@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Wilaya  ───────────────────────────────────────────
+model Wilaya {
+  id         String  @id @default(cuid())
+  code       String  @unique 
+  name       String  @unique 
+}
+// ─── Auth (NextAuth.js) ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  adresse         String?
+  hash          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  fk_wilaya      String?
+  wilaya        Wilaya @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+}
+
+model Role {
+  name            String @id  // "ADMIN", "OPERATOR"
+  actif           Boolean @default(true)
+  fk_irrigationField String?
+  irrigationField        IrrigationField @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
+}
+model Role_Memeber {
+  id            String @id  @default(cuid())
+  fk_role String
+  role   Role @relation(fields:[fk_role], references:[name], onDelete: Cascade) 
+  
+  fk_user    String
+  user       User     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+
+  @@unique([fk_user, fk_role]) // one row per role+functionality combo
+}
+model Functionality {
+  name String @id  // "devices", "zones", "schedules", "reports"
+}
+
+model Role_Functionality{
+  id @id @default(cuid())
+  fk_role String
+  role   Role @relation(fields:[fk_role], references:[name], onDelete: Cascade) 
+  fk_functionality String
+  functionality   Functionality @relation(fields:[fk_functionality], references:[name], onDelete: Cascade)
+
+  canCreate Boolean @default(false)
+  canRead Boolean @default(true)
+  canUpdate Boolean @default(false)
+  canDelete Boolean @default(false)
+  
+  @@unique([roleName, functionalityName]) // one row per role+functionality combo
+
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  dateTime   DateTime @default(now())
+  tableName  String
+  rowId      String
+  crudAction AuditAction
+  oldValue   Json?    
+  newValue   Json?    
+  fk_user    String
+  user       User     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+}
+
+
+
+model ConnectionLog {
+  id         String   @id @default(cuid())
+  dateTime   DateTime @default(now())
+  ipAddress  String
+  fk_user    String
+  user       User     @relation(fields: [fk_user], references: [id], onDelete: Cascade)
+  success    Boolean  @default(true)  // ← add this, useful for detecting brute force
+}
+
+
+// ─── IoT Domain ──────────────────────────────────────────────────
+model FarmingUnite {
+  id String @id @default(cuid())
+  name String? 
+  adresse String?
+  description String?
+  actif Boolean
+  createdAt   DateTime     @default(now())
+
+
+  fk_wilaya String?
+  wilaya Wilaya @relation(fields:[fk_wilaya], references:[id], onDelete: SetNull)
+  fk_owner String?
+  owner User @relation(fields:[fk_owner], references:[id], onDelete: SetNull)
+  
+  @@unique(fk_owner, name)
+}
+
+model IrrigationField {
+  id String @id @default(cuid())
+  name String?
+  latitude Float
+  longitude Float
+  actif Boolean
+  createdAt   DateTime     @default(now())
+  
+  fk_farmingUnite String
+  farmingUnite FarmingUnite @relation(fields:[fk_farmingUnite], references:[id], onDelete:Restrict)
+
+  @@unique([fk_farmingUnite, name])
+}
+model MCU {
+  id String @id @default(cuid())
+  name String?
+  minSoilMoisture Float
+  maxSoilMoisture Float
+  sleepingTime Float
+  macAdr String?
+  autoControlledIrrigation Boolean
+  actif Boolean
+  apiKey      String       
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  fk_irrigationField String
+  irrigationField IrrigationField @relation(fields:[fk_irrigationField], references:[id], onDelete:Restrict)
+
+  @@unique([fk_irrigationField, name])
+}
+model SensorType {
+  name String @id
+  description String?
+}
+model ActuatorType {
+  name String @id
+  description String?
+}
+model Sensor {
+  id String @id @default(cuid())
+  name String
+  macAdr String?
+  latitude Float
+  longitude Float
+  minAnalogue Float
+  maxAnalogue Float
+  createdAt DateTime     @default(now()) 
+  actif Boolean
+
+  fk_mcu String?
+  mcu MCU @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+  fk_sensorType String?
+  sensorType SensorType @relation(fields:[fk_sensorType], references:[id], onDelete:SetNull)
+
+  @@unique([fk_mcu, name])
+
+}
+model Actuator {
+  id String @id @default(cuid())
+  name String
+  macAdr String?
+  latitude Float
+  longitude Float
+  targetState boolean
+  createdAt DateTime     @default(now()) 
+  actif Boolean
+
+  fk_mcu String?
+  mcu MCU @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+  fk_actuatorType String?
+  actuatorType ActuatorType @relation(fields:[fk_actuatorType], references:[id], onDelete:SetNull)
+
+  @@unique([fk_mcu, name])
+
+}
+model EnvironementData {
+  id String @id @default(cuid())
+  analoguePerCent Float
+  rawValue Float
+  createdAt DateTime     @default(now()) 
+
+  fk_sensor String
+  sensor Sensor @relation(fields:[fk_sensor], references:[id], onDelete:Cascade)
+
+  fk_action String
+  action Actions @relation(fields:[fk_action], references:[id], onDelete:Cascade)
+}
+model Actions {
+  id String @id @default(cuid())
+  actionVal Boolean
+
+  createdAt DateTime      @default(now())
+  sentAt    DateTime?
+  ackedAt   DateTime? 
+
+  fk_actuator String
+  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
+ 
+}
+
+
+model Schedule {
+  id        String   @id @default(cuid())
+  name      String
+  daysCycle  Int
+  duration  Int
+  actif   Boolean  @default(true)
+  startAt   DateTime?
+  startDate    DateTime?
+  endDate    DateTime?
+  weekDays Days[]
+  toggleAtThresholds Boolean
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fk_actuator String
+  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+
+enum AuditAction {
+  INSERT
+  UPDATE
+  DELETE
+}
+
+enum Days {
+    SUNDAY
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+}
