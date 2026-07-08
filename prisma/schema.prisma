@@ -34,7 +34,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   fk_wilaya      String?
-  wilaya        Wilaya @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  wilaya        Wilaya? @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
 
   // reverse relations
   FarmingUnits       FarmingUnit[]
@@ -60,7 +60,7 @@ model RoleMember {
   user       User     @relation(fields: [fk_user], references: [id], onDelete: Cascade)
 
   fk_irrigationField String?
-  irrigationField        IrrigationField @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
+  irrigationField        IrrigationField? @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
 
   @@unique([fk_user, fk_role, fk_irrigationField]) // one row per role+functionality combo
 }
@@ -121,14 +121,14 @@ model FarmingUnit {
 
 
   fk_wilaya String?
-  wilaya Wilaya @relation(fields:[fk_wilaya], references:[id], onDelete: SetNull)
+  wilaya Wilaya? @relation(fields:[fk_wilaya], references:[id], onDelete: SetNull)
   fk_owner String?
-  owner User @relation(fields:[fk_owner], references:[id], onDelete: SetNull)
+  owner User? @relation(fields:[fk_owner], references:[id], onDelete: SetNull)
   
     // reverse relations
   irrigationFields IrrigationField[]
 
-  @@unique(fk_owner, name)
+  @@unique([fk_owner, name])
 }
 
 model IrrigationField {
@@ -141,11 +141,9 @@ model IrrigationField {
   
   fk_FarmingUnit String
   FarmingUnit FarmingUnit @relation(fields:[fk_FarmingUnit], references:[id], onDelete:Cascade)
-
-
     // reverse relations
   members              RoleMember[]
-  roles           Role[]
+  mcu              MCU[]
   @@unique([fk_FarmingUnit, name])
 }
 model MCU {
@@ -198,12 +196,12 @@ model Sensor {
   isActive Boolean
 
   fk_mcu String?
-  mcu MCU @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+  mcu MCU? @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
   fk_sensorType String?
-  sensorType SensorType @relation(fields:[fk_sensorType], references:[name], onDelete:SetNull)
+  sensorType SensorType? @relation(fields:[fk_sensorType], references:[name], onDelete:SetNull)
 
   // reverse relations
-  environmentData EnvironnementData[]
+  environmentData EnvironmentData[]
 
   @@unique([fk_mcu, name])
 
@@ -219,12 +217,11 @@ model Actuator {
   isActive Boolean
 
   fk_mcu String?
-  mcu MCU @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+  mcu MCU? @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
   fk_actuatorType String?
-  actuatorType ActuatorType @relation(fields:[fk_actuatorType], references:[name], onDelete:SetNull)
+  actuatorType ActuatorType? @relation(fields:[fk_actuatorType], references:[name], onDelete:SetNull)
 
   // reverse relations
-  environmentData EnvironnementData[]
   actions         Actions[]
   schedules       Schedule[]
 
@@ -256,7 +253,7 @@ model Actions {
   actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Restrict) 
  
    // reverse relations
-  environmentData EnvironnementData[]
+  environmentData EnvironmentData[]
 }
 
 

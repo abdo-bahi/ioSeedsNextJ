@@ -8,16 +8,16 @@ services:
     image: timescale/timescaledb:latest-pg16
     container_name: irrigation_db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB:       irrigation
-      POSTGRES_USER:     irrigation_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    environment:  
+      POSTGRES_DB:       ${DB_NAME}
+      POSTGRES_USER:     ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U irrigation_user -d irrigation"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
