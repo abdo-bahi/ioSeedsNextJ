@@ -35,6 +35,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   fk_wilaya      String?
   wilaya        Wilaya? @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  isActive           Boolean @default(true)
 
   // reverse relations
   FarmingUnits       FarmingUnit[]
