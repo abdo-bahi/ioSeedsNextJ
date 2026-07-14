@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
@@ -34,13 +35,13 @@ const navItems = [
     label: "Statistics",
     subtitle: "Charts & history",
     icon: BarChart2,
-    href: "/",
+    href: "/statistics",
   },
   {
     label: "Devices",
     subtitle: "MCUs, sensors, actuators",
     icon: Cpu,
-    href: "/",
+    href: "/devices",
   },
   {
     label: "Data",
@@ -63,7 +64,7 @@ const navItems = [
 ];
 
 export function AppSidebar() {
-  const [activeLabel, setActiveLabel] = useState("Dashboard");
+  const pathname = usePathname();
   return (
     <Sidebar className="border-r border-[#D6E8DC] bg-white">
       {/* ── Header ── */}
@@ -92,8 +93,7 @@ export function AppSidebar() {
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
-                    onClick={() => setActiveLabel(item.label)}
-                    isActive={item.active}
+                    isActive={pathname === item.href}
                     className={`
                       h-auto px-3 py-2.5 rounded-lg
                       hover:bg-[#E8F4ED] hover:text-[#1A3C2E]
