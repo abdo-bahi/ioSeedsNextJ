@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { trpc } from "@/lib/trpc/client"
 
 import {
   DropdownMenu,
@@ -18,9 +19,26 @@ import { useFieldStore } from "@/store/field-store"
 
 
 export function DashboardTopbar() {
-  const { fields, selectedField, setField } = useFieldStore();
+  const { selectedField, setField, setFields } = useFieldStore()
 
+  const { data: fields, isLoading } = trpc.field.getAll.useQuery(
+    { farmId: "0" },
+    { enabled: true }
+  )
   const notifCount = 2;
+
+  useEffect(() => {
+    if (fields && fields.length > 0) {
+          // Map to only what the store needs
+    const mapped = fields.map(f => ({
+      id:   f.id,
+      name: f.name ?? "Unnamed field",  // handle null name
+    }))
+    setFields(mapped)
+    if (!selectedField) setField(mapped[0])
+    }
+  }, [fields]);
+
 
   return (
     <header className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#D6E8DC] h-[56px]">
@@ -40,27 +58,23 @@ export function DashboardTopbar() {
             <Sprout className="h-[15px] w-[15px] text-[#4CAF7D]" />
             <div className="flex flex-col items-start leading-tight">
               <span className="text-[13px] font-semibold text-[#1A2E22]">
-                {selectedField.name}
-              </span>
-              <span className="text-[10px] text-[#8FAF9A]">
-                {selectedField.crop}
+                {selectedField?.name}
               </span>
             </div>
             <ChevronDown className="h-[13px] w-[13px] text-[#8FAF9A] ml-1" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-[180px]">
-            {fields.map((field) => (
+            {fields?.map((field) => (
               <DropdownMenuItem
                 key={field.name}
                 onClick={() => setField(field)}
                 className={`flex flex-col items-start gap-0 cursor-pointer ${
-                  selectedField.name === field.name
+                  selectedField?.name === field.name
                     ? "bg-[#E8F4ED] text-[#1A3C2E]"
                     : ""
                 }`}
               >
                 <span className="text-[13px] font-medium">{field.name}</span>
-                <span className="text-[11px] text-[#8FAF9A]">{field.crop}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

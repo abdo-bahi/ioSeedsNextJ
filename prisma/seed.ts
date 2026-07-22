@@ -200,6 +200,86 @@ const main = async () => {
     },
   })
   console.log("✅ User Admin seeded");
+
+  // ─── Get admin user ───────────────────────────────────────────────
+const admin = await prisma.user.findUnique({
+  where: { email: "admin@ioseeds.dz" }
+})
+
+if (!admin) {
+  console.error("❌ Admin user not found — run full seed first")
+  return
+}
+
+// ─── Get Blida wilaya ─────────────────────────────────────────────
+const blida = await prisma.wilaya.findUnique({
+  where: { code: "09" }
+})
+
+if (!blida) {
+  console.error("❌ Blida wilaya not found — run full seed first")
+  return
+}
+
+// ─── Seed Farm ────────────────────────────────────────────────────
+const farm = await prisma.farmingUnit.upsert({
+  where: {
+    fk_owner_name: {
+      fk_owner: admin.id,
+      name:     "IOSeeds Farm",
+    }
+  },
+  update: {},
+  create: {
+    name:        "IOSeeds Farm",
+    address:     "Route de Blida, Blida",
+    description: "Main test farm",
+    isActive:    true,
+    fk_wilaya:   blida.id,
+    fk_owner:    admin.id,
+  },
+})
+
+console.log("✅ Farm seeded:", farm.name, "→", farm.id)
+
+// ─── Seed 3 Irrigation Fields ─────────────────────────────────────
+const fieldData = [
+  {
+    name:           "Parcelle A",
+    latitude:       36.4703,
+    longitude:      2.8277,
+    isActive:       true,
+    fk_FarmingUnit: farm.id,
+  },
+  {
+    name:           "Parcelle B",
+    latitude:       36.4710,
+    longitude:      2.8290,
+    isActive:       true,
+    fk_FarmingUnit: farm.id,
+  },
+  {
+    name:           "Parcelle C",
+    latitude:       36.4720,
+    longitude:      2.8310,
+    isActive:       false,
+    fk_FarmingUnit: farm.id,
+  },
+]
+
+for (const field of fieldData) {
+  await prisma.irrigationField.upsert({
+    where: {
+      fk_FarmingUnit_name: {
+        fk_FarmingUnit: farm.id,
+        name:           field.name,
+      }
+    },
+    update: {},
+    create: field,
+  })
+  console.log("✅ Field seeded:", field.name)
+}
 };
 
 main()
