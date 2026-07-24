@@ -201,10 +201,6 @@ const main = async () => {
   })
   console.log("✅ User Admin seeded");
 
-  // ─── Get admin user ───────────────────────────────────────────────
-const admin = await prisma.user.findUnique({
-  where: { email: "admin@ioseeds.dz" }
-})
 
 if (!admin) {
   console.error("❌ Admin user not found — run full seed first")

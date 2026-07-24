@@ -22,7 +22,7 @@ export function DashboardTopbar() {
   const { selectedField, setField, setFields } = useFieldStore()
 
   const { data: fields, isLoading } = trpc.field.getAll.useQuery(
-    { farmId: "0" },
+    { farmId: "cmrzdal5y002pncbiaf53uihe" },
     { enabled: true }
   )
   const notifCount = 2;
