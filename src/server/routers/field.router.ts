@@ -6,7 +6,7 @@ export const fieldRouter = router({
   getAll: publicProc
     .input(z.object({ farmId: z.string() }))
     .query(async ({ input }) => {
-      return prisma.irrigationField.findMany({
+      return await prisma.irrigationField.findMany({
         where: { fk_FarmingUnit: input.farmId },
         select: {
           id: true,
