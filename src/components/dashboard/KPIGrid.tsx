@@ -34,24 +34,23 @@ function KPICardSkeleton() {
 export function KPIGrid() {
   const { selectedField } = useFieldStore()
 
-  // ── Sensor query ──────────────────────────────────────────────
-  const {
-    data:      sensorReadings,
-    isLoading: sensorsLoading,
-    isError:   sensorsError,
-  } = trpc.sensor.getLatestPerField.useQuery(
+  const { data: sensorReadings  ,  isLoading: sensorsLoading,
+    isError:   sensorsError} = trpc.sensor.getLatestPerField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
-    { enabled: !!selectedField?.id }
+    {
+      enabled:         !!selectedField?.id,
+      refetchInterval: 10000,  // refetch every 10 seconds
+    }
   )
-
-  // ── MCU query ─────────────────────────────────────────────────
-  const {
-    data:      mcus,
+  
+  const { data: mcus ,
     isLoading: mcusLoading,
-    isError:   mcusError,
-  } = trpc.mcu.getAllMcus.useQuery(
+    isError:   mcusError} = trpc.mcu.getAllMcus.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
-    { enabled: !!selectedField?.id }
+    {
+      enabled:         !!selectedField?.id,
+      refetchInterval: 30000,  // MCU status every 30 seconds
+    }
   )
 
   // ── MCU derived values ────────────────────────────────────────
