@@ -14,6 +14,7 @@ import {
 import { ChevronDown, Sprout, RotateCcw, Bell } from "lucide-react";
 
 import { useFieldStore } from "@/store/field-store"
+import { usePathname } from "next/navigation";
 
 // to change selected field later from db + and fetch for actuel data ***********************
 
@@ -38,7 +39,7 @@ export function DashboardTopbar() {
     if (!selectedField) setField(mapped[0])
     }
   }, [fields]);
-
+  const pathname = usePathname();
 
   return (
     <header className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-[#D6E8DC] h-[56px]">
@@ -49,7 +50,7 @@ export function DashboardTopbar() {
         {/* to change later ***************************** */}
 
         <span className="text-[14px] font-medium text-[#8FAF9A]">
-          Dashboard
+          {pathname === '/' ? 'Dashboard': pathname}
         </span>
 
         {/* ── Field selector pill ── */}
