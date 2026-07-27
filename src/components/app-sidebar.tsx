@@ -103,13 +103,13 @@ export function AppSidebar() {
                     <a href={item.href} className="flex items-center gap-3">
                       <item.icon
                         className={`h-[18px] w-[18px] shrink-0 ${
-                          item.active ? "text-[#4CAF7D]" : "text-[#8FAF9A]"
+                          (pathname === item.href) ? "text-[#4CAF7D]" : "text-[#8FAF9A]"
                         }`}
                       />
                       <div className="flex flex-col leading-tight">
                         <span
                           className={`text-[13.5px] font-medium ${
-                            item.active ? "text-[#1A3C2E]" : "text-[#3A5A44]"
+                            (pathname === item.href) ? "text-[#1A3C2E]" : "text-[#3A5A44]"
                           }`}
                         >
                           {item.label}

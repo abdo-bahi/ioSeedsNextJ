@@ -65,8 +65,7 @@ export function ActuatorPanel() {
 
         {actuators?.map((actuator:any) => {
           // Real state from last action
-          const lastAction  = actuator.actions[0]
-          const isOpen      = lastAction?.actionVal ?? actuator.targetState
+          const isOpen      = actuator?.targetState
           const isToggling  = toggle.isPending
 
           return (
