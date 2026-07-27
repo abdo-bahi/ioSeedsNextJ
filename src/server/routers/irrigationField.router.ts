@@ -1,0 +1,115 @@
+// src/server/routers/irrigationField.router.ts
+import { z } from "zod"
+import { publicProc, router } from "../trpc"
+import { prisma } from "../../../prisma/lib/prisma"
+
+export const irrigationFieldRouter = router({
+
+  getAllByFarm: publicProc
+    .input(z.object({ farmId: z.string() }))
+    .query(async ({ input }) => {
+      const fields = await prisma.irrigationField.findMany({
+        where:   { fk_FarmingUnit: input.farmId },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id:        true,
+          name:      true,
+          crop:      true,       // ← was cropType
+          surface:   true,       // ← was area, String not Float
+          latitude:  true,
+          longitude: true,
+          isActive:  true,
+          mcu: {
+            select: {
+              id: true,
+              sensors: {
+                where:  { fk_sensorType: "soil_moisture", isActive: true },
+                select: {
+                  environmentData: {
+                    orderBy: { createdAt: "desc" },
+                    take:    1,
+                    select:  { value: true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+
+      return fields.map(f => {
+        const mcuCount = f.mcu.length
+        const moistureValues = f.mcu
+          .flatMap(m => m.sensors)
+          .flatMap(s => s.environmentData)
+          .map(e => e.value)
+
+        const avgMoisture = moistureValues.length
+          ? Math.round(
+              moistureValues.reduce((a:any, b:any) => a + b, 0) / moistureValues.length * 10
+            ) / 10
+          : null
+
+        return {
+          id:          f.id,
+          name:        f.name,
+          crop:        f.crop,       // ← fixed
+          surface:     f.surface,    // ← fixed — string e.g. "2.4 ha"
+          latitude:    f.latitude,
+          longitude:   f.longitude,
+          isActive:    f.isActive,
+          mcuCount,
+          avgMoisture,
+        }
+      })
+    }),
+
+  create: publicProc
+    .input(z.object({
+      farmId:    z.string(),
+      name:      z.string().min(1),
+      crop:      z.string().optional(),   // ← fixed
+      surface:   z.string().optional(),   // ← fixed — string
+      latitude:  z.number(),
+      longitude: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      return prisma.irrigationField.create({
+        data: {
+          name:           input.name,
+          crop:           input.crop,
+          surface:        input.surface,
+          latitude:       input.latitude,
+          longitude:      input.longitude,
+          isActive:       true,
+          fk_FarmingUnit: input.farmId,
+        }
+      })
+    }),
+
+  update: publicProc
+    .input(z.object({
+      id:        z.string(),
+      name:      z.string().min(1).optional(),
+      crop:      z.string().optional(),   // ← fixed
+      surface:   z.string().optional(),   // ← fixed
+      latitude:  z.number().optional(),
+      longitude: z.number().optional(),
+      isActive:  z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input
+      return prisma.irrigationField.update({
+        where: { id },
+        data,
+      })
+    }),
+
+  delete: publicProc
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      return prisma.irrigationField.delete({
+        where: { id: input.id }
+      })
+    }),
+})

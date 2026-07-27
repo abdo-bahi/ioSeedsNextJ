@@ -135,6 +135,8 @@ model FarmingUnit {
 model IrrigationField {
   id String @id @default(cuid())
   name String?
+  crop String?
+  surface String?
   latitude Float
   longitude Float
   isActive Boolean
