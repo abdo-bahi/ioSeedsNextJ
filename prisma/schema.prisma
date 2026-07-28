@@ -136,7 +136,7 @@ model IrrigationField {
   id String @id @default(cuid())
   name String?
   crop String?
-  surface String?
+  surface Float?
   latitude Float
   longitude Float
   isActive Boolean

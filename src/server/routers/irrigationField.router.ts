@@ -69,7 +69,7 @@ export const irrigationFieldRouter = router({
       farmId:    z.string(),
       name:      z.string().min(1),
       crop:      z.string().optional(),   // ← fixed
-      surface:   z.string().optional(),   // ← fixed — string
+      surface:   z.number().min(1).optional(),   // ← fixed — string
       latitude:  z.number(),
       longitude: z.number(),
     }))
@@ -92,14 +92,14 @@ export const irrigationFieldRouter = router({
       id:        z.string(),
       name:      z.string().min(1).optional(),
       crop:      z.string().optional(),   // ← fixed
-      surface:   z.string().optional(),   // ← fixed
+      surface:   z.number().min(1).optional(),   // ← fixed
       latitude:  z.number().optional(),
       longitude: z.number().optional(),
       isActive:  z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
       const { id, ...data } = input
-      return prisma.irrigationField.update({
+      return await prisma.irrigationField.update({
         where: { id },
         data,
       })

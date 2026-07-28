@@ -1,8 +1,10 @@
-import React from 'react'
+import { IrrigationFieldsTable } from '@/components/data/IrrigationFieldsTable';
+
 
 const data = () => {
+  const selectedFarmId = "cmrzdal5y002pncbiaf53uihe";
   return (
-    <div><h1>data Page</h1></div>
+    <div className="space-y-6"><IrrigationFieldsTable farmId={selectedFarmId}/></div>
   )
 }
 
