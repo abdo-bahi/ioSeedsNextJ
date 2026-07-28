@@ -4,67 +4,66 @@ import { publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 
 export const irrigationFieldRouter = router({
-
   getAllByFarm: publicProc
-    .input(z.object({ farmId: z.string() }))
-    .query(async ({ input }) => {
-      const fields = await prisma.irrigationField.findMany({
-        where:   { fk_FarmingUnit: input.farmId },
-        orderBy: { createdAt: "asc" },
-        select: {
-          id:        true,
-          name:      true,
-          crop:      true,       // ← was cropType
-          surface:   true,       // ← was area, String not Float
-          latitude:  true,
-          longitude: true,
-          isActive:  true,
-          mcu: {
-            select: {
-              id: true,
-              sensors: {
-                where:  { fk_sensorType: "soil_moisture", isActive: true },
-                select: {
-                  environmentData: {
-                    orderBy: { createdAt: "desc" },
-                    take:    1,
-                    select:  { value: true }
-                  }
+  .input(z.object({ farmId: z.string() }))
+  .query(async ({ input }) => {
+    const fields = await prisma.irrigationField.findMany({
+      where:   { fk_FarmingUnit: input.farmId },
+      orderBy: { createdAt: "asc" },
+      select: {
+        id:        true,
+        name:      true,
+        crop:      true,
+        surface:   true,
+        latitude:  true,
+        longitude: true,
+        isActive:  true,
+        mcu: {                              
+          select: {
+            id: true,                      
+            sensors: {
+              where:  { fk_sensorType: "soil_moisture", isActive: true },
+              select: {
+                environmentData: {
+                  orderBy: { createdAt: "desc" },
+                  take:    1,
+                  select:  { value: true }
                 }
               }
             }
           }
         }
-      })
+      }
+    })
 
-      return fields.map(f => {
-        const mcuCount = f.mcu.length
-        const moistureValues = f.mcu
-          .flatMap(m => m.sensors)
-          .flatMap(s => s.environmentData)
-          .map(e => e.value)
+    return fields.map(f => {
+      const mcuCount = f.mcu.length
 
-        const avgMoisture = moistureValues.length
-          ? Math.round(
-              moistureValues.reduce((a:any, b:any) => a + b, 0) / moistureValues.length * 10
-            ) / 10
-          : null
+      const moistureValues = f.mcu
+        .flatMap(m => m.sensors)
+        .flatMap(s => s.environmentData)
+        .map(e => e.value)
 
-        return {
-          id:          f.id,
-          name:        f.name,
-          crop:        f.crop,       // ← fixed
-          surface:     f.surface,    // ← fixed — string e.g. "2.4 ha"
-          latitude:    f.latitude,
-          longitude:   f.longitude,
-          isActive:    f.isActive,
-          mcuCount,
-          avgMoisture,
-        }
-      })
-    }),
+      const avgMoisture = moistureValues.length
+        ? Math.round(
+            moistureValues.reduce((a, b) => a + b, 0) / moistureValues.length * 10
+          ) / 10
+        : null
 
-  create: publicProc
+      return {
+        id:          f.id,
+        name:        f.name,
+        crop:        f.crop,
+        surface:     f.surface,
+        latitude:    f.latitude,
+        longitude:   f.longitude,
+        isActive:    f.isActive,
+        mcuCount,
+        avgMoisture,
+      }
+    })
+  }),
+    create: publicProc
     .input(z.object({
       farmId:    z.string(),
       name:      z.string().min(1),
