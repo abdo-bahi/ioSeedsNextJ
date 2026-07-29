@@ -6,7 +6,7 @@ export const mcuRouter = router({
   getAllMcus: publicProc
     .input(z.object({ irrigationFieldId: z.string() }))
     .query(async ({ input }) => {
-      return prisma.mCU.findMany({
+      return await prisma.mCU.findMany({
         where: {
           fk_irrigationField: input.irrigationFieldId 
         },

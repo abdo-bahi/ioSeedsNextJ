@@ -8,7 +8,7 @@ export const actuatorRouter = router({
   getAllByField: publicProc
     .input(z.object({ irrigationFieldId: z.string() }))
     .query(async ({ input }) => {
-      return prisma.actuator.findMany({
+      return  await prisma.actuator.findMany({
         where: {
           mcu: { fk_irrigationField: input.irrigationFieldId }
         },

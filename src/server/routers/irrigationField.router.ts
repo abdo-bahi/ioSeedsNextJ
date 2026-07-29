@@ -73,7 +73,7 @@ export const irrigationFieldRouter = router({
       longitude: z.number(),
     }))
     .mutation(async ({ input }) => {
-      return prisma.irrigationField.create({
+      return await prisma.irrigationField.create({
         data: {
           name:           input.name,
           crop:           input.crop,
@@ -107,7 +107,7 @@ export const irrigationFieldRouter = router({
   delete: publicProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      return prisma.irrigationField.delete({
+      return await prisma.irrigationField.delete({
         where: { id: input.id }
       })
     }),
