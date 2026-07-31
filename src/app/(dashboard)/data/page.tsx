@@ -2,8 +2,12 @@
 
 import { useState } from "react"
 import { IrrigationFieldsTable } from "@/components/data/IrrigationFieldsTable"
+import { useFieldStore } from "@/store/field-store"
+import { MCUsTable } from "@/components/data/McuTable"
 
-const FARM_ID = "cmrzdal5y002pncbiaf53uihe"
+const FARM_ID = "cmrzdal5y002pncbiaf53uihe";
+const { selectedField } = useFieldStore();
+
 
 const tabs = [
   { value: "fields",    label: "Irrigation Fields" },
@@ -43,9 +47,10 @@ export default function DataPage() {
         <IrrigationFieldsTable farmId={FARM_ID} />
       )}
       {activeTab === "mcus" && (
-        <div className="bg-white border border-[#D6E8DC] rounded-xl p-8 text-center text-[13px] text-[#8FAF9A]">
-          MCUs table — coming soon
-        </div>
+          <MCUsTable
+          irrigationFieldId={selectedField?.id ?? ""}
+          farmId={FARM_ID}
+        />
       )}
       {activeTab === "sensors" && (
         <div className="bg-white border border-[#D6E8DC] rounded-xl p-8 text-center text-[13px] text-[#8FAF9A]">

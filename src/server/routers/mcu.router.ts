@@ -26,6 +26,8 @@ export const mcuRouter = router({
           macAddress:               true,
           autoControlledIrrigation: true,
           createdAt:                true,
+          fk_irrigationField:       true, 
+          updatedAt:                true, 
           // sensor + actuator counts
           _count: {
             select: {
@@ -81,6 +83,7 @@ export const mcuRouter = router({
       autoControlledIrrigation: z.boolean().optional(),
       isActive:                 z.boolean().optional(),
       status:                   MCUStatusZ.optional(),
+      fk_irrigationField:       z.string()
     }))
     .mutation(async ({ input }) => {
       const { id, ...data } = input
