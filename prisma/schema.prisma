@@ -42,6 +42,7 @@ model User {
   roleMembers         RoleMember[]
   auditLogs           AuditLog[]
   connectionLogs      ConnectionLog[]
+  schedule      Schedule[]
 }
 
 model Role {
@@ -277,6 +278,10 @@ model Schedule {
 
   fk_actuator String
   actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
+
+  fk_creator String?
+  creator    User?   @relation(fields:[fk_creator], references:[id], onDelete:SetNull)
+
 }
 
 // ─── Enums ───────────────────────────────────────────────────────

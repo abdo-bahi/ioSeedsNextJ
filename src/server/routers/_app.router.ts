@@ -4,6 +4,7 @@ import { actuatorRouter } from "./actuator.router"
 import { fieldRouter } from "./field.router"
 import { irrigationFieldRouter } from "./irrigationField.router"
 import { mcuRouter } from "./mcu.router"
+import { scheduleRouter } from "./schedule.router"
 import { sensorRouter } from "./sensor.router"
 
 export const appRouter = router({
@@ -13,6 +14,7 @@ export const appRouter = router({
   mcu: mcuRouter,
   actuator: actuatorRouter,
   activity: activityRouter,
+  schedule: scheduleRouter,
 })
 
 export type AppRouter = typeof appRouter
