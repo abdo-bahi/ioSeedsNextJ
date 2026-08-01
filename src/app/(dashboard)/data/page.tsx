@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { IrrigationFieldsTable } from "@/components/data/IrrigationFieldsTable"
 import { useFieldStore } from "@/store/field-store"
 import { MCUsTable } from "@/components/data/McuTable"
+import { trpc } from "@/lib/trpc/client"
 
 const FARM_ID = "cmrzdal5y002pncbiaf53uihe";
-const { selectedField } = useFieldStore();
 
 
 const tabs = [
@@ -18,6 +18,7 @@ const tabs = [
 
 export default function DataPage() {
   const [activeTab, setActiveTab] = useState("fields")
+  const { selectedField } = useFieldStore()
 
   return (
     <div className="space-y-6">
