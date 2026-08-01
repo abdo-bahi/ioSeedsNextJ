@@ -4,7 +4,7 @@ import { actuatorRouter } from "./actuator.router"
 import { fieldRouter } from "./field.router"
 import { irrigationFieldRouter } from "./irrigationField.router"
 import { mcuRouter } from "./mcu.router"
-import { sensorRouter } from "./sensors.router"
+import { sensorRouter } from "./sensor.router"
 
 export const appRouter = router({
   field: fieldRouter,

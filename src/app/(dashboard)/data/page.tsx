@@ -5,6 +5,7 @@ import { IrrigationFieldsTable } from "@/components/data/IrrigationFieldsTable"
 import { useFieldStore } from "@/store/field-store"
 import { MCUsTable } from "@/components/data/McuTable"
 import { trpc } from "@/lib/trpc/client"
+import { SensorsTable } from "@/components/data/SensorsTable"
 
 const FARM_ID = "cmrzdal5y002pncbiaf53uihe";
 
@@ -54,9 +55,10 @@ export default function DataPage() {
         />
       )}
       {activeTab === "sensors" && (
-        <div className="bg-white border border-[#D6E8DC] rounded-xl p-8 text-center text-[13px] text-[#8FAF9A]">
-          Sensors table — coming soon
-        </div>
+          <SensorsTable
+          irrigationFieldId={selectedField?.id ?? ""}
+          farmId={FARM_ID}
+        />
       )}
       {activeTab === "actuators" && (
         <div className="bg-white border border-[#D6E8DC] rounded-xl p-8 text-center text-[13px] text-[#8FAF9A]">
