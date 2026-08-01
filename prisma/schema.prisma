@@ -239,10 +239,10 @@ model EnvironmentData {
   createdAt DateTime     @default(now()) 
 
   fk_sensor String
-  sensor Sensor @relation(fields:[fk_sensor], references:[id], onDelete:Restrict)
+  sensor Sensor @relation(fields:[fk_sensor], references:[id], onDelete:Cascade)
 
   fk_action String
-  action Actions @relation(fields:[fk_action], references:[id], onDelete:Restrict)
+  action Actions @relation(fields:[fk_action], references:[id], onDelete:Cascade)
 }
 model Actions {
   id String @id @default(cuid())
@@ -253,7 +253,7 @@ model Actions {
   ackedAt   DateTime? 
 
   fk_actuator String
-  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Restrict) 
+  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
  
    // reverse relations
   environmentData EnvironmentData[]
