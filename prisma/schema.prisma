@@ -120,7 +120,7 @@ model FarmingUnit {
   description String?
   isActive Boolean
   createdAt   DateTime     @default(now())
-
+  contact String?
 
   fk_wilaya String?
   wilaya Wilaya? @relation(fields:[fk_wilaya], references:[id], onDelete: SetNull)

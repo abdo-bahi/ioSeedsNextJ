@@ -1,6 +1,7 @@
 import { router } from "../trpc"
 import { activityRouter } from "./activity.router"
 import { actuatorRouter } from "./actuator.router"
+import { farmingUnitRouter } from "./farmingUnit.router"
 import { fieldRouter } from "./field.router"
 import { irrigationFieldRouter } from "./irrigationField.router"
 import { mcuRouter } from "./mcu.router"
@@ -15,6 +16,7 @@ export const appRouter = router({
   actuator: actuatorRouter,
   activity: activityRouter,
   schedule: scheduleRouter,
+  farmingUnit: farmingUnitRouter,
 })
 
 export type AppRouter = typeof appRouter

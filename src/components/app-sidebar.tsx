@@ -37,12 +37,7 @@ const navItems = [
     icon: BarChart2,
     href: "/statistics",
   },
-  {
-    label: "Devices",
-    subtitle: "MCUs, sensors, actuators",
-    icon: Cpu,
-    href: "/devices",
-  },
+
   {
     label: "Data",
     subtitle: "Fields, MCUs, sensors...",
