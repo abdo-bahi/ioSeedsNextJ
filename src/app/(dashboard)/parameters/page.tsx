@@ -278,7 +278,7 @@ export default function ParametersPage() {
 
         {/* Description */}
         {farm.description && (
-          <div className="bg-white border-t border-[#D6E8DC] px-5 pb-5">
+          <div className="bg-white border-t border-[#D6E8DC] px-5 py-4 pb-5">
             <p className="text-[11px] font-semibold text-[#8FAF9A] uppercase tracking-wider mb-2">
               Description
             </p>
