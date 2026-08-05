@@ -189,8 +189,7 @@ const main = async () => {
   const wilaya = await prisma.wilaya.findUnique({
     where: { code: "09" }
   })
-  const hash = await bcrypt.hash("admin123", 10)
-
+  const testPassword = await bcrypt.hash("ioseed2026", 10);
   const admin = await prisma.user.upsert(
     {
       where: {
@@ -200,7 +199,7 @@ const main = async () => {
       create: {
         name:      "admin",
         email:     "adminn@ioseeds.dz",
-        hash:      hash,
+        password:      testPassword,
         fk_wilaya: wilaya!.id,  
       },
     }
@@ -338,7 +337,7 @@ const mcuA = await prisma.mCU.upsert({
     macAddress:               "AA:BB:CC:DD:EE:01",
     autoControlledIrrigation: true,
     isActive:                 true,
-    apiKeyHash:               "demo-api-key-hash-a1",
+    apiKeyHash:               "demo-api-key-password-a1",
     status:                   "ONLINE",
     fk_irrigationField:       parcelleA.id,
   },
@@ -360,7 +359,7 @@ const mcuB = await prisma.mCU.upsert({
     macAddress:               "AA:BB:CC:DD:EE:02",
     autoControlledIrrigation: false,
     isActive:                 true,
-    apiKeyHash:               "demo-api-key-hash-b1",
+    apiKeyHash:               "demo-api-key-password-b1",
     status:                   "SLEEPING",
     fk_irrigationField:       parcelleB.id,
   },
@@ -382,7 +381,7 @@ const mcuC = await prisma.mCU.upsert({
     macAddress:               "AA:BB:CC:DD:EE:03",
     autoControlledIrrigation: true,
     isActive:                 false,
-    apiKeyHash:               "demo-api-key-hash-c1",
+    apiKeyHash:               "demo-api-key-password-c1",
     status:                   "OFFLINE",
     fk_irrigationField:       parcelleC.id,
   },
@@ -598,7 +597,21 @@ await prisma.schedule.upsert({
 
 console.log("✅ Schedules seeded")
 console.log("🌱 Full demo data seeded successfully!")
+const testPassword = await bcrypt.hash("ioseed2026", 10);
 
+const admin = await prisma.user.upsert({
+  where: {
+    email: "admin@ioseed.dz",
+  },
+  update: {},
+  create: {
+    name: "Bahi Abderrahmane",
+    email: "admin@ioseed.dz",
+    password: testPassword,
+    isActive: true,
+    fk_wilaya: blida.id,
+  },
+});
 }
 };
 

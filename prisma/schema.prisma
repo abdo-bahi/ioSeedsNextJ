@@ -30,7 +30,7 @@ model User {
   emailVerified DateTime?
   image         String?
   address         String?
-  hash          String?
+  password          String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   fk_wilaya      String?
@@ -43,6 +43,8 @@ model User {
   auditLogs           AuditLog[]
   connectionLogs      ConnectionLog[]
   schedule      Schedule[]
+sessions Session[]
+accounts Account[]
 }
 
 model Role {
@@ -308,4 +310,55 @@ enum MCUStatus{
   OFFLINE
   SLEEPING
   ERROR
+}
+
+// new 5/8/2026
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String @id
+  accountId             String
+  providerId            String
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken  String?
+  refreshToken String?
+
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+
+  scope String?
+
+  idToken String?
+
+  password String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

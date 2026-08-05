@@ -58,7 +58,7 @@ const navItems = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({farms, user}: {farms:any, user:any}) {
   const pathname = usePathname();
   return (
     <Sidebar className="border-r border-[#D6E8DC] bg-white">
