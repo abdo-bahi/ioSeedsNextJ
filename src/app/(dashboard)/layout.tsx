@@ -16,6 +16,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   if (!session) redirect("/login")
 
+    
   // Fetch farms this user has access to
   const farms = await getUserFarms(session.user.id)
 

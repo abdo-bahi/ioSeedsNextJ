@@ -2,7 +2,6 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { prisma } from "../../prisma/lib/prisma"
-import bcrypt from "bcryptjs"
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -23,5 +22,5 @@ export const auth = betterAuth({
   },
 
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
 })

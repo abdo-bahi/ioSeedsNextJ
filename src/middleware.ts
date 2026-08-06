@@ -1,21 +1,24 @@
-import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 
-export async function middleware(request: NextRequest) {
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  })
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-  const isLoginPage  = request.nextUrl.pathname === "/login"
-  const isAuthRoute  = request.nextUrl.pathname.startsWith("/api/auth")
-  const isPublic     = isLoginPage || isAuthRoute
+  // Routes that don't need auth
+  const isPublic =
+    pathname === "/login" ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico"
 
-  if (!session && !isPublic) {
+  if (isPublic) return NextResponse.next()
+
+  // Just check if the session cookie exists — no DB call
+  const sessionCookie =
+    request.cookies.get("better-auth.session_token") ??
+    request.cookies.get("__Secure-better-auth.session_token")
+
+  if (!sessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  if (session && isLoginPage) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
   return NextResponse.next()

@@ -597,21 +597,9 @@ await prisma.schedule.upsert({
 
 console.log("✅ Schedules seeded")
 console.log("🌱 Full demo data seeded successfully!")
-const testPassword = await bcrypt.hash("ioseed2026", 10);
 
-const admin = await prisma.user.upsert({
-  where: {
-    email: "admin@ioseed.dz",
-  },
-  update: {},
-  create: {
-    name: "Bahi Abderrahmane",
-    email: "admin@ioseed.dz",
-    password: testPassword,
-    isActive: true,
-    fk_wilaya: blida.id,
-  },
-});
+
+
 }
 };
 
