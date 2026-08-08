@@ -18,18 +18,19 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-
+    console.log('email : ' , email, '\npassword : ' , password);
+    
     const result = await signIn.email({
       email,
       password,
-      callbackURL: "/dashboard",
+      callbackURL: "/",
       fetchOptions: {
         onError: (ctx) => {
           setError(ctx.error.message ?? "Email ou mot de passe incorrect.")
           setLoading(false)
         },
         onSuccess: () => {
-          router.push("/dashboard")
+          router.push("/")
           router.refresh()
         }
       }

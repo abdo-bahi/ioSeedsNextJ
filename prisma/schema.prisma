@@ -13,13 +13,13 @@ datasource db {
 }
 
 // ─── Wilaya  ───────────────────────────────────────────
+
 model Wilaya {
-  id         String  @id @default(cuid())
-  code       String  @unique 
-  name       String  @unique 
-    // reverse relations
-  users           User[]
-  FarmingUnits   FarmingUnit[]
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String        @unique // reverse relations
+  users        User[]
+  FarmingUnits FarmingUnit[]
 }
 // ─── Auth (NextAuth.js) ───────────────────────────────────────────
 
@@ -27,148 +27,149 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
-  emailVerified DateTime?
+  emailVerified Boolean @default(false)
   image         String?
-  address         String?
-  password          String?
+  address       String?
+  password      String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  fk_wilaya      String?
-  wilaya        Wilaya? @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
-  isActive           Boolean @default(true)
+  fk_wilaya     String?
+  wilaya        Wilaya?   @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  isActive      Boolean   @default(true)
 
   // reverse relations
-  FarmingUnits       FarmingUnit[]
-  roleMembers         RoleMember[]
-  auditLogs           AuditLog[]
-  connectionLogs      ConnectionLog[]
-  schedule      Schedule[]
-sessions Session[]
-accounts Account[]
+  FarmingUnits   FarmingUnit[]
+  roleMembers    RoleMember[]
+  auditLogs      AuditLog[]
+  connectionLogs ConnectionLog[]
+  schedule       Schedule[]
+  sessions       Session[]
+  accounts       Account[]
+
+  @@map("user")
 }
 
 model Role {
-  name            String @id  
-  isActive           Boolean @default(true)
+  name     String  @id
+  isActive Boolean @default(true)
 
   // reverse relations
-  members              RoleMember[]
-  functionalities      Role_Functionality[]
+  members         RoleMember[]
+  functionalities Role_Functionality[]
 }
+
 model RoleMember {
-  id            String @id  @default(cuid())
+  id      String @id @default(cuid())
   fk_role String
-  role   Role @relation(fields:[fk_role], references:[name], onDelete: Cascade) 
-  
-  fk_user    String
-  user       User     @relation(fields: [fk_user], references: [id], onDelete: Cascade)
+  role    Role   @relation(fields: [fk_role], references: [name], onDelete: Cascade)
+  fk_user String?
+  user    User?   @relation(fields: [fk_user], references: [id], onDelete: Cascade)
 
   fk_irrigationField String?
-  irrigationField        IrrigationField? @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
+  irrigationField    IrrigationField? @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
 
-  @@unique([fk_user, fk_role, fk_irrigationField]) // one row per role+functionality combo
+  // one row per role+functionality combo
+  @@unique([fk_user, fk_role, fk_irrigationField])
 }
+
 model Functionality {
-  name String @id  // "devices", "zones", "schedules", "reports"
+  name                String               @id // "devices", "zones", "schedules", "reports"
   // reverse relations
   roleFunctionalities Role_Functionality[]
 }
 
-model Role_Functionality{
-  id String @id @default(cuid())
-  fk_role String
-  role   Role @relation(fields:[fk_role], references:[name], onDelete: Cascade) 
+model Role_Functionality {
+  id               String        @id @default(cuid())
+  fk_role          String
+  role             Role          @relation(fields: [fk_role], references: [name], onDelete: Cascade)
   fk_functionality String
-  functionality   Functionality @relation(fields:[fk_functionality], references:[name], onDelete: Cascade)
+  functionality    Functionality @relation(fields: [fk_functionality], references: [name], onDelete: Cascade)
 
   canCreate Boolean @default(false)
-  canRead Boolean @default(true)
+  canRead   Boolean @default(true)
   canUpdate Boolean @default(false)
   canDelete Boolean @default(false)
-  
-  @@unique([fk_role, fk_functionality]) // one row per role+functionality combo
+  // one row per role+functionality combo
 
+  @@unique([fk_role, fk_functionality])
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  dateTime   DateTime @default(now())
+  id         String      @id @default(cuid())
+  dateTime   DateTime    @default(now())
   tableName  String
   rowId      String
   crudAction AuditAction
-  oldValue   Json?    
-  newValue   Json?    
-  fk_user    String
-  user       User     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+  oldValue   Json?
+  newValue   Json?
+  fk_user    String?
+  user       User?        @relation(fields: [fk_user], references: [id], onDelete: Restrict)
 }
-
-
 
 model ConnectionLog {
-  id         String   @id @default(cuid())
-  dateTime   DateTime @default(now())
-  ipAddress  String
-  fk_user    String
-  user       User     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
-  success    Boolean  @default(true)  // ← add this, useful for detecting brute force
+  id        String   @id @default(cuid())
+  dateTime  DateTime @default(now())
+  ipAddress String
+  fk_user   String?
+  user      User?     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+  success   Boolean  @default(true) // ← add this, useful for detecting brute force
 }
 
-
 // ─── IoT Domain ──────────────────────────────────────────────────
-model FarmingUnit {
-  id String @id @default(cuid())
-  name String? 
-  address String?
-  description String?
-  isActive Boolean
-  createdAt   DateTime     @default(now())
-  contact String?
 
-  fk_wilaya String?
-  wilaya Wilaya? @relation(fields:[fk_wilaya], references:[id], onDelete: SetNull)
-  fk_owner String?
-  owner User? @relation(fields:[fk_owner], references:[id], onDelete: SetNull)
-  
-    // reverse relations
+model FarmingUnit {
+  id          String   @id @default(cuid())
+  name        String?
+  address     String?
+  description String?
+  isActive    Boolean
+  createdAt   DateTime @default(now())
+  contact     String?
+
+  fk_wilaya        String?
+  wilaya           Wilaya?           @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  fk_owner         String?
+  owner            User?             @relation(fields: [fk_owner], references: [id], onDelete: SetNull)
+  // reverse relations
   irrigationFields IrrigationField[]
 
   @@unique([fk_owner, name])
 }
 
 model IrrigationField {
-  id String @id @default(cuid())
-  name String?
-  crop String?
-  surface Float?
-  latitude Float
-  longitude Float
-  isActive Boolean
-  createdAt   DateTime     @default(now())
-  
+  id             String       @id @default(cuid())
+  name           String?
+  crop           String?
+  surface        Float?
+  latitude       Float
+  longitude      Float
+  isActive       Boolean
+  createdAt      DateTime     @default(now())
   fk_FarmingUnit String
-  FarmingUnit FarmingUnit @relation(fields:[fk_FarmingUnit], references:[id], onDelete:Cascade)
-    // reverse relations
-  members              RoleMember[]
-  mcu              MCU[]
+  FarmingUnit    FarmingUnit  @relation(fields: [fk_FarmingUnit], references: [id], onDelete: Cascade)
+  // reverse relations
+  members        RoleMember[]
+  mcu            MCU[]
+
   @@unique([fk_FarmingUnit, name])
 }
-model MCU {
-  id String @id @default(cuid())
-  name String?
-  minSoilMoisture Float
-  maxSoilMoisture Float
-  sleepingTime Float
-  macAddress String?
-  autoControlledIrrigation Boolean
-  isActive Boolean
-  apiKeyHash      String 
-  status MCUStatus      
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+model MCU {
+  id                       String    @id @default(cuid())
+  name                     String?
+  minSoilMoisture          Float
+  maxSoilMoisture          Float
+  sleepingTime             Float
+  macAddress               String?
+  autoControlledIrrigation Boolean
+  isActive                 Boolean
+  apiKeyHash               String
+  status                   MCUStatus
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   fk_irrigationField String
-  irrigationField IrrigationField @relation(fields:[fk_irrigationField], references:[id], onDelete:Cascade)
+  irrigationField    IrrigationField @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
 
   // reverse relations
   sensors   Sensor[]
@@ -176,118 +177,114 @@ model MCU {
 
   @@unique([fk_irrigationField, name])
 }
+
 model SensorType {
-  name String @id
+  name        String   @id
   description String?
-  
-    // reverse relations
-  sensors Sensor[]
+  // reverse relations
+  sensors     Sensor[]
 }
+
 model ActuatorType {
-  name String @id
+  name        String  @id
   description String?
 
-    // reverse relations
+  // reverse relations
   actuators Actuator[]
 }
+
 model Sensor {
-  id String @id @default(cuid())
-  name String
-  macAddress String?
-  latitude Float
-  longitude Float
+  id          String   @id @default(cuid())
+  name        String
+  macAddress  String?
+  latitude    Float
+  longitude   Float
   minAnalogue Float
   maxAnalogue Float
-  createdAt DateTime     @default(now()) 
-  isActive Boolean
+  createdAt   DateTime @default(now())
+  isActive    Boolean
 
-  fk_mcu String?
-  mcu MCU? @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+  fk_mcu        String?
+  mcu           MCU?        @relation(fields: [fk_mcu], references: [id], onDelete: SetNull)
   fk_sensorType String?
-  sensorType SensorType? @relation(fields:[fk_sensorType], references:[name], onDelete:SetNull)
+  sensorType    SensorType? @relation(fields: [fk_sensorType], references: [name], onDelete: SetNull)
 
   // reverse relations
   environmentData EnvironmentData[]
 
   @@unique([fk_mcu, name])
-
 }
-model Actuator {
-  id String @id @default(cuid())
-  name String
-  macAddress String?
-  latitude Float
-  longitude Float
-  targetState Boolean
-  createdAt DateTime     @default(now()) 
-  isActive Boolean
 
-  fk_mcu String?
-  mcu MCU? @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)  
+model Actuator {
+  id          String   @id @default(cuid())
+  name        String
+  macAddress  String?
+  latitude    Float
+  longitude   Float
+  targetState Boolean
+  createdAt   DateTime @default(now())
+  isActive    Boolean
+
+  fk_mcu          String?
+  mcu             MCU?          @relation(fields: [fk_mcu], references: [id], onDelete: SetNull)
   fk_actuatorType String?
-  actuatorType ActuatorType? @relation(fields:[fk_actuatorType], references:[name], onDelete:SetNull)
+  actuatorType    ActuatorType? @relation(fields: [fk_actuatorType], references: [name], onDelete: SetNull)
 
   // reverse relations
-  actions         Actions[]
-  schedules       Schedule[]
+  actions   Actions[]
+  schedules Schedule[]
 
   @@unique([fk_mcu, name])
-
 }
-model EnvironmentData {
-  id String @id @default(cuid())
-  value Float
-  unit String
-  rawValue Float?
-  createdAt DateTime     @default(now()) 
 
+model EnvironmentData {
+  id        String   @id @default(cuid())
+  value     Float
+  unit      String
+  rawValue  Float?
+  createdAt DateTime @default(now())
   fk_sensor String
-  sensor Sensor @relation(fields:[fk_sensor], references:[id], onDelete:Cascade)
+  sensor    Sensor   @relation(fields: [fk_sensor], references: [id], onDelete: Cascade)
 
   fk_action String
-  action Actions @relation(fields:[fk_action], references:[id], onDelete:Cascade)
+  action    Actions @relation(fields: [fk_action], references: [id], onDelete: Cascade)
 }
+
 model Actions {
-  id String @id @default(cuid())
+  id        String  @id @default(cuid())
   actionVal Boolean
 
-  createdAt DateTime      @default(now())
-  sentAt    DateTime?
-  ackedAt   DateTime? 
-
-  fk_actuator String
-  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
- 
-   // reverse relations
+  createdAt       DateTime          @default(now())
+  sentAt          DateTime?
+  ackedAt         DateTime?
+  fk_actuator     String
+  actuator        Actuator          @relation(fields: [fk_actuator], references: [id], onDelete: Cascade) // reverse relations
   environmentData EnvironmentData[]
 }
 
-
 model Schedule {
-  id        String   @id @default(cuid())
-  name      String
-  repeatEveryDays  Int
-  duration  Int
-  isActive   Boolean  @default(true)
-  startAt   DateTime?
-  startDate    DateTime?
-  endDate    DateTime?
-  weekDays Days[]
+  id                 String    @id @default(cuid())
+  name               String
+  repeatEveryDays    Int
+  duration           Int
+  isActive           Boolean   @default(true)
+  startAt            DateTime?
+  startDate          DateTime?
+  endDate            DateTime?
+  weekDays           Days[]
   toggleAtThresholds Boolean
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   fk_actuator String
-  actuator Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade) 
-
-  fk_creator String?
-  creator    User?   @relation(fields:[fk_creator], references:[id], onDelete:SetNull)
+  actuator    Actuator @relation(fields: [fk_actuator], references: [id], onDelete: Cascade)
+  fk_creator  String?
+  creator     User?    @relation(fields: [fk_creator], references: [id], onDelete: SetNull)
 
 }
 
 // ─── Enums ───────────────────────────────────────────────────────
-
 
 enum AuditAction {
   INSERT
@@ -296,16 +293,16 @@ enum AuditAction {
 }
 
 enum Days {
-    SUNDAY
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
 }
 
-enum MCUStatus{
+enum MCUStatus {
   ONLINE
   OFFLINE
   SLEEPING
@@ -326,16 +323,19 @@ model Session {
   userAgent String?
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
 }
 
 model Account {
-  id                    String @id
-  accountId             String
-  providerId            String
+  id         String @id
+  accountId  String
+  providerId String
 
   userId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   accessToken  String?
   refreshToken String?
@@ -351,6 +351,9 @@ model Account {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("account")
 }
 
 model Verification {
@@ -361,4 +364,7 @@ model Verification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
