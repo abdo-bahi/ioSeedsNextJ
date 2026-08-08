@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth"
 import { getUserFarms } from "@/lib/get-user-farms"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { AppInitializer } from "@/components/app-initializer"
 
 
 
@@ -28,6 +29,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <div className="flex flex-col flex-1 overflow-hidden">
           <DashboardTopbar />
           <main className="flex-1 overflow-y-auto bg-[#F7F9F5] p-6">
+          <AppInitializer />
             {children}
           </main>
         </div>

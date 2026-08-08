@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
-
+import { usePathname, useRouter } from "next/navigation";
+import { Icon, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,8 @@ import {
   CalendarClock,
   SlidersHorizontal,
 } from "lucide-react";
+import { authClient, signOut } from "@/lib/auth-client";
+import { useFieldStore } from "@/store/field-store";
 
 const navItems = [
   {
@@ -60,6 +62,17 @@ const navItems = [
 
 export function AppSidebar({farms, user}: {farms:any, user:any}) {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+
+  const reset  = useFieldStore(s => s.reset)
+  const router = useRouter()
+  
+  async function handleLogout() {
+    reset()                                    // clear field store
+    await authClient.signOut()                 // clear Better Auth session
+    router.push("/login")
+  }
+  
   return (
     <Sidebar className="border-r border-[#D6E8DC] bg-white">
       {/* ── Header ── */}
@@ -127,11 +140,18 @@ export function AppSidebar({farms, user}: {farms:any, user:any}) {
         <div className="flex items-center gap-3">
           <div className="flex flex-col leading-tight min-w-0">
             <span className="text-[13px] font-medium text-[#1A2E22] truncate">
-              Bahi Abderrahamane
+              {session?.user.name} --- {session?.user.fk_farm}
             </span>
             <span className="text-[11px] text-[#8FAF9A]">Administrateur</span>
           </div>
         </div>
+        <button
+        onClick={handleLogout}
+        className="absolute right-2 text-[#8FAF9A]  hover:text-[#D95F5F] transition-colors p-1 rounded"
+        title="Se déconnecter"
+      >
+        <LogOut className="h-4 w-4" />
+      </button>
       </SidebarFooter>
     </Sidebar>
   );

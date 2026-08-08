@@ -15,30 +15,17 @@ import { ChevronDown, Sprout, RotateCcw, Bell } from "lucide-react";
 
 import { useFieldStore } from "@/store/field-store"
 import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 // to change selected field later from db + and fetch for actuel data ***********************
 
 
 export function DashboardTopbar() {
-  const { selectedField, setField, setFields } = useFieldStore()
+  const { fields, selectedField, setField, setFields } = useFieldStore()
 
-  const { data: fields, isLoading } = trpc.field.getAll.useQuery(
-    { farmId: "cmrzdal5y002pncbiaf53uihe" },
-    { enabled: true }
-  )
+  const { data: session } = authClient.useSession();
   const notifCount = 2;
-
-  useEffect(() => {
-    if (fields && fields.length > 0) {
-          // Map to only what the store needs
-    const mapped = fields.map(f => ({
-      id:   f.id,
-      name: f.name ?? "Unnamed field",  // handle null name
-    }))
-    setFields(mapped)
-    if (!selectedField) setField(mapped[0])
-    }
-  }, [fields]);
+  
   const pathname = usePathname();
 
   return (

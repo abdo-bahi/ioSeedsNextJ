@@ -6,7 +6,7 @@ type Field = {
   id: string;
   name: string | null;
 };
-
+  
 type FieldStore = {
   fields: Field[];
   selectedField: Field | null;

@@ -19,7 +19,7 @@ model Wilaya {
   code         String        @unique
   name         String        @unique // reverse relations
   users        User[]
-  FarmingUnits FarmingUnit[]
+  farmingUnits FarmingUnit[]
 }
 // ─── Auth (NextAuth.js) ───────────────────────────────────────────
 
@@ -35,10 +35,13 @@ model User {
   updatedAt     DateTime  @updatedAt
   fk_wilaya     String?
   wilaya        Wilaya?   @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  fk_farm     String?
+  farm        FarmingUnit?   @relation("FarmMembers", fields: [fk_farm], references: [id], onDelete: SetNull)
   isActive      Boolean   @default(true)
 
   // reverse relations
-  FarmingUnits   FarmingUnit[]
+  // User owns these farms
+  ownedFarms FarmingUnit[] @relation("FarmOwner")
   roleMembers    RoleMember[]
   auditLogs      AuditLog[]
   connectionLogs ConnectionLog[]
@@ -129,10 +132,10 @@ model FarmingUnit {
   fk_wilaya        String?
   wilaya           Wilaya?           @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
   fk_owner         String?
-  owner            User?             @relation(fields: [fk_owner], references: [id], onDelete: SetNull)
+  owner            User?             @relation("FarmOwner", fields: [fk_owner], references: [id], onDelete: SetNull)
   // reverse relations
   irrigationFields IrrigationField[]
-
+  users        User[] @relation("FarmMembers")
   @@unique([fk_owner, name])
 }
 
