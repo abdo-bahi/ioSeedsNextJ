@@ -8,7 +8,7 @@ export const farmingUnitRouter = router({
   getById: publicProc
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      return prisma.farmingUnit.findUnique({
+      return await prisma.farmingUnit.findUnique({
         where:  { id: input.id },
         select: {
           id:          true,
@@ -31,7 +31,7 @@ export const farmingUnitRouter = router({
   // ── Get all wilayas for select ────────────────────────────────
   getWilayas: publicProc
     .query(async () => {
-      return prisma.wilaya.findMany({
+      return await prisma.wilaya.findMany({
         select:  { id: true, name: true, code: true },
         orderBy: { name: "asc" }
       })
@@ -39,12 +39,27 @@ export const farmingUnitRouter = router({
   // ── Get all wilayas for select ────────────────────────────────
   getUsers: publicProc
     .query(async () => {
-      return prisma.user.findMany({
+      return await prisma.user.findMany({
         select:  { id: true, name: true, email:true },
         orderBy: { name: "asc" }
       })
     }),
-
+    getFarmingUnitByUser: publicProc
+    .input(z.object({
+      id: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: input.id,
+        },
+        select: {
+          fk_farm: true,
+        },
+      });
+  
+      return user?.fk_farm ?? null;
+    }),
   // ── Update farm ───────────────────────────────────────────────
   update: publicProc
     .input(z.object({

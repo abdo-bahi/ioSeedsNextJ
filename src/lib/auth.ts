@@ -21,11 +21,6 @@ export const auth = betterAuth({
     }
   },
 
-  user: {
-    additionalFields: {
-      fk_farm: { type: "string", required: false, fieldName: "fk_farm", returned: true },
-    }
-  },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
 })

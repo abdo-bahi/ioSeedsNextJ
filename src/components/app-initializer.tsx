@@ -9,12 +9,29 @@ export function AppInitializer() {
   const { data: session } = authClient.useSession()
   const { selectedField, setField, setFields } = useFieldStore()
 
-  const farmId = session?.user?.fk_farm ?? ""
+  const {
+    data: farmId,
+    isLoading: farmLoading,
+  } = trpc.farmingUnit.getFarmingUnitByUser.useQuery(
+    {
+      id: session?.user.id ?? "",
+    },
+    {
+      enabled: !!session?.user.id,
+    }
+  );
 
-  const { data: fields } = trpc.irrigationField.getAllByFarm.useQuery(
-    { farmId },
-    { enabled: !!farmId }
-  )
+  const {
+    data: fields,
+    isLoading: fieldsLoading,
+  } = trpc.irrigationField.getAllByFarm.useQuery(
+    {
+      farmId: farmId!,
+    },
+    {
+      enabled: !!farmId,
+    }
+  );
 
   useEffect(() => {
     if (!fields || fields.length === 0) return
