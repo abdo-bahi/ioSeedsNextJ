@@ -112,7 +112,7 @@ const main = async () => {
       console.log('**** error : ', e);
     })
     console.log('**** result : ', result);
-    
+      
     let admin = await prisma.user.update(
       {
         where: {

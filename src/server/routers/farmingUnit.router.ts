@@ -36,14 +36,8 @@ export const farmingUnitRouter = router({
         orderBy: { name: "asc" }
       })
     }),
-  // ── Get all wilayas for select ────────────────────────────────
-  getUsers: publicProc
-    .query(async () => {
-      return await prisma.user.findMany({
-        select:  { id: true, name: true, email:true },
-        orderBy: { name: "asc" }
-      })
-    }),
+
+
     getFarmingUnitByUser: publicProc
     .input(z.object({
       id: z.string(),
