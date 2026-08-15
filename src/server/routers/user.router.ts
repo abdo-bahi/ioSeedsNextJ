@@ -90,12 +90,18 @@ export const userRouter = router({
           body: { newPassword: password, currentPassword: password },
           headers: new Headers(),
         })
+      }      
+      if (email) {
+        await auth.api.changeEmail({
+          body: { newEmail: email },
+          headers: new Headers(),
+        })
       }
 
       // Update other fields directly in Prisma
       return prisma.user.update({
         where: { id },
-        data: { ...rest, name, email }
+        data: { ...rest, name }
       })
     }),
 
@@ -113,7 +119,7 @@ export const userRouter = router({
   delete: publicProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      // Better Auth doesn't have a deleteUser API — delete directly
+      
       return prisma.user.delete({
         where: { id: input.id }
       })
