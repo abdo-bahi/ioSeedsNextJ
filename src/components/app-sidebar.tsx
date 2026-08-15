@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
+import { trpc } from "@/lib/trpc/client";
 
 let FARM_ID:string;
 
@@ -70,6 +71,9 @@ export function AppSidebar({farms, user}: {farms:any, user:any}) {
   const { selectedField } = useFieldStore();
 
   FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
+  const { data: farm, isLoading } = trpc.farmingUnit.getById.useQuery(
+    { id: FARM_ID }
+  )
   const router = useRouter()
   
   async function handleLogout() {
@@ -92,7 +96,7 @@ export function AppSidebar({farms, user}: {farms:any, user:any}) {
           <div>
             <p className="text-[15px] font-semibold text-[#1A2E22]">IOSeeds</p>
             <p className="text-[10px] font-medium tracking-widest text-[#4CAF7D] uppercase">
-              Smart Irrigation
+              {isLoading ? '***' : farm.name}
             </p>
           </div>
         </div>
