@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 type Field = {
   id: string;
   name: string | null;
+  fk_FarmingUnit: string | null;
 };
   
 type FieldStore = {

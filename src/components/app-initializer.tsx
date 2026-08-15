@@ -38,6 +38,7 @@ export function AppInitializer() {
     const mapped = fields.map(f => ({
       id:   f.id,
       name: f.name ?? "Unnamed field",
+      fk_FarmingUnit: f.fk_FarmingUnit ?? "Unnamed farm",
     }))
     setFields(mapped)
     if (!selectedField) setField(mapped[0])

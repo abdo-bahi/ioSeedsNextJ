@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, User, CalendarClock } from "lucide-react";
 
-const FARM_ID = "cmrzdal5y002pncbiaf53uihe";
+let FARM_ID:string;
 
 const ALL_DAYS = [
   { key: "MONDAY", short: "L" },
@@ -530,6 +530,8 @@ function ScheduleCard({
 // ── Main page ─────────────────────────────────────────────────────
 export default function SchedulesPage() {
   const { selectedField } = useFieldStore();
+
+  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
   const utils = trpc.useUtils();
 
   const [showAll, setShowAll] = useState(false);

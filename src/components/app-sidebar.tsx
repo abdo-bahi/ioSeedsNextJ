@@ -25,6 +25,8 @@ import {
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
 
+let FARM_ID:string;
+
 const navItems = [
   {
     label: "Dashboard",
@@ -65,6 +67,9 @@ export function AppSidebar({farms, user}: {farms:any, user:any}) {
   const { data: session } = authClient.useSession();
 
   const reset  = useFieldStore(s => s.reset)
+  const { selectedField } = useFieldStore();
+
+  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
   const router = useRouter()
   
   async function handleLogout() {
@@ -140,7 +145,7 @@ export function AppSidebar({farms, user}: {farms:any, user:any}) {
         <div className="flex items-center gap-3">
           <div className="flex flex-col leading-tight min-w-0">
             <span className="text-[13px] font-medium text-[#1A2E22] truncate">
-              {session?.user.name} --- {session?.user.fk_farm}
+              {session?.user.name}
             </span>
             <span className="text-[11px] text-[#8FAF9A]">Administrateur</span>
           </div>

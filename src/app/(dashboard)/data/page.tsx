@@ -8,7 +8,7 @@ import { trpc } from "@/lib/trpc/client"
 import { SensorsTable } from "@/components/data/SensorsTable"
 import { ActuatorsTable } from "@/components/data/ActuatorsTable"
 
-const FARM_ID = "cmrzdal5y002pncbiaf53uihe";
+let FARM_ID:string;
 
 
 const tabs = [
@@ -20,7 +20,9 @@ const tabs = [
 
 export default function DataPage() {
   const [activeTab, setActiveTab] = useState("fields")
-  const { selectedField } = useFieldStore()
+  const { selectedField } = useFieldStore();
+
+  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
 
   return (
     <div className="space-y-6">

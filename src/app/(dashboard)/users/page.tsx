@@ -14,8 +14,12 @@ import {
   Plus, Pencil, Trash2,
   ShieldCheck, UserX, UserCheck,
 } from "lucide-react"
+import { auth } from "@/lib/auth"
+import { useFieldStore } from "@/store/field-store"
 
-const FARM_ID = "cmshz7ala002p1gbi2jheb0g4"
+const { selectedField, setField, setFields } = useFieldStore()
+
+const FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
 
 // ── Role badge ────────────────────────────────────────────────────
 const roleColors: Record<string, string> = {
@@ -87,7 +91,7 @@ function UserModal({
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-[#5A7A65]">Nom complet</Label>
               <Input
-                placeholder="Ahmed Bensalem"
+                placeholder="Bahi Abderrahmane"
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
                 className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
@@ -97,7 +101,7 @@ function UserModal({
               <Label className="text-[12px] text-[#5A7A65]">Email</Label>
               <Input
                 type="email"
-                placeholder="ahmed@ferme.dz"
+                placeholder="abderrahmane@ferme.dz"
                 value={form.email}
                 onChange={e => set("email", e.target.value)}
                 className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
@@ -112,7 +116,7 @@ function UserModal({
             </Label>
             <Input
               type="password"
-              placeholder={isEdit ? "••••••••" : "Min. 6 caractères"}
+              placeholder={isEdit ? "••••••••" : "Min. 8 caractères"}
               value={form.password}
               onChange={e => set("password", e.target.value)}
               className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
@@ -161,7 +165,7 @@ function UserModal({
                 form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
               }`}
             >
-              <span className={`absolute top-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
                 form.isActive ? "translate-x-4" : "translate-x-0.5"
               }`} />
             </button>

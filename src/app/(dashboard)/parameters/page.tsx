@@ -14,8 +14,10 @@ import {
   User, MapPin, Phone, Calendar,
   Pencil, Leaf, CheckCircle, XCircle,
 } from "lucide-react"
+import { useFieldStore } from "@/store/field-store"
 
-const FARM_ID = "cmrzdal5y002pncbiaf53uihe"
+
+let FARM_ID: any;
 
 // ── Info tile ─────────────────────────────────────────────────────
 function InfoTile({
@@ -177,6 +179,10 @@ function EditFarmModal({
 
 // ── Main page ─────────────────────────────────────────────────────
 export default function ParametersPage() {
+  const { selectedField, setField, setFields } = useFieldStore();
+
+  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
+  
   const utils = trpc.useUtils()
   const [editOpen, setEditOpen] = useState(false)
 

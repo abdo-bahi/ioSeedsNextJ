@@ -18,6 +18,7 @@ export const irrigationFieldRouter = router({
         latitude:  true,
         longitude: true,
         isActive:  true,
+        fk_FarmingUnit:  true,
         mcu: {                              
           select: {
             id: true,                      
@@ -58,6 +59,7 @@ export const irrigationFieldRouter = router({
         latitude:    f.latitude,
         longitude:   f.longitude,
         isActive:    f.isActive,
+        fk_FarmingUnit:  f.fk_FarmingUnit,
         mcuCount,
         avgMoisture,
       }
