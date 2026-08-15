@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Icon, LogOut } from "lucide-react";
+import { Icon, LogOut, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -30,36 +30,41 @@ let FARM_ID:string;
 
 const navItems = [
   {
-    label: "Dashboard",
-    subtitle: "Live readings & actions",
+    label: "Tableau de bord",
+    subtitle: "Lectures en direct et actions",
     icon: LayoutDashboard,
     href: "/",
     active: true,
   },
   {
-    label: "Statistics",
-    subtitle: "Charts & history",
+    label: "Statistiques",
+    subtitle: "Graphiques et historique",
     icon: BarChart2,
     href: "/statistics",
   },
-
   {
-    label: "Data",
-    subtitle: "Fields, MCUs, sensors...",
+    label: "Données",
+    subtitle: "Champs, microcontrôleurs, capteurs...",
     icon: Database,
     href: "/data",
   },
   {
-    label: "Schedules",
-    subtitle: "Rules & configs",
+    label: "Programmes",
+    subtitle: "Règles et configurations d'irrigation",
     icon: CalendarClock,
     href: "/schedules",
   },
   {
-    label: "Parameters",
-    subtitle: "Farm & system settings",
+    label: "Paramètres",
+    subtitle: "Paramètres de la ferme et du système",
     icon: SlidersHorizontal,
     href: "/parameters",
+  },
+  {
+    label: "Utilisateurs",
+    subtitle: "Gestion des utilisateurs du système",
+    icon: Users,
+    href: "/users",
   },
 ];
 
