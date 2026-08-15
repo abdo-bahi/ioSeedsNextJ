@@ -37,7 +37,7 @@ export function DashboardTopbar() {
         {/* to change later ***************************** */}
 
         <span className="text-[14px] font-medium text-[#8FAF9A]">
-          {pathname === '/' ? 'Dashboard': pathname}
+          {pathname === '/' ? 'Dashboard': pathname.replace(/^\/(.)/, (_, char) => char.toUpperCase())}
         </span>
 
         {/* ── Field selector pill ── */}
