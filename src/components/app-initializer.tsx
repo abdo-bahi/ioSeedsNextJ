@@ -38,10 +38,11 @@ export function AppInitializer() {
     const mapped = fields.map(f => ({
       id:   f.id,
       name: f.name ?? "Unnamed field",
-      fk_FarmingUnit: f.fk_FarmingUnit ?? "Unnamed farm",
+      fk_FarmingUnit: f.fk_FarmingUnit ?? null,
     }))
     setFields(mapped)
-    if (!selectedField) setField(mapped[0])
+    const persisted = mapped.find(f => f.id === selectedField?.id);
+    setField(persisted ?? mapped[0]);
   }, [fields])
 
   return null

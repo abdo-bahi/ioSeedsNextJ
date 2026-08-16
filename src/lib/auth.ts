@@ -2,6 +2,7 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
 import { prisma } from "../../prisma/lib/prisma"
+import { admin } from "better-auth/plugins"
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -10,6 +11,12 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+  },
+  user: {
+    changeEmail: {
+        enabled: true,
+        updateEmailWithoutVerification: true
+    }
   },
 
   session: {
@@ -23,4 +30,7 @@ export const auth = betterAuth({
 
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
+  plugins: [
+    admin()  // ← adds admin.setUserPassword and other admin APIs
+  ],
 })

@@ -24,30 +24,35 @@ model Wilaya {
 // ─── Auth (NextAuth.js) ───────────────────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String?
-  email         String    @unique
-  emailVerified Boolean @default(false)
+  email         String       @unique
+  emailVerified Boolean      @default(false)
   image         String?
   address       String?
   password      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   fk_wilaya     String?
-  wilaya        Wilaya?   @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
-  fk_farm     String?
-  farm        FarmingUnit?   @relation("FarmMembers", fields: [fk_farm], references: [id], onDelete: SetNull)
-  isActive      Boolean   @default(true)
+  wilaya        Wilaya?      @relation(fields: [fk_wilaya], references: [id], onDelete: SetNull)
+  fk_farm       String?
+  farm          FarmingUnit? @relation("FarmMembers", fields: [fk_farm], references: [id], onDelete: SetNull)
+  isActive      Boolean      @default(true)
 
   // reverse relations
   // User owns these farms
-  ownedFarms FarmingUnit[] @relation("FarmOwner")
+  ownedFarms     FarmingUnit[]   @relation("FarmOwner")
   roleMembers    RoleMember[]
   auditLogs      AuditLog[]
   connectionLogs ConnectionLog[]
   schedule       Schedule[]
   sessions       Session[]
   accounts       Account[]
+
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
 
   @@map("user")
 }
@@ -62,9 +67,9 @@ model Role {
 }
 
 model RoleMember {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   fk_role String
-  role    Role   @relation(fields: [fk_role], references: [name], onDelete: Cascade)
+  role    Role    @relation(fields: [fk_role], references: [name], onDelete: Cascade)
   fk_user String?
   user    User?   @relation(fields: [fk_user], references: [id], onDelete: Cascade)
 
@@ -106,7 +111,7 @@ model AuditLog {
   oldValue   Json?
   newValue   Json?
   fk_user    String?
-  user       User?        @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+  user       User?       @relation(fields: [fk_user], references: [id], onDelete: Restrict)
 }
 
 model ConnectionLog {
@@ -114,7 +119,7 @@ model ConnectionLog {
   dateTime  DateTime @default(now())
   ipAddress String
   fk_user   String?
-  user      User?     @relation(fields: [fk_user], references: [id], onDelete: Restrict)
+  user      User?    @relation(fields: [fk_user], references: [id], onDelete: Restrict)
   success   Boolean  @default(true) // ← add this, useful for detecting brute force
 }
 
@@ -135,7 +140,8 @@ model FarmingUnit {
   owner            User?             @relation("FarmOwner", fields: [fk_owner], references: [id], onDelete: SetNull)
   // reverse relations
   irrigationFields IrrigationField[]
-  users        User[] @relation("FarmMembers")
+  users            User[]            @relation("FarmMembers")
+
   @@unique([fk_owner, name])
 }
 
@@ -327,6 +333,8 @@ model Session {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
 
   @@index([userId])
   @@map("session")
