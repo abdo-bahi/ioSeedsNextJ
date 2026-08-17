@@ -91,7 +91,7 @@ export const userRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { id, password, email, ...rest } = input;
+      const { id, password, email, isActive, ...rest } = input;
       const reqHeaders = await headers()
 
 
@@ -120,11 +120,17 @@ export const userRouter = router({
           })
           .catch((e) => console.log("cant set password", e));
       }
+      if(!isActive){
+        await auth.api.revokeUserSessions({
+          body: { userId: id },
+          headers: reqHeaders,
+        });
+      }
 
       // Update other fields directly in Prisma
       return prisma.user.update({
         where: { id },
-        data: { ...rest },
+        data: { isActive, ...rest },
       });
     }),
 

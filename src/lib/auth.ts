@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../../prisma/lib/prisma";
 import { admin } from "better-auth/plugins";
+import { createAuthMiddleware } from "better-auth/api";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -15,6 +16,13 @@ export const auth = betterAuth({
     changeEmail: {
       enabled: true,
       updateEmailWithoutVerification: true,
+    },
+    additionalFields: {
+      isActive: {
+        type: "boolean",
+        defaultValue: true,
+        input: false, // Prevent users from changing this during sign-up
+      },
     },
   },
 
@@ -32,4 +40,28 @@ export const auth = betterAuth({
   plugins: [
     admin({ adminUserIds: ["6QvZE3E2qKvQApVvStyieaOHbNZk2Poz"] }), // ← adds admin.setUserPassword and other admin APIs
   ],
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      console.log('inside the hook');
+      
+      if (ctx.path === "/login") {
+        const body = ctx.body as { email?: string };
+
+        if (body?.email) {
+          const user = await prisma.user.findUnique({
+            where: { email: body.email },
+            select: { isActive: true },
+          });
+          console.log('inside the userin the hook', user);
+
+          if (user && user.isActive === false) { 
+            console.log('inside the user inactive in the hook');
+            throw new Error("This account has been deactivated.");
+
+          }
+        }
+      }
+    }),
+  },
 });
