@@ -517,7 +517,8 @@ export default function UsersPage() {
                     {/* Roles */}
                     <td className="px-4 py-3.5">
                       <div className="flex gap-1 flex-wrap">
-                        {user.roleMembers.length > 0 ? (
+                        {user.role}
+                        {/* {user.roleMembers.length > 0 ? (
                           user.roleMembers.map((rm: any, i: number) => (
                             <RoleBadge key={i} role={rm.fk_role} />
                           ))
@@ -525,7 +526,7 @@ export default function UsersPage() {
                           <span className="text-[#8FAF9A] text-[11px]">
                             Aucun rôle
                           </span>
-                        )}
+                        )} */}
                       </div>
                     </td>
 
@@ -561,13 +562,16 @@ export default function UsersPage() {
                     {/* Actions */}
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-1.5">
-                        <button
+
+                      {/* ***   to set later for role management *** */}
+
+                        {/* <button
                           onClick={() => setRoleTarget(user.id)}
                           className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
                           title="Gérer les rôles"
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
-                        </button>
+                        </button> */}
                         <button
                           onClick={() => setEditTarget(user.id)}
                           className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
@@ -575,13 +579,13 @@ export default function UsersPage() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => setDeleteTarget(user.id)}
                           className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

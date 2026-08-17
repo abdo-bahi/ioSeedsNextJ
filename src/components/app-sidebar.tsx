@@ -112,42 +112,46 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    isActive={pathname === item.href}
-                    className={`
+              {navItems.map(
+                (item) =>
+                  (item.label !== "Utilisateurs" ||
+                    session?.user?.role === "admin") && (
+                    <SidebarMenuItem key={item.label}>
+                      <SidebarMenuButton
+                        isActive={pathname === item.href}
+                        className={`
                       h-auto px-3 py-2.5 rounded-lg
                       hover:bg-[#E8F4ED] hover:text-[#1A3C2E]
                       data-[active=true]:bg-[#E8F4ED] data-[active=true]:text-[#1A3C2E]
                     `}
-                  >
-                    <a href={item.href} className="flex items-center gap-3">
-                      <item.icon
-                        className={`h-[18px] w-[18px] shrink-0 ${
-                          pathname === item.href
-                            ? "text-[#4CAF7D]"
-                            : "text-[#8FAF9A]"
-                        }`}
-                      />
-                      <div className="flex flex-col leading-tight">
-                        <span
-                          className={`text-[13.5px] font-medium ${
-                            pathname === item.href
-                              ? "text-[#1A3C2E]"
-                              : "text-[#3A5A44]"
-                          }`}
-                        >
-                          {item.label}
-                        </span>
-                        <span className="text-[11px] text-[#8FAF9A] font-normal">
-                          {item.subtitle}
-                        </span>
-                      </div>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      >
+                        <a href={item.href} className="flex items-center gap-3">
+                          <item.icon
+                            className={`h-[18px] w-[18px] shrink-0 ${
+                              pathname === item.href
+                                ? "text-[#4CAF7D]"
+                                : "text-[#8FAF9A]"
+                            }`}
+                          />
+                          <div className="flex flex-col leading-tight">
+                            <span
+                              className={`text-[13.5px] font-medium ${
+                                pathname === item.href
+                                  ? "text-[#1A3C2E]"
+                                  : "text-[#3A5A44]"
+                              }`}
+                            >
+                              {item.label}
+                            </span>
+                            <span className="text-[11px] text-[#8FAF9A] font-normal">
+                              {item.subtitle}
+                            </span>
+                          </div>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -156,11 +160,20 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
       {/* ── Footer ── */}
       <SidebarFooter className="px-4 py-4 border-t border-[#D6E8DC]">
         <div className="flex items-center gap-3">
-          <div className="flex flex-col leading-tight min-w-0">
-            <span className="text-[13px] font-medium text-[#1A2E22] truncate">
-              {session?.user.name}
-            </span>
-            <span className="text-[11px] text-[#8FAF9A]">Administrateur</span>
+          <div className="flex flex-row items-center gap-2 leading-tight min-w-0">
+            <div className="h-7 w-7 rounded-full bg-[#4CAF7D] flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
+              {user.name?.[0]?.toUpperCase() ?? "?"}
+              {user.name?.[1]?.toUpperCase() ?? "?"}
+            </div>
+
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] font-semibold text-gray-900 truncate">
+                {session?.user?.name ?? user?.name ?? "—"}
+              </span>
+              <span className="text-[11px] text-[#8FAF9A]">
+                {session?.user?.role ?? "—"}
+              </span>
+            </div>
           </div>
         </div>
         <button

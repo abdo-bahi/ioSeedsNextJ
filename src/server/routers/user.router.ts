@@ -21,6 +21,7 @@ export const userRouter = router({
         createdAt: true,
         fk_wilaya: true,
         fk_farm: true,
+        role: true,
         wilaya: { select: { name: true, code: true } },
         roleMembers: {
           select: {
