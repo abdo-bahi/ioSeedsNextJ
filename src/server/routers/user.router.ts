@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { authClient } from "@/lib/auth-client";
 import { headers } from "next/headers";
 
+
 export const userRouter = router({
   // ── Get all users ─────────────────────────────────────────────
   getAll: publicProc.query(async () => {
@@ -90,25 +91,31 @@ export const userRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, password, email, ...rest } = input;
+      const reqHeaders = await headers()
+
 
       const data: any = { ...rest };
-      // if (email) {
-      //   const res = await authClient.changeEmail({
-      //     newEmail: email,
-      //   });
-      // }
+
       if (email) {
-        await auth.api.changeEmail({
-          body: { newEmail: email },
-          headers: new Headers(),
-        })
+        await auth.api.adminUpdateUser({
+          body: {
+            userId: id,
+            data: {
+              email,
+            },
+          },
+          headers: reqHeaders,
+        });
       }
       //  Hash directly — no auth.api needed for admin password reset
       if (password) {
-        await authClient.admin
+        await auth.api
           .setUserPassword({
-            newPassword: password, // required
-            userId: id, // required
+            body: {
+              newPassword: password, // required
+              userId: id, // required
+            },
+            headers: reqHeaders,
           })
           .catch((e) => console.log("cant set password", e));
       }

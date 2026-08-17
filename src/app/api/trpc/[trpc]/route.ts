@@ -8,6 +8,12 @@ const handler = (req: Request) =>
     req,
     router:        appRouter,
     createContext: () => ({}),  // empty context for now — auth added later
+    onError: ({ error, path, input }) => {
+      console.error(`❌ tRPC error on [${path}]`)
+      console.error("Input:", JSON.stringify(input, null, 2))
+      console.error("Error:", error.message)
+      console.error("Stack:", error.stack)
+    },
   })
 
 export { handler as GET, handler as POST }
