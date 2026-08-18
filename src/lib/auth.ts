@@ -38,14 +38,14 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL ?? "http://localhost:3000",
   plugins: [
-    admin({ adminUserIds: ["6QvZE3E2qKvQApVvStyieaOHbNZk2Poz"] }), // ← adds admin.setUserPassword and other admin APIs
+    admin({ adminUserIds: ["6QvZE3E2qKvQApVvStyieaOHbNZk2Poz"] }), 
   ],
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      console.log('inside the hook');
+      console.log('inside the hook from : ', ctx.path);
       
-      if (ctx.path === "/login") {
+      if (ctx.path === "/sign-in/email") {
         const body = ctx.body as { email?: string };
 
         if (body?.email) {
