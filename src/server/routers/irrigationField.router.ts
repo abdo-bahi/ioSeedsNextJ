@@ -1,6 +1,6 @@
 // src/server/routers/irrigationField.router.ts
 import { z } from "zod"
-import { publicProc, router } from "../trpc"
+import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 
 export const irrigationFieldRouter = router({
@@ -65,7 +65,7 @@ export const irrigationFieldRouter = router({
       }
     })
   }),
-    create: publicProc
+    create: protectedProc
     .input(z.object({
       farmId:    z.string(),
       name:      z.string().min(1),
@@ -88,7 +88,7 @@ export const irrigationFieldRouter = router({
       })
     }),
 
-  update: publicProc
+  update: protectedProc
     .input(z.object({
       id:        z.string(),
       name:      z.string().min(1).optional(),

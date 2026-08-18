@@ -1,9 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../../../prisma/lib/prisma";
-import { publicProc, router } from "../trpc";
+import { protectedProc, publicProc, router } from "../trpc";
 import { auth } from "../../lib/auth";
-import bcrypt from "bcryptjs";
-import { authClient } from "@/lib/auth-client";
 import { headers } from "next/headers";
 
 
@@ -36,7 +34,7 @@ export const userRouter = router({
   }),
 
   // ── Create user via Better Auth ───────────────────────────────
-  create: publicProc
+  create: protectedProc
     .input(
       z.object({
         email: z.string().email(),
@@ -77,7 +75,7 @@ export const userRouter = router({
     }),
 
   // ── Update user ───────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(
       z.object({
         id: z.string(),
@@ -135,7 +133,7 @@ export const userRouter = router({
     }),
 
   // ── Toggle isActive ───────────────────────────────────────────
-  toggleActive: publicProc
+  toggleActive: protectedProc
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ input }) => {
       return prisma.user.update({
@@ -145,7 +143,7 @@ export const userRouter = router({
     }),
 
   // ── Delete user ───────────────────────────────────────────────
-  delete: publicProc
+  delete: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
       return prisma.user.delete({
@@ -154,7 +152,7 @@ export const userRouter = router({
     }),
 
   // ── Assign role ───────────────────────────────────────────────
-  assignRole: publicProc
+  assignRole: protectedProc
     .input(
       z.object({
         fk_user: z.string(),
@@ -177,7 +175,7 @@ export const userRouter = router({
     }),
 
   // ── Remove role ───────────────────────────────────────────────
-  removeRole: publicProc
+  removeRole: protectedProc
     .input(z.object({ roleMemberId: z.string() }))
     .mutation(async ({ input }) => {
       return prisma.roleMember.delete({

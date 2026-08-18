@@ -1,11 +1,11 @@
 import { z } from "zod"
-import { publicProc, router } from "../trpc"
+import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 
 export const farmingUnitRouter = router({
 
   // ── Get one farm by id ────────────────────────────────────────
-  getById: publicProc
+  getById: protectedProc
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       return await prisma.farmingUnit.findUnique({
@@ -55,7 +55,7 @@ export const farmingUnitRouter = router({
       return user?.fk_farm ?? null;
     }),
   // ── Update farm ───────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(z.object({
       id:          z.string(),
       name:        z.string().min(1).optional(),
