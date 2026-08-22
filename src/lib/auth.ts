@@ -43,9 +43,9 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      console.log('inside the hook from : ', ctx.path);
-      
-      if (ctx.path === "/sign-in/email") {
+      if (ctx.path !== "/sign-in/email") {
+        return;
+      }
         const body = ctx.body as { email?: string };
 
         if (body?.email) {
@@ -53,15 +53,11 @@ export const auth = betterAuth({
             where: { email: body.email },
             select: { isActive: true },
           });
-          console.log('inside the userin the hook', user);
-
           if (user && user.isActive === false) { 
-            console.log('inside the user inactive in the hook');
             throw new Error("This account has been deactivated.");
-
           }
         }
-      }
+      
     }),
   },
 });
