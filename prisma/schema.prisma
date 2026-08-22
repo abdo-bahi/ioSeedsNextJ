@@ -255,8 +255,8 @@ model EnvironmentData {
   fk_sensor String
   sensor    Sensor   @relation(fields: [fk_sensor], references: [id], onDelete: Cascade)
 
-  fk_action String
-  action    Actions @relation(fields: [fk_action], references: [id], onDelete: Cascade)
+  fk_action String?
+  action    Actions? @relation(fields: [fk_action], references: [id], onDelete: SetNull)
 }
 
 model Actions {

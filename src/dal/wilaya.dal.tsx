@@ -4,6 +4,8 @@ export async function getAllWilayas(){
     let wilayas;
     try {
              wilayas = prisma.wilaya.findMany({});
+             console.log((wilayas));
+             
 
     } catch (error) {
         console.error('cant fetch wilayas', error);
