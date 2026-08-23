@@ -28,8 +28,8 @@ services:
     container_name: irrigation_mqtt
     restart: unless-stopped
     ports:
-      - "1883:1883"   # MQTT
-      - "9001:9001"   # WebSocket (optional, for browser MQTT clients)
+      - "0.0.0.0:1883:1883"   # MQTT
+      - "0.0.0.0:9001:9001"   # WebSocket (optional, for browser MQTT clients)
     volumes:
       - ./docker/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./docker/mosquitto_passwd:/mosquitto/config/passwd

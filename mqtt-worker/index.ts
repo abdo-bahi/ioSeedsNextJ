@@ -1,13 +1,17 @@
 import mqtt from "mqtt";
 import crypto from "crypto";
-import * as dotenv from "dotenv";
-import { PrismaClient } from "../generated/prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg";
+import * as dotenv from "dotenv"
+import path from "path"
+// Load .env manually from project root
+dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
-dotenv.config()
+console.log("🔍 ENV check:")
+console.log("   DATABASE_URL:", process.env.DATABASE_URL)
+console.log("   MQTT_BROKER_URL:", process.env.MQTT_BROKER_URL)
+console.log("   MQTT_USER:", process.env.MQTT_USER)
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-const prisma  = new PrismaClient({ adapter })
+import { prisma } from "../prisma/lib/prisma" 
+
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL!, {
   username: process.env.MQTT_USER,
@@ -23,6 +27,20 @@ async function validateMCU(mcuId: string, fieldId: string, rawApiKey: string) {
     .createHash("sha256")
     .update(rawApiKey)
     .digest("hex");
+
+    console.log("🔍 Validating MCU:")
+    console.log("   mcuId:      ", mcuId)
+    console.log("   fieldId:    ", fieldId)
+    console.log("   rawApiKey:  ", rawApiKey)
+    console.log("   computed hash:", apiKeyHash)
+  
+    // Check what's actually in DB
+    const mcuInDb = await prisma.mCU.findFirst({
+      where: { id: mcuId },
+      select: { id: true, name: true, apiKeyHash: true, fk_irrigationField: true, isActive: true }
+    })
+  
+    console.log("   DB record:  ", mcuInDb)
 
   return await prisma.mCU.findFirst({
     where: {
