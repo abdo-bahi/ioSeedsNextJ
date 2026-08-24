@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { publicProc, router } from "../trpc"
+import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 import { MCUStatus } from "../../../generated/prisma/client"
 import crypto from "crypto"
@@ -114,4 +114,21 @@ export const mcuRouter = router({
         data:  { status: input.status }
       })
     }),
+
+    regenerateApiKey: protectedProc
+  .input(z.object({ id: z.string() }))
+  .mutation(async ({ input }) => {
+    const rawApiKey  = crypto.randomBytes(32).toString("hex")
+    const apiKeyHash = crypto
+      .createHash("sha256")
+      .update(rawApiKey)
+      .digest("hex")
+
+    await prisma.mCU.update({
+      where: { id: input.id },
+      data:  { apiKeyHash }
+    })
+
+    return { apiKey: rawApiKey }
+  }),
 })
