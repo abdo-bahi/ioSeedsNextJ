@@ -19,12 +19,6 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
-// Test DB on start
-prisma.mCU.count()
-  .then(n => console.log(`✅ DB connected — ${n} MCUs`))
-  .catch(e => { console.error("❌ DB failed:", e.message); process.exit(1) })
-
-
 const client = mqtt.connect(process.env.MQTT_BROKER_URL!, {
   username: process.env.MQTT_USER,
   password: process.env.MQTT_PASSWORD,
@@ -39,20 +33,6 @@ async function validateMCU(mcuId: string, fieldId: string, rawApiKey: string) {
     .createHash("sha256")
     .update(rawApiKey)
     .digest("hex");
-
-    console.log("🔍 Validating MCU:")
-    console.log("   mcuId:      ", mcuId)
-    console.log("   fieldId:    ", fieldId)
-    console.log("   rawApiKey:  ", rawApiKey)
-    console.log("   computed hash:", apiKeyHash)
-  
-    // Check what's actually in DB
-    const mcuInDb = await prisma.mCU.findFirst({
-      where: { id: mcuId },
-      select: { id: true, name: true, apiKeyHash: true, fk_irrigationField: true, isActive: true }
-    })
-  
-    console.log("   DB record:  ", mcuInDb)
 
   return await prisma.mCU.findFirst({
     where: {
