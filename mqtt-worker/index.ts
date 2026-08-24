@@ -10,7 +10,19 @@ console.log("   DATABASE_URL:", process.env.DATABASE_URL)
 console.log("   MQTT_BROKER_URL:", process.env.MQTT_BROKER_URL)
 console.log("   MQTT_USER:", process.env.MQTT_USER)
 
-import { prisma } from "../prisma/lib/prisma" 
+import { PrismaPg }    from "@prisma/adapter-pg"
+import { PrismaClient } from "../generated/prisma/client"
+
+// ✅ Create directly here — not from prisma/lib/prisma.ts
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!
+})
+const prisma = new PrismaClient({ adapter })
+
+// Test DB on start
+prisma.mCU.count()
+  .then(n => console.log(`✅ DB connected — ${n} MCUs`))
+  .catch(e => { console.error("❌ DB failed:", e.message); process.exit(1) })
 
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL!, {
@@ -91,7 +103,7 @@ client.on("message", async (topic, payload) => {
   try {
     const parts = topic.split("/");
     // irrigation / farmId / fieldId / mcuId / ...rest
-    const [farmId, fieldId, mcuId] = parts;
+    const [, farmId, fieldId, mcuId] = parts;
     const data = JSON.parse(payload.toString());
 
     // Validate MCU
