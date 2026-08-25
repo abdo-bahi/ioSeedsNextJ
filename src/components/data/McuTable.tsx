@@ -330,38 +330,22 @@ function McuModal({
 
           {/* ── API Key section (edit mode only) ── */}
           {initial && (
-            <div className="flex flex-col gap-2 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+            <div className="flex flex-col gap-2 p-3 rounded-lg border border-[#D95F5F]/30 bg-[#FDEAEA]/40">
               <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
-                ApiKeyHash
+                Clé API
               </p>
-              <div className="flex gap-2">
-                <Input
-                  type={showKey ? "text" : "password"}
-                  value={newApiKey ?? "••••—••••••••••••—••••••"}
-                  readOnly
-                  className="border-[#D6E8DC] font-mono text-[11px] flex-1 bg-white"
-                />
-                <button
-                  onClick={() => setShowKey((s) => !s)}
-                  className="h-9 w-9 rounded-md border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#1A3C2E] transition-colors"
-                >
-                  {showKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-                <button
-                  onClick={onRegenerateKey}
-                  className="h-9 w-9 rounded-md border border-[#D95F5F] flex items-center justify-center text-[#D95F5F] hover:bg-[#FDEAEA] transition-colors"
-                  title="Régénérer — invalide immédiatement la clé actuelle"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-              </div>
-              <p className="text-[11px] text-[#D95F5F]">
-                Régénérer invalide immédiatement la clé actuelle du MCU.
+              <p className="text-[12px] text-[#5A7A65]">
+                La clé actuelle est masquée pour des raisons de sécurité.
+                Régénérez-en une nouvelle si le MCU est compromis.
               </p>
+              <Button
+                variant="outline"
+                onClick={onRegenerateKey}
+                className="border-[#D95F5F] text-[#D95F5F] hover:bg-[#FDEAEA] gap-2 text-[12px] h-8 w-fit"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Générer une nouvelle clé API
+              </Button>
             </div>
           )}
         </div>
@@ -405,6 +389,14 @@ export function MCUsTable({
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [newApiKey, setNewApiKey] = useState<string | undefined>();
+  const [apiKeyModal, setApiKeyModal] = useState<{
+    mcuName: string;
+    apiKey: string;
+  } | null>(null);
+  const [showGeneratedKey, setShowGeneratedKey] = useState(false);
+  const [confirmRegenTarget, setConfirmRegenTarget] = useState<string | null>(
+    null
+  );
 
   // ── Fetch MCUs ────────────────────────────────────────────────
   const { data: mcus, isLoading } = trpc.mcu.getAllMcus.useQuery(
@@ -446,6 +438,17 @@ export function MCUsTable({
     onSuccess: () => {
       invalidate();
       setDeleteTarget(null);
+    },
+  });
+  const regenerateKey = trpc.mcu.regenerateApiKey.useMutation({
+    onSuccess: (data, variables) => {
+      const mcu = mcus?.find((m: any) => m.id === variables.id);
+      setConfirmRegenTarget(null);
+      setApiKeyModal({
+        mcuName: mcu?.name ?? "MCU",
+        apiKey: data.apiKey,
+      });
+      setShowGeneratedKey(false);
     },
   });
 
@@ -639,10 +642,9 @@ export function MCUsTable({
           title={`Configuration — ${editMcu.name}`}
           fields={fieldOptions}
           defaultFieldId={editMcu.fk_irrigationField ?? irrigationFieldId}
-          newApiKey={newApiKey}
           onRegenerateKey={() => {
-            // TODO: call regenerateApiKey mutation
-            alert("Régénération à implémenter");
+            setEditTarget(null)                    // close config modal
+            setConfirmRegenTarget(editMcu.id)      // open confirm dialog
           }}
           initial={{
             name: editMcu.name ?? "",
@@ -685,6 +687,148 @@ export function MCUsTable({
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
               {remove.isPending ? "..." : "Supprimer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Confirm regenerate dialog ── */}
+      <Dialog
+        open={!!confirmRegenTarget}
+        onOpenChange={() => setConfirmRegenTarget(null)}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-[16px] font-semibold text-[#D95F5F]">
+              ⚠️ Régénérer la clé API ?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <p className="text-[13px] text-[#5A7A65]">
+              Cette action va <strong>invalider immédiatement</strong> la clé
+              actuelle du MCU. Le dispositif physique ne pourra plus communiquer
+              tant que vous ne mettez pas à jour sa configuration avec la
+              nouvelle clé.
+            </p>
+            <div className="p-3 rounded-lg bg-[#FEF3DC] border border-[#E89B2D]">
+              <p className="text-[12px] text-[#B8780E] font-medium">
+                ⚠️ Assurez-vous d&apos;avoir accès physique au MCU avant de
+                continuer.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmRegenTarget(null)}
+              className="border-[#D6E8DC]"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() =>
+                confirmRegenTarget &&
+                regenerateKey.mutate({ id: confirmRegenTarget })
+              }
+              disabled={regenerateKey.isPending}
+              className="bg-[#D95F5F] hover:bg-[#C04040] text-white gap-2"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${
+                  regenerateKey.isPending ? "animate-spin" : ""
+                }`}
+              />
+              {regenerateKey.isPending
+                ? "Génération..."
+                : "Confirmer et générer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── New API key reveal dialog (shown once) ── */}
+      <Dialog
+        open={!!apiKeyModal}
+        onOpenChange={() => {
+          setApiKeyModal(null);
+          setShowGeneratedKey(false);
+        }}
+      >
+        <DialogContent className="sm:max-w-[460px]">
+          <DialogHeader>
+            <DialogTitle className="text-[16px] font-semibold">
+              Nouvelle clé API — {apiKeyModal?.mcuName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-2">
+            {/* Warning */}
+            <div className="p-3 rounded-lg bg-[#FEF3DC] border border-[#E89B2D]">
+              <p className="text-[12px] text-[#B8780E] font-medium">
+                ⚠️ Copiez cette clé maintenant. Elle ne sera{" "}
+                <strong>plus jamais affichée</strong> après fermeture.
+              </p>
+            </div>
+
+            {/* Key display */}
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[12px] text-[#5A7A65]">
+                Clé API (raw)
+              </Label>
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    type={showGeneratedKey ? "text" : "password"}
+                    value={apiKeyModal?.apiKey ?? ""}
+                    readOnly
+                    className="border-[#D6E8DC] font-mono text-[11px] bg-[#F7F9F5] pr-10"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowGeneratedKey((s) => !s)}
+                  className="h-9 w-9 rounded-md border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#1A3C2E] transition-colors"
+                  title={showGeneratedKey ? "Masquer" : "Afficher"}
+                >
+                  {showGeneratedKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(apiKeyModal?.apiKey ?? "");
+                  }}
+                  className="h-9 w-9 rounded-md border border-[#4CAF7D] flex items-center justify-center text-[#4CAF7D] hover:bg-[#E6F7ED] transition-colors"
+                  title="Copier"
+                >
+                  <Key className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Usage hint */}
+            <div className="p-3 rounded-lg bg-[#F7F9F5] border border-[#D6E8DC]">
+              <p className="text-[11px] text-[#8FAF9A] font-medium uppercase tracking-wider mb-1">
+                Utilisation dans le firmware ESP32
+              </p>
+              <code className="text-[11px] text-[#1A2E22] font-mono break-all">
+                const char* API_KEY = &quot;
+                {showGeneratedKey ? apiKeyModal?.apiKey : "••••••••••••••••"}
+                &quot;;
+              </code>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setApiKeyModal(null);
+                setShowGeneratedKey(false);
+              }}
+              className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            >
+              J&apos;ai copié la clé — Fermer
             </Button>
           </DialogFooter>
         </DialogContent>
