@@ -5,10 +5,6 @@ import path from "path"
 // Load .env manually from project root
 dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
-console.log("🔍 ENV check:")
-console.log("   DATABASE_URL:", process.env.DATABASE_URL)
-console.log("   MQTT_BROKER_URL:", process.env.MQTT_BROKER_URL)
-console.log("   MQTT_USER:", process.env.MQTT_USER)
 
 import { PrismaPg }    from "@prisma/adapter-pg"
 import { PrismaClient } from "../generated/prisma/client"

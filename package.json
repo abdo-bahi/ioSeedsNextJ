@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "worker": "tsx mqtt-worker/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
