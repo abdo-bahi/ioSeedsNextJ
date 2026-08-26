@@ -9,6 +9,46 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") })
 import { PrismaPg }    from "@prisma/adapter-pg"
 import { PrismaClient } from "../generated/prisma/client"
 
+import http from "http"
+
+// ── Simple HTTP server for receiving publish commands ──────────────
+const httpServer = http.createServer(async (req, res) => {
+  if (req.method !== "POST") {
+    res.writeHead(405)
+    res.end()
+    return
+  }
+
+  // Auth check
+  const workerKey = req.headers["x-worker-key"]
+  if (workerKey !== process.env.WORKER_SECRET) {
+    res.writeHead(401)
+    res.end(JSON.stringify({ error: "Unauthorized" }))
+    return
+  }
+
+  // Parse body
+  let body = ""
+  req.on("data", chunk => { body += chunk })
+  req.on("end", () => {
+    try {
+      const { topic, payload } = JSON.parse(body)
+      client.publish(topic, JSON.stringify(payload), { qos: 2 })
+      console.log(`📤 Published to ${topic}`)
+      res.writeHead(200)
+      res.end(JSON.stringify({ ok: true }))
+    } catch (err) {
+      res.writeHead(500)
+      res.end(JSON.stringify({ error: "Failed" }))
+    }
+  })
+})
+
+httpServer.listen(3001, () => {
+  console.log("📡 Worker HTTP server on port 3001")
+})
+
+
 // ✅ Create directly here — not from prisma/lib/prisma.ts
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!
