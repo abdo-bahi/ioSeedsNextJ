@@ -1,59 +1,59 @@
 import mqtt from "mqtt";
 import crypto from "crypto";
-import * as dotenv from "dotenv"
-import path from "path"
+import * as dotenv from "dotenv";
+import path from "path";
 // Load .env manually from project root
-dotenv.config({ path: path.resolve(__dirname, "../.env") })
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
 
-import { PrismaPg }    from "@prisma/adapter-pg"
-import { PrismaClient } from "../generated/prisma/client"
-
-import http from "http"
+import http from "http";
 
 // ── Simple HTTP server for receiving publish commands ──────────────
 const httpServer = http.createServer(async (req, res) => {
   if (req.method !== "POST") {
-    res.writeHead(405)
-    res.end()
-    return
+    res.writeHead(405);
+    res.end();
+    return;
   }
 
   // Auth check
-  const workerKey = req.headers["x-worker-key"]
+  const workerKey = req.headers["x-worker-key"];
   if (workerKey !== process.env.WORKER_SECRET) {
-    res.writeHead(401)
-    res.end(JSON.stringify({ error: "Unauthorized" }))
-    return
+    res.writeHead(401);
+    res.end(JSON.stringify({ error: "Unauthorized" }));
+    return;
   }
 
   // Parse body
-  let body = ""
-  req.on("data", chunk => { body += chunk })
+  let body = "";
+  req.on("data", (chunk) => {
+    body += chunk;
+  });
   req.on("end", () => {
     try {
-      const { topic, payload } = JSON.parse(body)
-      client.publish(topic, JSON.stringify(payload), { qos: 2 })
-      console.log(`📤 Published to ${topic}`)
-      res.writeHead(200)
-      res.end(JSON.stringify({ ok: true }))
+      const { topic, payload } = JSON.parse(body);
+      client.publish(topic, JSON.stringify(payload), { qos: 2 });
+      console.log(`📤 Published to ${topic}`);
+      res.writeHead(200);
+      res.end(JSON.stringify({ ok: true }));
     } catch (err) {
-      res.writeHead(500)
-      res.end(JSON.stringify({ error: "Failed" }))
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: "Failed" }));
     }
-  })
-})
+  });
+});
 
 httpServer.listen(3001, () => {
-  console.log("📡 Worker HTTP server on port 3001")
-})
-
+  console.log("📡 Worker HTTP server on port 3001");
+});
 
 // ✅ Create directly here — not from prisma/lib/prisma.ts
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!
-})
-const prisma = new PrismaClient({ adapter })
+  connectionString: process.env.DATABASE_URL!,
+});
+const prisma = new PrismaClient({ adapter });
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL!, {
   username: process.env.MQTT_USER,
@@ -111,7 +111,6 @@ client.on("connect", () => {
     if (err) console.error("Subscribe error:", err);
     else console.log("📡 Subscribed to:", topics);
   });
-
 });
 
 // ── Route messages ─────────────────────────────────────────────────
@@ -222,6 +221,24 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
     timestamp: new Date().toISOString(),
   });
 
+  // Update targetState optimistically
+  await prisma.actuator.update({
+    where: { id: actuatorId },
+    data: { targetState: data.state },
+  });
+
+  if (actuator.targetState !== data.state) {
+    // Create action record
+    const action = await prisma.actions.create({
+      data: {
+        actionVal: data.state,
+        sentAt: new Date(),
+        fk_actuator: actuatorId,
+        mcuAction: true,
+      },
+    });
+  }
+
   console.log(`✅ Actuator ${actuator.name} state updated: ${data.state}`);
 }
 
@@ -312,4 +329,3 @@ process.on("SIGTERM", () => {
 });
 
 console.log("🌱 MQTT Worker starting...");
-

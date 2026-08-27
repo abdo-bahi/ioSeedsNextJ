@@ -262,6 +262,7 @@ model EnvironmentData {
 model Actions {
   id        String  @id @default(cuid())
   actionVal Boolean
+  mcuAction Boolean?
 
   createdAt       DateTime          @default(now())
   sentAt          DateTime?

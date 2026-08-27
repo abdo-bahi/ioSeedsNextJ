@@ -4,7 +4,6 @@ import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { TRPCError } from "@trpc/server";
 
-
 export const actuatorRouter = router({
   // ── Get all for a field (dashboard quick actions) ─────────────
   getAllByField: publicProc
@@ -110,42 +109,41 @@ export const actuatorRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-
       // Get full context for topic construction
       const actuator = await prisma.actuator.findUnique({
-        where:   { id: input.actuatorId },
+        where: { id: input.actuatorId },
         include: {
           mcu: {
             include: {
               irrigationField: {
-                include: { FarmingUnit: true }
-              }
-            }
-          }
-        }
-      })
+                include: { FarmingUnit: true },
+              },
+            },
+          },
+        },
+      });
 
-      if (!actuator?.mcu) throw new TRPCError({ code: "NOT_FOUND" })
+      if (!actuator?.mcu) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const farmId  = actuator.mcu.irrigationField.FarmingUnit!.id
-      const fieldId = actuator.mcu.fk_irrigationField
-      const mcuId   = actuator.fk_mcu!
+      const farmId = actuator.mcu.irrigationField.FarmingUnit!.id;
+      const fieldId = actuator.mcu.fk_irrigationField;
+      const mcuId = actuator.fk_mcu!;
 
       // Create action record
       const action = await prisma.actions.create({
         data: {
-          actionVal:   input.newState,
-          sentAt:      new Date(),
+          actionVal: input.newState,
+          sentAt: new Date(),
           fk_actuator: input.actuatorId,
-        }
-      })
+        },
+      });
 
       // Update targetState optimistically
       await prisma.actuator.update({
         where: { id: input.actuatorId },
-        data:  { targetState: input.newState }
-      })
-      
+        data: { targetState: input.newState },
+      });
+
       // ✅ Publish via worker HTTP — no instrumentation needed
       await publishToMCU(
         `irrigation/${farmId}/${fieldId}/${mcuId}/actuator/${input.actuatorId}/cmd`,
