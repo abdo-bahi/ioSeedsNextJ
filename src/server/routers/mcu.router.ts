@@ -109,22 +109,17 @@ export const mcuRouter = router({
 
 
         // ✅ Publish via worker HTTP — no instrumentation needed
+        if(data.minSoilMoisture)
         await publishToMCU(
-          `irrigation/${farmId}/${fieldId}/config/${mcuId}/cmd`,
+          `irrigation/${farmId}/${fieldId}/${mcuId}/config`,
           {
-            name: input.name,
-            minSoilMoisture: input.minSoilMoisture,
-            maxSoilMoisture: input.maxSoilMoisture,
-            sleepingTime: input.sleepingTime,
-            macAddress: input.macAddress,
-            autoControlledIrrigation: input.autoControlledIrrigation,
-            isActive: input.isActive,
-            status: input.status,
-            fk_irrigationField: input.fk_irrigationField,
+            minSoilMoisture: input.minSoilMoisture ?? null,
+            maxSoilMoisture: input.maxSoilMoisture ?? null,
+            sleepingTime: input.sleepingTime ?? null,
+            autoControlledIrrigation: input.autoControlledIrrigation  ?? null,
           }
         )  
-        
-
+      
       return         prisma.mCU.update({
           where: { id },
           data,
