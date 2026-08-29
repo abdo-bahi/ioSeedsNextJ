@@ -16,3 +16,30 @@ export async function publishToMCU(topic: string, payload: object) {
       console.error("❌ Worker not reachable:", err)
     }
   }
+
+  export async function publishSchedulesToMCU(
+    farmId:  string,
+    fieldId: string,
+    mcuId:   string,
+    schedules: {
+      id:                 string
+      name:               string
+      isActive:           boolean
+      duration:           number
+      startAt:            Date | null
+      startDate:          Date | null
+      endDate:            Date | null
+      weekDays:           string[]
+      repeatEveryDays:    number
+      toggleAtThresholds: boolean
+      actuatorId:         string
+    }[]
+  ) {
+    await publishToMCU(
+      `irrigation/${farmId}/${fieldId}/${mcuId}/schedules`,
+      {
+        commandId: `schedules-${Date.now()}`,
+        schedules,
+      }
+    )
+  }
