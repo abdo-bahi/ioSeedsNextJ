@@ -146,7 +146,6 @@ export const scheduleRouter = router({
       });
     }),
 
-
   // ── Create ────────────────────────────────────────────────────
   create: protectedProc
     .input(
@@ -169,7 +168,7 @@ export const scheduleRouter = router({
         ? new Date(`1970-01-01T${input.startAt}:00.000Z`)
         : null;
 
-      const schedule = prisma.schedule.create({
+      const schedule = await prisma.schedule.create({
         data: {
           name: input.name,
           fk_actuator: input.fk_actuator,
@@ -182,7 +181,11 @@ export const scheduleRouter = router({
           toggleAtThresholds: input.toggleAtThresholds,
           isActive: input.isActive,
         },
-        include: { actuator: true },
+        include: {
+          actuator: {
+            select: { fk_mcu: true },
+          },
+        },
       });
 
       // Sync all schedules to MCU after create
@@ -227,7 +230,7 @@ export const scheduleRouter = router({
             endDate: endDate ? new Date(endDate) : null,
           }),
         },
-        include: { actuator: true },
+        include: { actuator: { select: { fk_mcu: true } } },
       });
 
       // Sync after update
@@ -238,21 +241,21 @@ export const scheduleRouter = router({
       return updated;
     }),
 
-    toggleActive: protectedProc
+  toggleActive: protectedProc
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
     .mutation(async ({ input }) => {
       const updated = await prisma.schedule.update({
-        where: { id:       input.id },
-        data:  { isActive: input.isActive },
-        include: { actuator: true }
-      })
+        where: { id: input.id },
+        data: { isActive: input.isActive },
+        include: { actuator: { select: { fk_mcu: true } } },
+      });
 
       // Sync after toggle
       if (updated.actuator.fk_mcu) {
-        await syncSchedulesToMCU(updated.actuator.fk_mcu)
+        await syncSchedulesToMCU(updated.actuator.fk_mcu);
       }
 
-      return updated
+      return updated;
     }),
 
   delete: protectedProc
@@ -260,17 +263,17 @@ export const scheduleRouter = router({
     .mutation(async ({ input }) => {
       // Get MCU before deleting
       const schedule = await prisma.schedule.findUnique({
-        where:   { id: input.id },
-        include: { actuator: true }
-      })
+        where: { id: input.id },
+        include: { actuator: { select: { fk_mcu: true } } },
+      });
 
-      await prisma.schedule.delete({ where: { id: input.id } })
+      await prisma.schedule.delete({ where: { id: input.id } });
 
       // Sync after delete — MCU gets updated list without deleted schedule
       if (schedule?.actuator.fk_mcu) {
-        await syncSchedulesToMCU(schedule.actuator.fk_mcu)
+        await syncSchedulesToMCU(schedule.actuator.fk_mcu);
       }
 
-      return { success: true }
+      return { success: true };
     }),
 });
