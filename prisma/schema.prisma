@@ -48,6 +48,7 @@ model User {
   schedule       Schedule[]
   sessions       Session[]
   accounts       Account[]
+  actions       Actions[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -197,6 +198,7 @@ model SensorType {
 model ActuatorType {
   name        String  @id
   description String?
+  isForIrrigation Boolean?
 
   // reverse relations
   actuators Actuator[]
@@ -263,6 +265,10 @@ model Actions {
   id        String  @id @default(cuid())
   actionVal Boolean
   mcuAction Boolean?
+  
+  fk_user String?
+  user    User?   @relation(fields: [fk_user], references: [id], onDelete: SetNull)
+
 
   createdAt       DateTime          @default(now())
   sentAt          DateTime?
