@@ -2,6 +2,7 @@
 import { z } from "zod"
 import { publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
+import { Select } from "@base-ui/react"
 
 export const activityRouter = router({
 
@@ -24,10 +25,13 @@ export const activityRouter = router({
           id:        true,
           actionVal: true,
           createdAt: true,
+          mcuAction: true,
+          user: {select: {name:true}},
           actuator: {
             select: {
               name:         true,
-              actuatorType: { select: { name: true } }
+              actuatorType: { select: { name: true } },
+              mcu: {select: {name: true}}
             }
           }
         }
@@ -41,6 +45,9 @@ export const activityRouter = router({
         sublabel:  a.actuator.actuatorType?.name ?? "",
         isOpen:    a.actionVal,
         createdAt: a.createdAt,
+        mcu: a.actuator.mcu?.name,
+        user: a.user?.name,
+        isMcuAction: a.mcuAction
       }))
     }),
 })

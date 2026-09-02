@@ -201,16 +201,6 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
     data: { targetState: data.state },
   });
 
-  // Log the action
-  await prisma.actions.create({
-    data: {
-      actionVal: data.state,
-      sentAt: new Date(),
-      ackedAt: new Date(),
-      fk_actuator: actuatorId,
-    },
-  });
-
   // Broadcast to dashboard
   await broadcast("actuator_state", {
     mcuId: mcu.id,
@@ -235,6 +225,7 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
         sentAt: new Date(),
         fk_actuator: actuatorId,
         mcuAction: true,
+        fk_user:     null,          // ← null = auto
       },
     });
   }

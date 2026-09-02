@@ -108,7 +108,7 @@ export const actuatorRouter = router({
         newState: z.boolean(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       // Get full context for topic construction
       const actuator = await prisma.actuator.findUnique({
         where: { id: input.actuatorId },
@@ -135,6 +135,7 @@ export const actuatorRouter = router({
           actionVal: input.newState,
           sentAt: new Date(),
           fk_actuator: input.actuatorId,
+          fk_user:     ctx.session?.user.id,   // ← set = manual
         },
       });
 
