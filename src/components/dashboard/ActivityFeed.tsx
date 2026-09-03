@@ -78,7 +78,7 @@ export function ActivityFeed() {
 
               {/* Who made the action + type */}
               <p className="text-[11px] text-[#8FAF9A] mt-0.5">
-                {activity.mcuAction
+                {(activity.isMcuAction)
                   ? `${activity.mcu ?? "MCU"} (Auto)`
                   : `${activity.user ?? "Unknown"} (Manual)`}
               </p>

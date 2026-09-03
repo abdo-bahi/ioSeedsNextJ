@@ -195,22 +195,6 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
     return;
   }
 
-  // Update targetState to reflect real device state
-  await prisma.actuator.update({
-    where: { id: actuatorId },
-    data: { targetState: data.state },
-  });
-
-  // Broadcast to dashboard
-  await broadcast("actuator_state", {
-    mcuId: mcu.id,
-    actuatorId: actuator.id,
-    name: actuator.name,
-    state: data.state,
-    fieldId: mcu.fk_irrigationField,
-    timestamp: new Date().toISOString(),
-  });
-
   // Update targetState optimistically
   await prisma.actuator.update({
     where: { id: actuatorId },
@@ -229,6 +213,16 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
       },
     });
   }
+
+  // Broadcast to dashboard
+  // await broadcast("actuator_state", {
+  //   mcuId: mcu.id,
+  //   actuatorId: actuator.id,
+  //   name: actuator.name,
+  //   state: data.state,
+  //   fieldId: mcu.fk_irrigationField,
+  //   timestamp: new Date().toISOString(),
+  // });
 
   console.log(`✅ Actuator ${actuator.name} state updated: ${data.state}`);
 }
