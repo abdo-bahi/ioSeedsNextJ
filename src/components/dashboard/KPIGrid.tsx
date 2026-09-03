@@ -4,6 +4,7 @@ import { Wifi, Droplets, Thermometer, Waves, TriangleAlert, LucideIcon } from "l
 import { KPICard } from "@/components/dashboard/KPICard"
 import { useFieldStore } from "@/store/field-store"
 import { trpc } from "@/lib/trpc/client"
+import { useEffect } from "react"
 
 // ── Icon + color maps ─────────────────────────────────────────────
 const sensorIconMap: Record<string, LucideIcon> = {
@@ -32,14 +33,15 @@ function KPICardSkeleton() {
 }
 
 export function KPIGrid() {
+
   const { selectedField } = useFieldStore()
+  const queryClient = trpc.useUtils()
 
   const { data: sensorReadings  ,  isLoading: sensorsLoading,
     isError:   sensorsError} = trpc.sensor.getLatestPerField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
     {
       enabled:         !!selectedField?.id,
-      refetchInterval: 10000,  // refetch every 10 seconds
     }
   )
   
@@ -49,9 +51,59 @@ export function KPIGrid() {
     { irrigationFieldId: selectedField?.id ?? "" },
     {
       enabled:         !!selectedField?.id,
-      refetchInterval: 30000,  // MCU status every 30 seconds
     }
   )
+
+
+ useEffect(() => {
+  if (!selectedField?.id) return
+
+  console.log("🔌 Opening SSE connection...")
+
+  const eventSource = new EventSource("/api/sse")
+
+  eventSource.onopen = () => {
+    console.log("🟢 SSE CONNECTED")
+  }
+
+  eventSource.addEventListener("connected", (event) => {
+    console.log("🟢 SSE INITIALIZED:", event.data)
+  })
+
+  eventSource.addEventListener("sensor_reading", (event) => {
+    console.log("📡 SENSOR EVENT RECEIVED:", event.data)
+
+    queryClient.sensor.getLatestPerField.invalidate({
+      irrigationFieldId: selectedField.id,
+    })
+  })
+
+  eventSource.addEventListener("actuator_state", (event) => {
+    console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data)
+
+    queryClient.mcu.getAllMcus.invalidate({
+      irrigationFieldId: selectedField.id,
+    })
+  })
+
+  eventSource.addEventListener("device_status", (event) => {
+    console.log("📱 DEVICE EVENT RECEIVED:", event.data)
+
+    queryClient.mcu.getAllMcus.invalidate({
+      irrigationFieldId: selectedField.id,
+    })
+  })
+
+  eventSource.onerror = (error) => {
+    console.error("🔴 SSE ERROR:", error)
+    console.log("SSE readyState:", eventSource.readyState)
+  }
+
+  return () => {
+    console.log("🔌 Closing SSE connection")
+    eventSource.close()
+  }
+}, [selectedField?.id, queryClient])
 
   // ── MCU derived values ────────────────────────────────────────
   const nbMcu       = mcus?.length ?? 0

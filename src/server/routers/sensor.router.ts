@@ -28,7 +28,7 @@ export const sensorRouter = router({
       }
     })
     //in case the sensors where empty
-    if (! sensors) {
+    if (! sensors || sensors.length === 0) {
       return {
         sensorType:  'example',
         average:     0,

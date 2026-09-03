@@ -1,6 +1,8 @@
 import { sseEvents } from "@/lib/sse"
 
 export async function POST(req: Request) {
+  console.log("📡 /api/sse/broadcast CALLED")
+
   const workerKey = req.headers.get("x-worker-key")
   if (workerKey !== process.env.WORKER_SECRET) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })

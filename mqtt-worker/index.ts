@@ -82,8 +82,10 @@ async function validateMCU(mcuId: string, fieldId: string, rawApiKey: string) {
 
 // ── SSE broadcast ──────────────────────────────────────────────────
 async function broadcast(event: string, data: object) {
+  console.log("📡 worker broadcast CALLED")
+
   try {
-    await fetch(`${process.env.NEXTAUTH_URL}/api/sse/broadcast`, {
+    await fetch(`${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/api/sse/broadcast`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -91,8 +93,8 @@ async function broadcast(event: string, data: object) {
       },
       body: JSON.stringify({ event, data }),
     });
-  } catch {
-    /* SSE server might not be ready */
+  } catch(error) {
+    console.error("❌ SSE broadcast failed:", error)
   }
 }
 
@@ -169,14 +171,14 @@ async function handleSensorData(mcu: any, sensorId: string, data: any) {
   });
 
   // Broadcast to dashboard to use later incha'Allah
-  // await broadcast("sensor_reading", {
-  //   mcuId:      mcu.id,
-  //   sensorId:   sensor.id,
-  //   sensorType: sensor.fk_sensorType,
-  //   fieldId:    mcu.fk_irrigationField,
-  //   value:      data.value,
-  //   timestamp:  new Date().toISOString(),
-  // })
+  await broadcast("sensor_reading", {
+    mcuId:      mcu.id,
+    sensorId:   sensor.id,
+    sensorType: sensor.fk_sensorType,
+    fieldId:    mcu.fk_irrigationField,
+    value:      data.value,
+    timestamp:  new Date().toISOString(),
+  })
 
   console.log(`✅ Reading saved: ${sensor.name} = ${data.value}${data.unit}`);
 }
@@ -215,14 +217,14 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
   }
 
   // Broadcast to dashboard
-  // await broadcast("actuator_state", {
-  //   mcuId: mcu.id,
-  //   actuatorId: actuator.id,
-  //   name: actuator.name,
-  //   state: data.state,
-  //   fieldId: mcu.fk_irrigationField,
-  //   timestamp: new Date().toISOString(),
-  // });
+  await broadcast("actuator_state", {
+    mcuId: mcu.id,
+    actuatorId: actuator.id,
+    name: actuator.name,
+    state: data.state,
+    fieldId: mcu.fk_irrigationField,
+    timestamp: new Date().toISOString(),
+  });
 
   console.log(`✅ Actuator ${actuator.name} state updated: ${data.state}`);
 }
