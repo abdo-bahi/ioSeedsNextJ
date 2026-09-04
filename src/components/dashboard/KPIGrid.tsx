@@ -1,25 +1,32 @@
-"use client"
+"use client";
 
-import { Wifi, Droplets, Thermometer, Waves, TriangleAlert, LucideIcon } from "lucide-react"
-import { KPICard } from "@/components/dashboard/KPICard"
-import { useFieldStore } from "@/store/field-store"
-import { trpc } from "@/lib/trpc/client"
-import { useEffect } from "react"
+import {
+  Wifi,
+  Droplets,
+  Thermometer,
+  Waves,
+  TriangleAlert,
+  LucideIcon,
+} from "lucide-react";
+import { KPICard } from "@/components/dashboard/KPICard";
+import { useFieldStore } from "@/store/field-store";
+import { trpc } from "@/lib/trpc/client";
+import { useEffect } from "react";
 
 // ── Icon + color maps ─────────────────────────────────────────────
 const sensorIconMap: Record<string, LucideIcon> = {
   soil_moisture: Droplets,
-  temperature:   Thermometer,
-  humidity:      Waves,
-  flow_rate:     TriangleAlert,
-}
+  temperature: Thermometer,
+  humidity: Waves,
+  flow_rate: TriangleAlert,
+};
 
 function formatRelative(date: Date | null): string {
-  if (!date) return "Aucune donnée"
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-  if (diff < 60)   return `il y a ${diff}s`
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`
-  return `il y a ${Math.floor(diff / 3600)}h`
+  if (!date) return "Aucune donnée";
+  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+  if (diff < 60) return `il y a ${diff}s`;
+  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
+  return `il y a ${Math.floor(diff / 3600)}h`;
 }
 
 function KPICardSkeleton() {
@@ -29,110 +36,119 @@ function KPICardSkeleton() {
       <div className="h-8 w-16 bg-[#E8F4ED] rounded mb-2" />
       <div className="h-3 w-32 bg-[#E8F4ED] rounded" />
     </div>
-  )
+  );
 }
 
 export function KPIGrid() {
+  const { selectedField } = useFieldStore();
+  const queryClient = trpc.useUtils();
 
-  const { selectedField } = useFieldStore()
-  const queryClient = trpc.useUtils()
-
-  const { data: sensorReadings  ,  isLoading: sensorsLoading,
-    isError:   sensorsError} = trpc.sensor.getLatestPerField.useQuery(
+  const {
+    data: sensorReadings,
+    isLoading: sensorsLoading,
+    isError: sensorsError,
+  } = trpc.sensor.getLatestPerField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
     {
-      enabled:         !!selectedField?.id,
+      enabled: !!selectedField?.id,
     }
-  )
-  
-  const { data: mcus ,
+  );
+
+  const {
+    data: mcus,
     isLoading: mcusLoading,
-    isError:   mcusError} = trpc.mcu.getAllMcus.useQuery(
+    isError: mcusError,
+  } = trpc.mcu.getAllMcus.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
     {
-      enabled:         !!selectedField?.id,
+      enabled: !!selectedField?.id,
     }
-  )
+  );
 
+  useEffect(() => {
+    if (!selectedField?.id) return;
 
- useEffect(() => {
-  if (!selectedField?.id) return
+    console.log("🔌 Opening SSE connection...");
 
-  console.log("🔌 Opening SSE connection...")
+    const eventSource = new EventSource("/api/sse");
 
-  const eventSource = new EventSource("/api/sse")
+    eventSource.onopen = () => {
+      console.log("🟢 SSE CONNECTED");
+    };
 
-  eventSource.onopen = () => {
-    console.log("🟢 SSE CONNECTED")
-  }
+    eventSource.addEventListener("connected", (event) => {
+      console.log("🟢 SSE INITIALIZED:", event.data);
+    });
 
-  eventSource.addEventListener("connected", (event) => {
-    console.log("🟢 SSE INITIALIZED:", event.data)
-  })
+    eventSource.addEventListener("sensor_reading", (event) => {
+      console.log("📡 SENSOR EVENT RECEIVED:", event.data);
 
-  eventSource.addEventListener("sensor_reading", (event) => {
-    console.log("📡 SENSOR EVENT RECEIVED:", event.data)
+      queryClient.sensor.getLatestPerField.invalidate({
+        irrigationFieldId: selectedField.id,
+      });
+    });
 
-    queryClient.sensor.getLatestPerField.invalidate({
-      irrigationFieldId: selectedField.id,
-    })
-  })
+    eventSource.addEventListener("actuator_state", (event) => {
+      console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data);
 
-  eventSource.addEventListener("actuator_state", (event) => {
-    console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data)
+      queryClient.mcu.getAllMcus.invalidate({
+        irrigationFieldId: selectedField.id,
+      });
+    });
 
-    queryClient.mcu.getAllMcus.invalidate({
-      irrigationFieldId: selectedField.id,
-    })
-  })
+    eventSource.addEventListener("device_status", (event) => {
+      console.log("📱 DEVICE EVENT RECEIVED:", event.data);
 
-  eventSource.addEventListener("device_status", (event) => {
-    console.log("📱 DEVICE EVENT RECEIVED:", event.data)
+      queryClient.mcu.getAllMcus.invalidate({
+        irrigationFieldId: selectedField.id,
+      });
+    });
 
-    queryClient.mcu.getAllMcus.invalidate({
-      irrigationFieldId: selectedField.id,
-    })
-  })
+    eventSource.onerror = (error) => {
+      console.error("🔴 SSE ERROR:", error);
+      console.log("SSE readyState:", eventSource.readyState);
+    };
 
-  eventSource.onerror = (error) => {
-    console.error("🔴 SSE ERROR:", error)
-    console.log("SSE readyState:", eventSource.readyState)
-  }
-
-  return () => {
-    console.log("🔌 Closing SSE connection")
-    eventSource.close()
-  }
-}, [selectedField?.id, queryClient])
+    return () => {
+      console.log("🔌 Closing SSE connection");
+      eventSource.close();
+    };
+  }, [selectedField?.id, queryClient]);
 
   // ── MCU derived values ────────────────────────────────────────
-  const nbMcu       = mcus?.length ?? 0
-  const nbActiveMcu = mcus?.filter((mcu: any) => mcu.isActive).length ?? 0
+  const nbMcu = mcus?.length ?? 0;
+  const nbActiveMcu = mcus?.filter((mcu: any) => mcu.isActive).length ?? 0;
 
   const avgMinSoilMoisture = mcus?.length
-    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.minSoilMoisture, 0) / mcus.length
-    : null
+    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.minSoilMoisture, 0) /
+      mcus.length
+    : null;
 
   const avgMaxSoilMoisture = mcus?.length
-    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.maxSoilMoisture, 0) / mcus.length
-    : null
+    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.maxSoilMoisture, 0) /
+      mcus.length
+    : null;
 
   // ── Color based on MCU thresholds ─────────────────────────────
   function getSensorColor(
     sensorType: string,
-    average:    number
+    average: number
   ): "green" | "amber" | "red" | "blue" {
-    if (sensorType === "soil_moisture" && avgMinSoilMoisture && avgMaxSoilMoisture) {
-      if (average < avgMinSoilMoisture) return "red"    // too dry
-      if (average > avgMaxSoilMoisture) return "amber"  // too wet
-      return "green"                                     // optimal
+    if (
+      sensorType === "soil_moisture" &&
+      avgMinSoilMoisture &&
+      avgMaxSoilMoisture
+    ) {
+      if (average < avgMinSoilMoisture) return "red"; // too dry
+      if (average > avgMaxSoilMoisture) return "amber"; // too wet
+      return "green"; // optimal
     }
     if (sensorType === "temperature") {
-      if (average > 35) return "red"
-      if (average > 28) return "amber"
-      return "blue"
+      if (average > 35) return "red";
+      if (average > 28) return "amber";
+      return "blue";
     }
-    return "green"
+    return "green";
   }
 
   return (
@@ -146,7 +162,6 @@ export function KPIGrid() {
 
       {/* ── Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
         {/* MCU card */}
         {mcusLoading ? (
           <KPICardSkeleton />
@@ -161,10 +176,12 @@ export function KPIGrid() {
         ) : (
           <KPICard
             title="MCUs Actifs"
-            value={`${nbActiveMcu} / ${nbMcu}`}   // ✅ slash not backslash
+            value={`${nbActiveMcu} / ${nbMcu}`} // ✅ slash not backslash
             subtitle="dans cette parcelle"
             icon={Wifi}
-            color={nbActiveMcu === 0 ? "red" : nbActiveMcu < nbMcu ? "amber" : "blue"}
+            color={
+              nbActiveMcu === 0 ? "red" : nbActiveMcu < nbMcu ? "amber" : "blue"
+            }
           />
         )}
 
@@ -184,18 +201,19 @@ export function KPIGrid() {
           </div>
         )}
 
-        {!sensorsLoading && !sensorsError && sensorReadings?.map((sensor: any) => (
-          <KPICard
-            key={sensor.sensorType}                              // ✅ key added
-            title={sensor.sensorType.replace(/_/g, " ").toUpperCase()}
-            value={`${sensor.average}${sensor.unit}`}           // ✅ string not number
-            subtitle={formatRelative(sensor.lastReadAt)}
-            icon={sensorIconMap[sensor.sensorType] ?? Thermometer}
-            color={getSensorColor(sensor.sensorType, sensor.average)}
-          />
-        ))}
-
+        {!sensorsLoading &&
+          !sensorsError &&
+          sensorReadings?.map((sensor: any) => (
+            <KPICard
+              key={sensor.sensorType} // ✅ key added
+              title={sensor.sensorType.replace(/_/g, " ").toUpperCase()}
+              value={`${sensor.average}${sensor.unit ?? "%"}`}
+              subtitle={formatRelative(sensor.lastReadAt)}
+              icon={sensorIconMap[sensor.sensorType] ?? Thermometer}
+              color={getSensorColor(sensor.sensorType, sensor.average)}
+            />
+          ))}
       </div>
     </div>
-  )
+  );
 }

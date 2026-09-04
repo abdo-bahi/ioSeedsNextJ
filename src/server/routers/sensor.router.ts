@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
-import { Select } from "@base-ui/react"
 
 export const sensorRouter = router({
 
@@ -20,11 +19,12 @@ export const sensorRouter = router({
       },
       select: {
         id:            true,
-        fk_sensorType: true,
+        fk_sensorType: true, 
+        unit: true,
         environmentData: {
           orderBy: { createdAt: "desc" },
           take:    1,
-          select:  { value: true, unit: true, createdAt: true }
+          select:  { value: true, createdAt: true }
         }
       }
     })
@@ -42,7 +42,7 @@ export const sensorRouter = router({
       const grouped: Record<string, {
         sensorType:   string
         average:      number
-        unit:         string
+        unit:         string | null
         sensorCount:  number
         lastReadAt:   Date | null
       }> = {}
@@ -57,7 +57,7 @@ export const sensorRouter = router({
           grouped[type] = {
             sensorType:  type,
             average:     0,
-            unit:        reading.unit,
+            unit:        sensor.unit,
             sensorCount: 0,
             lastReadAt:  null,
           }
@@ -117,11 +117,12 @@ export const sensorRouter = router({
             }
           },
           fk_sensorType: true,
+          unit: true,
           sensorType:    { select: { name: true } },
           environmentData: {
             orderBy: { createdAt: "desc" },
             take:    1,
-            select:  { value: true, unit: true, createdAt: true }
+            select:  { value: true,  createdAt: true }
           }
         }
       })
@@ -183,7 +184,7 @@ export const sensorRouter = router({
         },
         select: {
           value:     true,
-          fk_sensor:      {select:{unit:true}},
+          sensor:      {select:{unit:true}},
           createdAt: true,
         },
         orderBy: { createdAt: "asc" },
@@ -192,7 +193,7 @@ export const sensorRouter = router({
       return readings.map(r => ({
         time:  r.createdAt.toISOString(),
         value: r.value,
-        unit:  r.unit,
+        unit: r.sensor
       }))
     }),
   
