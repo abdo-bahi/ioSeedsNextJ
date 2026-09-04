@@ -1,6 +1,7 @@
 import { z } from "zod"
-import { publicProc, router } from "../trpc"
+import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
+import { Select } from "@base-ui/react"
 
 export const sensorRouter = router({
 
@@ -166,7 +167,52 @@ export const sensorRouter = router({
     .mutation(async ({ input }) => {
       return prisma.sensor.create({ data: input })
     }),
-
+    
+    getChartData: protectedProc
+    .input(z.object({
+      sensorId:    z.string(),
+      fromMinutes: z.number().default(60 * 24), // last 24h
+    }))
+    .query(async ({ input }) => {
+      const from = new Date(Date.now() - input.fromMinutes * 60 * 1000)
+  
+      const readings = await prisma.environmentData.findMany({
+        where: {
+          fk_sensor: input.sensorId,
+          createdAt: { gte: from }
+        },
+        select: {
+          value:     true,
+          fk_sensor:      {select:{unit:true}},
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      })
+  
+      return readings.map(r => ({
+        time:  r.createdAt.toISOString(),
+        value: r.value,
+        unit:  r.unit,
+      }))
+    }),
+  
+  // Get sensors for a field (for selector)
+  getSensorsByField: protectedProc
+    .input(z.object({ irrigationFieldId: z.string() }))
+    .query(async ({ input }) => {
+      return prisma.sensor.findMany({
+        where: {
+          isActive: true,
+          mcu: { fk_irrigationField: input.irrigationFieldId }
+        },
+        select: {
+          id:            true,
+          name:          true,
+          fk_sensorType: true,
+        },
+        orderBy: { name: "asc" }
+      })
+    }),
   // ── Update ────────────────────────────────────────────────────
   update: publicProc
     .input(z.object({

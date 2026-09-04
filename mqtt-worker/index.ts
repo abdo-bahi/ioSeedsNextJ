@@ -147,7 +147,7 @@ client.on("message", async (topic, payload) => {
 
 // ── 1. Sensor data handler ─────────────────────────────────────────
 async function handleSensorData(mcu: any, sensorId: string, data: any) {
-  console.log(`🌱 Sensor ${sensorId}: ${data.value}${data.unit}`);
+  console.log(`🌱 Sensor ${sensorId}: ${data.value}${data.rawValue}`);
 
   // Verify sensor belongs to this MCU
   const sensor = await prisma.sensor.findFirst({
@@ -163,7 +163,6 @@ async function handleSensorData(mcu: any, sensorId: string, data: any) {
   await prisma.environmentData.create({
     data: {
       value: parseFloat(data.value),
-      unit: data.unit,
       rawValue: data.rawValue != null ? parseFloat(data.rawValue) : null,
       fk_sensor: sensor.id,
       fk_action: null,

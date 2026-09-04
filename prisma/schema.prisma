@@ -212,6 +212,7 @@ model Sensor {
   longitude   Float
   minAnalogue Float
   maxAnalogue Float
+  unit        String?
   createdAt   DateTime @default(now())
   isActive    Boolean
 
@@ -251,7 +252,6 @@ model Actuator {
 model EnvironmentData {
   id        String   @id @default(cuid())
   value     Float
-  unit      String
   rawValue  Float?
   createdAt DateTime @default(now())
   fk_sensor String
