@@ -6,6 +6,7 @@ import { trpc } from "@/lib/trpc/client"
 import { useFieldStore } from "@/store/field-store"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useEffect } from "react"
 
 function ActuatorSkeleton() {
   return (
@@ -22,23 +23,66 @@ function ActuatorSkeleton() {
 
 export function ActuatorPanel() {
   const { selectedField } = useFieldStore()
-  const utils = trpc.useUtils()
+  const queryClient = trpc.useUtils();
 
   const { data: actuators, isLoading } = trpc.actuator.getAllByField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
     {
       enabled:         !!selectedField?.id,
-      refetchInterval: 15000,
     }
   )
 
   const toggle = trpc.actuator.toggle.useMutation({
     onSuccess: () => {
       // Refetch actuators after toggle
-      utils.actuator.getAllByField.invalidate()
-      utils.activity.getRecentByField.invalidate()
+      queryClient.actuator.getAllByField.invalidate()
+      queryClient.activity.getRecentByField.invalidate()
     }
   })
+
+  useEffect(() => {
+    if (!selectedField?.id) return;
+
+    console.log("🔌 Opening SSE connection...");
+
+    const eventSource = new EventSource("/api/sse");
+
+    eventSource.onopen = () => {
+      console.log("🟢 SSE CONNECTED");
+    };
+
+    eventSource.addEventListener("connected", (event) => {
+      console.log("🟢 SSE INITIALIZED:", event.data);
+    });
+
+    eventSource.addEventListener("actuator_state", (event) => {
+      console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data);
+
+      queryClient.actuator.getAllByField.invalidate({
+        irrigationFieldId: selectedField.id,
+      });
+    });
+
+    eventSource.addEventListener("device_status", (event) => {
+      console.log("📱 DEVICE EVENT RECEIVED:", event.data);
+
+      queryClient.actuator.getAllByField.invalidate({
+        irrigationFieldId: selectedField.id,
+      });
+    });
+
+    eventSource.onerror = (error) => {
+      console.error("🔴 SSE ERROR:", error);
+      console.log("SSE readyState:", eventSource.readyState);
+    };
+
+    return () => {
+      console.log("🔌 Closing SSE connection");
+      eventSource.close();
+    };
+  }, [selectedField?.id, queryClient]);
+
+
 
   return (
     <div className="bg-white border border-[#D6E8DC] rounded-xl p-4">
