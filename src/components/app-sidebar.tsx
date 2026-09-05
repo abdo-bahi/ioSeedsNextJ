@@ -36,12 +36,12 @@ const navItems = [
     href: "/",
     active: true,
   },
-  {
-    label: "Statistiques",
-    subtitle: "Graphiques et historique",
-    icon: BarChart2,
-    href: "/statistics",
-  },
+  // {
+  //   label: "Statistiques",
+  //   subtitle: "Graphiques et historique",
+  //   icon: BarChart2,
+  //   href: "/statistics",
+  // },
   {
     label: "Données",
     subtitle: "Champs, microcontrôleurs, capteurs...",
