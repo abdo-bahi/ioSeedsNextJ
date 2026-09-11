@@ -5,8 +5,8 @@
 
 // ── Config ────────────────────────────────────────────────────────
 const char* WIFI_SSID = "IdoomFibre_Bh";
-const char* WIFI_PASSWORD = "********";
-const char* MQTT_BROKER = "192.168.100.9";
+const char* WIFI_PASSWORD = "tMtkKH96";
+const char* MQTT_BROKER = "192.168.100.35";
 const int MQTT_PORT = 1883;
 const char* MQTT_USER = "admin";
 const char* MQTT_PASS = "ioseeds2026";
@@ -35,7 +35,7 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   DeserializationError err = deserializeJson(doc, payload, length);
 
   if (err) {
-    Serial.println("❌ JSON parse error: " + String(err.c_str()))
+    Serial.println("❌ JSON parse error: " + String(err.c_str()));
     return;
   }
   // ── Actuator command ──────────────────────────────────────────
