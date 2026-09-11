@@ -321,7 +321,6 @@ const main = async () => {
     await prisma.environmentData.create({
       data: {
         value:     r.value,
-        unit:      "%",
         rawValue:  r.rawValue,
         createdAt: new Date(now - r.minutesAgo * 60 * 1000),
         fk_sensor: sensorA1.id,
