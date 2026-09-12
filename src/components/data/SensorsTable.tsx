@@ -63,6 +63,8 @@ type SensorForm = {
   longitude:     string
   minAnalogue:   string
   maxAnalogue:   string
+  unit:          string              
+  rowValueConversion: boolean
   isActive:      boolean
   fk_mcu:        string
   fk_sensorType: string
@@ -75,6 +77,8 @@ const emptyForm: SensorForm = {
   longitude:     "2.8277",
   minAnalogue:   "0",
   maxAnalogue:   "1023",
+  unit:               "%",
+  rowValueConversion: false,
   isActive:      true,
   fk_mcu:        "",
   fk_sensorType: "",
@@ -558,6 +562,8 @@ export function SensorsTable({
             minAnalogue:   String(editSensor.minAnalogue),
             maxAnalogue:   String(editSensor.maxAnalogue),
             isActive:      editSensor.isActive,
+            unit:          editSensor.unit,
+            rowValueConversion: editSensor.rowValueCenversion,
             fk_mcu:        editSensor.fk_mcu ?? "",
             fk_sensorType: editSensor.sensorType ?? "",
           }}

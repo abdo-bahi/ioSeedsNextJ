@@ -163,6 +163,8 @@ export const sensorRouter = router({
         longitude: z.number(),
         minAnalogue: z.number(),
         maxAnalogue: z.number(),
+        unit: z.string().max(5).optional(),
+        rowValueConversion: z.boolean().default(false),
         isActive: z.boolean().default(true),
         fk_mcu: z.string().optional(),
         fk_sensorType: z.string().optional(),
@@ -264,6 +266,8 @@ export const sensorRouter = router({
         longitude: z.number().optional(),
         minAnalogue: z.number().optional(),
         maxAnalogue: z.number().optional(),
+        unit: z.string().max(5).optional(),
+        rowValueConversion: z.boolean().optional(),
         isActive: z.boolean().optional(),
         fk_mcu: z.string().optional(),
         fk_sensorType: z.string().optional(),
@@ -279,5 +283,14 @@ export const sensorRouter = router({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
       return prisma.sensor.delete({ where: { id: input.id } });
+    }),
+  getLastReading: publicProc
+    .input(z.object({ sensorId: z.string() }))
+    .query(async ({ input }) => {
+      return prisma.environmentData.findFirst({
+        where: { fk_sensor: input.sensorId },
+        orderBy: { createdAt: "desc" },
+        select: { value: true, rawValue: true, createdAt: true },
+      });
     }),
 });
