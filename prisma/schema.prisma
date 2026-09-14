@@ -213,7 +213,7 @@ model Sensor {
   minAnalogue Float
   maxAnalogue Float
   unit        String?
-  rowValueConversion Boolean
+  rowValueConversion Boolean @default(false)
   createdAt   DateTime @default(now())
   isActive    Boolean
 

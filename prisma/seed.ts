@@ -1,7 +1,6 @@
+import "dotenv/config"
 import { auth } from "@/lib/auth"
 import { prisma } from "./lib/prisma"
-import bcrypt from "bcryptjs"
-import { authClient, signUp } from "@/lib/auth-client"
 
 console.log("starting seeding .......")
 
@@ -23,7 +22,7 @@ const main = async () => {
   // ─── Roles ────────────────────────────────────────────────────
   await prisma.role.createMany({
     data: [
-      { name: "admin" },
+      { name: "ADMIN" },
       { name: "OPERATOR" },
       { name: "FARMER" },
       { name: "VIEWER" },
@@ -97,9 +96,6 @@ const main = async () => {
 
   // ─── Admin user ────────────────────────────────────────────────
   const blida = await prisma.wilaya.findUnique({ where: { code: "09" } })
-  const wilaya = await prisma.wilaya.findUnique({
-    where: { code: "09" }
-  })
     if (!blida) { console.error("❌ Blida not found"); return }
 
     const result = await auth.api.signUpEmail({
@@ -118,7 +114,7 @@ const main = async () => {
         where: {
           email:     "admin@ioseeds.dz",
         },
-        data: {fk_wilaya: wilaya!.id},
+        data: {fk_wilaya: blida.id},
       }
     )
     console.log("✅ Admin created:", admin.email);
@@ -136,6 +132,12 @@ const main = async () => {
     },
   })
   console.log("✅ Farm seeded:", farm.name)
+
+  admin = await prisma.user.update({
+    where: { email: "admin@ioseeds.dz" },
+    data:  { fk_farm: farm.id },
+  })
+  console.log("✅ Admin linked to farm:", farm.name)
 
   // ─── Fields ────────────────────────────────────────────────────
   // ✅ Create ALL fields first, THEN query them
@@ -217,6 +219,7 @@ const main = async () => {
       name: "Sensor-A1-Moisture", macAddress: "AA:BB:CC:DD:EE:11",
       latitude: 36.4703, longitude: 2.8277,
       minAnalogue: 0, maxAnalogue: 1023, isActive: true,
+      unit: "%", rowValueConversion: false,
       fk_mcu: mcuA.id, fk_sensorType: "soil_moisture",
     },
   })
@@ -227,6 +230,7 @@ const main = async () => {
       name: "Sensor-A1-Temp", macAddress: "AA:BB:CC:DD:EE:12",
       latitude: 36.4704, longitude: 2.8278,
       minAnalogue: 0, maxAnalogue: 1023, isActive: true,
+      unit: "°C", rowValueConversion: false,
       fk_mcu: mcuA.id, fk_sensorType: "temperature",
     },
   })
@@ -237,6 +241,7 @@ const main = async () => {
       name: "Sensor-B1-Moisture", macAddress: "AA:BB:CC:DD:EE:13",
       latitude: 36.4710, longitude: 2.8290,
       minAnalogue: 0, maxAnalogue: 1023, isActive: true,
+      unit: "%", rowValueConversion: false,
       fk_mcu: mcuB.id, fk_sensorType: "soil_moisture",
     },
   })
@@ -247,6 +252,7 @@ const main = async () => {
       name: "Sensor-C1-Moisture", macAddress: "AA:BB:CC:DD:EE:14",
       latitude: 36.4720, longitude: 2.8310,
       minAnalogue: 0, maxAnalogue: 1023, isActive: true,
+      unit: "%", rowValueConversion: false,
       fk_mcu: mcuC.id, fk_sensorType: "soil_moisture",
     },
   })

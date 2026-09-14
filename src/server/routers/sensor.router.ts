@@ -28,13 +28,15 @@ export const sensorRouter = router({
       });
       //in case the sensors where empty
       if (!sensors || sensors.length === 0) {
-        return {
-          sensorType: "example",
-          average: 0,
-          unit: "%",
-          sensorCount: 1,
-          lastReadAt: null,
-        };
+        return [
+          {
+            sensorType: "example",
+            average: 0,
+            unit: "%",
+            sensorCount: 1,
+            lastReadAt: null,
+          },
+        ];
       }
       // Step 2 — group by sensorType and average the latest values
       const grouped: Record<
@@ -109,6 +111,7 @@ export const sensorRouter = router({
           longitude: true,
           minAnalogue: true,
           maxAnalogue: true,
+          rowValueConversion: true,
           isActive: true,
           fk_mcu: true,
           mcu: {
@@ -124,7 +127,7 @@ export const sensorRouter = router({
           environmentData: {
             orderBy: { createdAt: "desc" },
             take: 1,
-            select: { value: true, createdAt: true },
+            select: { value: true, rawValue: true, createdAt: true },
           },
         },
       });
@@ -142,6 +145,8 @@ export const sensorRouter = router({
         mcuName: s.mcu?.name ?? "—",
         fieldName: s.mcu?.irrigationField?.name ?? "—",
         sensorType: s.fk_sensorType ?? "—",
+        unit: s.unit,
+        rowValueConversion: s.rowValueConversion,
         lastReading: s.environmentData[0] ?? null,
       }));
     }),

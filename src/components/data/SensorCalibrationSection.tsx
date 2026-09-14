@@ -72,7 +72,7 @@ export function SensorCalibrationSection({
             rowValueConversion ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
           }`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+          <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
             rowValueConversion ? "translate-x-4" : "translate-x-0.5"
           }`} />
         </button>
