@@ -224,6 +224,8 @@ model Sensor {
 
   // reverse relations
   environmentData EnvironmentData[]
+  threshold Threshold[]
+
 
   @@unique([fk_mcu, name])
 }
@@ -248,6 +250,7 @@ model Actuator {
   schedules Schedule[]
 
   @@unique([fk_mcu, name])
+  threshold Threshold[]
 }
 
 model EnvironmentData {
@@ -386,4 +389,28 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model Threshold {
+  id       String @id @default(cuid())
+  name     String?
+  priority Int    @default(1)
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  // Sensor being monitored
+  fk_sensor  String
+  sensor     Sensor @relation(fields:[fk_sensor], references:[id], onDelete:Cascade)
+
+  // Actuator being controlled
+  fk_actuator String
+  actuator    Actuator @relation(fields:[fk_actuator], references:[id], onDelete:Cascade)
+
+  // Conditions
+  minValue       Float?              // trigger if sensorValue < minValue
+  maxValue       Float?              // trigger if sensorValue > maxValue
+
+  // Actions
+  minValueAction Boolean?    // what to do when below min
+  maxValueAction Boolean?    // what to do when above max
 }
