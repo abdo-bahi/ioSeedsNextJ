@@ -7,6 +7,7 @@ import { irrigationFieldRouter } from "./irrigationField.router"
 import { mcuRouter } from "./mcu.router"
 import { scheduleRouter } from "./schedule.router"
 import { sensorRouter } from "./sensor.router"
+import { thresholdRouter } from "./threshold.router"
 import { userRouter } from "./user.router"
 
 export const appRouter = router({
@@ -19,6 +20,7 @@ export const appRouter = router({
   schedule: scheduleRouter,
   farmingUnit: farmingUnitRouter,
   user: userRouter,
+  threshold: thresholdRouter,
 })
 
 export type AppRouter = typeof appRouter
