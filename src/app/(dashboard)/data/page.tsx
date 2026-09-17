@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { IrrigationFieldsTable } from "@/components/data/IrrigationFieldsTable"
 import { useFieldStore } from "@/store/field-store"
 import { MCUsTable } from "@/components/data/McuTable"
-import { trpc } from "@/lib/trpc/client"
 import { SensorsTable } from "@/components/data/SensorsTable"
 import { ActuatorsTable } from "@/components/data/ActuatorsTable"
+import { ThresholdsTable } from "@/components/data/ThresholdsTable"
 
 let FARM_ID:string;
 
@@ -16,6 +16,7 @@ const tabs = [
   { value: "mcus",      label: "MCUs" },
   { value: "sensors",   label: "Sensors" },
   { value: "actuators", label: "Actuators" },
+  { value: "thresholds", label: "Seuils" },
 ]
 
 export default function DataPage() {
@@ -65,6 +66,12 @@ export default function DataPage() {
       )}
       {activeTab === "actuators" && (
           <ActuatorsTable
+          irrigationFieldId={selectedField?.id ?? ""}
+          farmId={FARM_ID}
+        />
+      )}
+      {activeTab === "thresholds" && (
+          <ThresholdsTable
           irrigationFieldId={selectedField?.id ?? ""}
           farmId={FARM_ID}
         />

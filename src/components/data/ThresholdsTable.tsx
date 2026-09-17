@@ -98,7 +98,7 @@ function ThresholdModal({
                 className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
               />
               <p className="text-[10px] text-[#8FAF9A]">
-                1 = plus haute priorité
+                1 = Le dernier qui sera verifier
               </p>
             </div>
           </div>
@@ -212,7 +212,7 @@ function ThresholdModal({
                 form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
               }`}
             >
-              <span className={`absolute top-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
                 form.isActive ? "translate-x-4" : "translate-x-0.5"
               }`} />
             </button>
@@ -238,23 +238,36 @@ function ThresholdModal({
 }
 
 // ── Main table ────────────────────────────────────────────────────
-export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: string }) {
+export function ThresholdsTable({
+  irrigationFieldId,
+}: {
+  irrigationFieldId: string
+  farmId:            string
+}) {
   const utils = trpc.useUtils()
 
   const [addOpen,      setAddOpen]      = useState(false)
   const [editTarget,   setEditTarget]   = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [actuatorFilter, setActuatorFilter] = useState<string>("")
 
   const { data: thresholds, isLoading } = trpc.threshold.getAllByField.useQuery(
-    { irrigationFieldId }
+    { irrigationFieldId },
+    { enabled: !!irrigationFieldId }
   )
 
   const { data: sensors }   = trpc.sensor.getAllByField.useQuery(
-    { irrigationFieldId }
+    { irrigationFieldId },
+    { enabled: !!irrigationFieldId }
   )
   const { data: actuators } = trpc.actuator.getAllByField.useQuery(
-    { irrigationFieldId }
+    { irrigationFieldId },
+    { enabled: !!irrigationFieldId }
   )
+
+  const filtered = actuatorFilter
+    ? thresholds?.filter((t:any) => t.fk_actuator === actuatorFilter)
+    : thresholds
 
   const invalidate = () => utils.threshold.getAllByField.invalidate()
 
@@ -319,13 +332,29 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
-        <div>
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
-            Seuils automatiques
-          </p>
-          <p className="text-[11px] text-[#8FAF9A] mt-0.5">
-            Appliqués par ordre de priorité
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+              Seuils automatiques
+            </p>
+            <p className="text-[11px] text-[#8FAF9A] mt-0.5">
+              Appliqués par ordre de priorité
+            </p>
+          </div>
+
+          {/* Actuator filter */}
+          <select
+            value={actuatorFilter}
+            onChange={e => setActuatorFilter(e.target.value)}
+            className="h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+          >
+            <option value="">Tous les actionneurs</option>
+            {actuators?.map((a:any) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
@@ -336,7 +365,15 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
         </Button>
       </div>
 
+      {/* No field selected */}
+      {!irrigationFieldId && (
+        <div className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
+          Sélectionnez une parcelle dans la barre du haut pour voir les seuils.
+        </div>
+      )}
+
       {/* Table */}
+      {irrigationFieldId && (
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
@@ -359,7 +396,7 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
               </tr>
             ))}
 
-            {!isLoading && thresholds?.map((t:any) => (
+            {!isLoading && filtered?.map((t:any) => (
               <tr key={t.id} className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors">
 
                 {/* Priority */}
@@ -384,12 +421,15 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
 
                 {/* Actuator */}
                 <td className="px-4 py-3.5 text-[#5A7A65]">
-                  {t.actuator.name}
+                  <div>{t.actuator.name}</div>
+                  <div className="text-[10px] text-[#8FAF9A]">
+                    {t.actuator.actuatorType?.name}
+                  </div>
                 </td>
 
                 {/* Min condition */}
                 <td className="px-4 py-3.5">
-                  {t.minValue !== null ? (
+                  {t.minValue !== null && t.minValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-[#1A2E22]">
                         &lt; {t.minValue}
@@ -403,7 +443,7 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
 
                 {/* Max condition */}
                 <td className="px-4 py-3.5">
-                  {t.maxValue !== null ? (
+                  {t.maxValue !== null && t.maxValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-[#1A2E22]">
                         &gt; {t.maxValue}
@@ -418,11 +458,14 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
                 {/* Status */}
                 <td className="px-4 py-3.5">
                   <button
-                    onClick={() => toggleActive.mutate({ id: t.id, isActive: !t.isActive })}
-                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                    onClick={() => toggleActive.mutate({
+                      id:       t.id,
+                      isActive: !t.isActive
+                    })}
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium transition-colors ${
                       t.isActive
-                        ? "bg-[#E6F7ED] text-[#2D8653]"
-                        : "bg-[#F5F5F5] text-[#888]"
+                        ? "bg-[#E6F7ED] text-[#2D8653] hover:bg-[#FDEAEA] hover:text-[#B84040]"
+                        : "bg-[#F5F5F5] text-[#888] hover:bg-[#E6F7ED] hover:text-[#2D8653]"
                     }`}
                   >
                     {t.isActive ? "• Actif" : "• Inactif"}
@@ -449,16 +492,20 @@ export function ThresholdsTable({ irrigationFieldId }: { irrigationFieldId: stri
               </tr>
             ))}
 
-            {!isLoading && thresholds?.length === 0 && (
+            {!isLoading && filtered?.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
-                  Aucun seuil configuré. Cliquez sur &quot;Ajouter seuil&quot; pour commencer.
+                  {actuatorFilter
+                    ? "Aucun seuil pour cet actionneur."
+                    : "Aucun seuil configuré. Cliquez sur Ajouter seuil pour commencer."
+                  }
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Add modal */}
       <ThresholdModal
