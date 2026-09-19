@@ -15,6 +15,7 @@ export async function POST(req: Request) {
     case "actuator_state": sseEvents.actuatorState(data); break
     case "device_status":  sseEvents.deviceStatus(data);  break
     case "command_ack":    sseEvents.commandAck(data);    break
+    case "notification":   sseEvents.notification(data);  break
     default:
       return Response.json({ error: "Unknown event" }, { status: 400 })
   }

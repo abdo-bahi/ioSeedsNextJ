@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { keepPreviousData } from "@tanstack/react-query"
 import { trpc } from "@/lib/trpc/client"
 import { Button } from "@/components/ui/button"
 import {
@@ -253,16 +254,28 @@ export function ThresholdsTable({
 
   const { data: thresholds, isLoading } = trpc.threshold.getAllByField.useQuery(
     { irrigationFieldId },
-    { enabled: !!irrigationFieldId }
+    {
+      enabled:          !!irrigationFieldId,
+      staleTime:        30_000,
+      placeholderData:  keepPreviousData,
+    }
   )
 
-  const { data: sensors }   = trpc.sensor.getAllByField.useQuery(
+  const { data: sensors } = trpc.sensor.getAllByField.useQuery(
     { irrigationFieldId },
-    { enabled: !!irrigationFieldId }
+    {
+      enabled:          !!irrigationFieldId,
+      staleTime:        30_000,
+      placeholderData:  keepPreviousData,
+    }
   )
   const { data: actuators } = trpc.actuator.getAllByField.useQuery(
     { irrigationFieldId },
-    { enabled: !!irrigationFieldId }
+    {
+      enabled:          !!irrigationFieldId,
+      staleTime:        30_000,
+      placeholderData:  keepPreviousData,
+    }
   )
 
   const filtered = actuatorFilter

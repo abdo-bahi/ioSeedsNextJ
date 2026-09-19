@@ -11,13 +11,10 @@ import {
 import { Input }    from "@/components/ui/input"
 import { Label }    from "@/components/ui/label"
 import {
-  User, MapPin, Phone, Calendar,
+  User, MapPin, Calendar,
   Pencil, Leaf, CheckCircle, XCircle,
 } from "lucide-react"
 import { useFieldStore } from "@/store/field-store"
-
-
-let FARM_ID: any;
 
 // ── Info tile ─────────────────────────────────────────────────────
 function InfoTile({
@@ -177,12 +174,94 @@ function EditFarmModal({
   )
 }
 
+// ── Notification preferences ──────────────────────────────────────
+type NotifChannel = "INAPP" | "EMAIL" | "BOTH" | "NONE"
+type NotifPrefs = {
+  minThreshold:   NotifChannel
+  maxThreshold:   NotifChannel
+  actuatorManual: NotifChannel
+  actuatorAuto:   NotifChannel
+  mcuInactive:    NotifChannel
+  deviceInactive: NotifChannel
+}
+
+function NotificationPreferences() {
+  const utils = trpc.useUtils()
+
+  const { data: prefs } = trpc.notification.getPreferences.useQuery()
+  const update = trpc.notification.updatePreferences.useMutation({
+    onSuccess: () => utils.notification.getPreferences.invalidate(),
+  })
+
+  const channels: NotifChannel[] = ["INAPP", "EMAIL", "BOTH", "NONE"]
+
+  const channelLabel: Record<NotifChannel, string> = {
+    INAPP: "📱 In-app",
+    EMAIL: "📧 Email",
+    BOTH:  "📱+📧 Les deux",
+    NONE:  "🔕 Aucune",
+  }
+
+  const events: { key: keyof NotifPrefs; label: string }[] = [
+    { key: "minThreshold",   label: "Seuil min atteint" },
+    { key: "maxThreshold",   label: "Seuil max atteint" },
+    { key: "actuatorManual", label: "Action manuelle actionneur" },
+    { key: "actuatorAuto",   label: "Action automatique actionneur" },
+    { key: "mcuInactive",    label: "MCU inactif après sommeil" },
+    { key: "deviceInactive", label: "Capteur/actionneur inactif" },
+  ]
+
+  const value: NotifPrefs = (prefs ?? {
+    minThreshold:   "INAPP",
+    maxThreshold:   "INAPP",
+    actuatorManual: "INAPP",
+    actuatorAuto:   "INAPP",
+    mcuInactive:    "INAPP",
+    deviceInactive: "INAPP",
+  }) as NotifPrefs
+
+  return (
+    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#D6E8DC]">
+        <p className="text-[14px] font-semibold text-[#1A2E22]">
+          Préférences de notification
+        </p>
+        <p className="text-[12px] text-[#8FAF9A] mt-0.5">
+          Choisissez comment recevoir chaque type d&apos;alerte
+        </p>
+      </div>
+
+      <div className="divide-y divide-[#F0F7F3]">
+        {events.map(event => (
+          <div key={event.key} className="flex items-center justify-between px-5 py-3.5">
+            <p className="text-[13px] text-[#1A2E22]">{event.label}</p>
+            <select
+              value={value[event.key]}
+              onChange={e => {
+                const payload: Partial<Record<keyof NotifPrefs, NotifChannel>> = {
+                  [event.key]: e.target.value as NotifChannel,
+                }
+                update.mutate(payload)
+              }}
+              className="h-8 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+            >
+              {channels.map(c => (
+                <option key={c} value={c}>{channelLabel[c]}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────
 export default function ParametersPage() {
-  const { selectedField, setField, setFields } = useFieldStore();
+  const { selectedField } = useFieldStore();
 
-  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
-  
+  const FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
+
   const utils = trpc.useUtils()
   const [editOpen, setEditOpen] = useState(false)
 
@@ -315,6 +394,9 @@ export default function ParametersPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Notification preferences ── */}
+      <NotificationPreferences />
 
       {/* ── Edit modal ── */}
       {farm && (

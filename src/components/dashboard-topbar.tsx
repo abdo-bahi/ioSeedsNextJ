@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { trpc } from "@/lib/trpc/client"
 
 import {
   DropdownMenu,
@@ -11,8 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Sprout, RotateCcw, Bell } from "lucide-react";
-
+import { ChevronDown, Sprout, RotateCcw } from "lucide-react";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useFieldStore } from "@/store/field-store"
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -21,11 +19,10 @@ import { authClient } from "@/lib/auth-client";
 
 
 export function DashboardTopbar() {
-  const { fields, selectedField, setField, setFields } = useFieldStore()
+  const { fields, selectedField, setField } = useFieldStore()
 
   const { data: session } = authClient.useSession();
-  const notifCount = 2;
-  
+
   const pathname = usePathname();
 
   return (
@@ -79,18 +76,7 @@ export function DashboardTopbar() {
           <RotateCcw className="h-[16px] w-[16px]" />
         </Button>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-[36px] w-[36px] text-[#8FAF9A] hover:text-[#4CAF7D] hover:bg-[#E8F4ED]"
-        >
-          <Bell className="h-[16px] w-[16px]" />
-          {notifCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 h-[16px] w-[16px] rounded-full bg-[#D95F5F] text-white text-[9px] font-bold flex items-center justify-center">
-              {notifCount}
-            </span>
-          )}
-        </Button>
+        <NotificationBell userId={session?.user?.id ?? ""} />
       </div>
     </header>
   );

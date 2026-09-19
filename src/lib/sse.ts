@@ -30,4 +30,5 @@ type SSEClient = {
     actuatorState: (data: unknown) => broadcast("actuator_state", data),
     deviceStatus:  (data: unknown) => broadcast("device_status",  data),
     commandAck:    (data: unknown) => broadcast("command_ack",    data),
+    notification:  (data: unknown) => broadcast("notification",   data),
   }

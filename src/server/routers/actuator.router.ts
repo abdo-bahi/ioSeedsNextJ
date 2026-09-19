@@ -2,6 +2,7 @@ import { z } from "zod";
 import { publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
+import { notify } from "@/lib/notifications";
 import { TRPCError } from "@trpc/server";
 
 export const actuatorRouter = router({
@@ -154,6 +155,14 @@ export const actuatorRouter = router({
           targetState: input.newState,
         }
       );
+
+      await notify({
+        type:        "ACTUATOR_MANUAL",
+        title:       "👤 Action manuelle",
+        message:     `${actuator.name} ${input.newState ? "ouvert" : "fermé"} manuellement`,
+        fk_actuator: input.actuatorId,
+        fieldId:     actuator.mcu.fk_irrigationField,
+      });
 
       return action;
     }),

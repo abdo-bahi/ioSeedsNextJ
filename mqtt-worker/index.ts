@@ -7,8 +7,22 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
+import type { MCU, MCUStatus } from "../generated/prisma/client";
+import { notify } from "../src/lib/notifications";
 
 import http from "http";
+
+interface MQTTData {
+  value?:      string | number
+  rawValue?:   string | number
+  unit?:       string
+  state?:      string | boolean
+  status?:     string
+  apiKey?:     string
+  commandId?:  string
+  success?:    boolean
+  message?:    string
+}
 
 // ── Simple HTTP server for receiving publish commands ──────────────
 const httpServer = http.createServer(async (req, res) => {
@@ -38,7 +52,7 @@ const httpServer = http.createServer(async (req, res) => {
       console.log(`📤 Published to ${topic}`);
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true }));
-    } catch (err) {
+    } catch {
       res.writeHead(500);
       res.end(JSON.stringify({ error: "Failed" }));
     }
@@ -81,7 +95,7 @@ async function validateMCU(mcuId: string, fieldId: string, rawApiKey: string) {
 }
 
 // ── SSE broadcast ──────────────────────────────────────────────────
-async function broadcast(event: string, data: object) {
+async function broadcast(event: string, data: unknown) {
   console.log("📡 worker broadcast CALLED")
 
   try {
@@ -120,7 +134,7 @@ client.on("message", async (topic, payload) => {
   try {
     const parts = topic.split("/");
     // irrigation / farmId / fieldId / mcuId / ...rest
-    const [, farmId, fieldId, mcuId] = parts;
+    const [, , fieldId, mcuId] = parts;
     const data = JSON.parse(payload.toString());
 
     // Validate MCU
@@ -146,7 +160,7 @@ client.on("message", async (topic, payload) => {
 });
 
 // ── 1. Sensor data handler ─────────────────────────────────────────
-async function handleSensorData(mcu: any, sensorId: string, data: any) {
+async function handleSensorData(mcu: MCU, sensorId: string, data: MQTTData) {
   console.log(`🌱 Sensor ${sensorId}: ${data.value}${data.rawValue}`);
 
   // Verify sensor belongs to this MCU
@@ -162,8 +176,8 @@ async function handleSensorData(mcu: any, sensorId: string, data: any) {
   // Save reading
   await prisma.environmentData.create({
     data: {
-      value: parseFloat(data.value),
-      rawValue: data.rawValue != null ? parseFloat(data.rawValue) : null,
+      value: parseFloat(String(data.value)),
+      rawValue: data.rawValue != null ? parseFloat(String(data.rawValue)) : null,
       fk_sensor: sensor.id,
       fk_action: null,
     },
@@ -180,10 +194,48 @@ async function handleSensorData(mcu: any, sensorId: string, data: any) {
   })
 
   console.log(`✅ Reading saved: ${sensor.name} = ${data.value}${data.unit}`);
+
+  // Check thresholds
+  const thresholds = await prisma.threshold.findMany({
+    where: { fk_sensor: sensor.id, isActive: true },
+  });
+
+  if (thresholds.length) {
+    const value = parseFloat(String(data.value));
+    for (const t of thresholds) {
+      if (t.minValue !== null && value < t.minValue) {
+        await notify(
+          {
+            type:        "MIN_THRESHOLD",
+            title:       "⚠️ Seuil min atteint",
+            message:     `${sensor.name} = ${data.value}${data.unit ?? ""} (seuil: ${t.minValue})`,
+            fk_sensor:   sensor.id,
+            fk_actuator: t.fk_actuator,
+            fieldId:     mcu.fk_irrigationField,
+          },
+          (d) => broadcast("notification", d)
+        );
+      }
+
+      if (t.maxValue !== null && value > t.maxValue) {
+        await notify(
+          {
+            type:        "MAX_THRESHOLD",
+            title:       "⚠️ Seuil max atteint",
+            message:     `${sensor.name} = ${data.value}${data.unit ?? ""} (seuil: ${t.maxValue})`,
+            fk_sensor:   sensor.id,
+            fk_actuator: t.fk_actuator,
+            fieldId:     mcu.fk_irrigationField,
+          },
+          (d) => broadcast("notification", d)
+        );
+      }
+    }
+  }
 }
 
 // ── 2. Actuator state handler ──────────────────────────────────────
-async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
+async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData) {
   console.log(`⚡ Actuator ${actuatorId}: state=${data.state}`);
 
   // Verify actuator belongs to this MCU
@@ -196,23 +248,36 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
     return;
   }
 
+  const newState = data.state === true || data.state === "true";
+
   // Update targetState optimistically
   await prisma.actuator.update({
     where: { id: actuatorId },
-    data: { targetState: data.state },
+    data: { targetState: newState },
   });
 
-  if (actuator.targetState !== data.state) {
+  if (actuator.targetState !== newState) {
     // Create action record
-    const action = await prisma.actions.create({
+    await prisma.actions.create({
       data: {
-        actionVal: data.state,
+        actionVal: newState,
         sentAt: new Date(),
         fk_actuator: actuatorId,
         mcuAction: true,
         fk_user:     null,          // ← null = auto
       },
     });
+
+    await notify(
+      {
+        type:        "ACTUATOR_AUTO",
+        title:       "🤖 Action automatique",
+        message:     `${actuator.name} ${newState ? "ouvert" : "fermé"} par le MCU`,
+        fk_actuator: actuatorId,
+        fieldId:     mcu.fk_irrigationField,
+      },
+      (d) => broadcast("notification", d)
+    );
   }
 
   // Broadcast to dashboard
@@ -220,7 +285,7 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
     mcuId: mcu.id,
     actuatorId: actuator.id,
     name: actuator.name,
-    state: data.state,
+    state: newState,
     fieldId: mcu.fk_irrigationField,
     timestamp: new Date().toISOString(),
   });
@@ -229,12 +294,12 @@ async function handleActuatorState(mcu: any, actuatorId: string, data: any) {
 }
 
 // ── 3. MCU status handler ──────────────────────────────────────────
-async function handleMCUStatus(mcu: any, data: any) {
+async function handleMCUStatus(mcu: MCU, data: MQTTData) {
   const status = (data.status as string)?.toUpperCase() ?? "OFFLINE";
 
   await prisma.mCU.update({
     where: { id: mcu.id },
-    data: { status: status as any },
+    data: { status: status as MCUStatus },
   });
 
   await broadcast("device_status", {
@@ -244,11 +309,24 @@ async function handleMCUStatus(mcu: any, data: any) {
     status,
   });
 
+  if (status === "OFFLINE") {
+    await notify(
+      {
+        type:    "MCU_INACTIVE",
+        title:   "📡 MCU hors ligne",
+        message: `${mcu.name} est passé hors ligne`,
+        fk_mcu:  mcu.id,
+        fieldId: mcu.fk_irrigationField,
+      },
+      (d) => broadcast("notification", d)
+    );
+  }
+
   console.log(`📡 MCU ${mcu.name} → ${status}`);
 }
 
 // ── 4. Ack handler ─────────────────────────────────────────────────
-async function handleAck(mcu: any, data: any) {
+async function handleAck(mcu: MCU, data: MQTTData) {
   if (!data.commandId) return;
 
   await prisma.actions.update({

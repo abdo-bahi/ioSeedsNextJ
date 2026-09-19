@@ -49,6 +49,8 @@ model User {
   sessions       Session[]
   accounts       Account[]
   actions       Actions[]
+  notifications Notification[]
+  notificationPreferences NotificationPreference[]
 
   role       String?
   banned     Boolean?  @default(false)
@@ -184,6 +186,8 @@ model MCU {
   // reverse relations
   sensors   Sensor[]
   actuators Actuator[]
+    notifications Notification[]
+
 
   @@unique([fk_irrigationField, name])
 }
@@ -225,6 +229,7 @@ model Sensor {
   // reverse relations
   environmentData EnvironmentData[]
   threshold Threshold[]
+  notifications Notification[]
 
 
   @@unique([fk_mcu, name])
@@ -248,6 +253,8 @@ model Actuator {
   // reverse relations
   actions   Actions[]
   schedules Schedule[]
+  notifications Notification[]
+
 
   @@unique([fk_mcu, name])
   threshold Threshold[]
@@ -413,4 +420,59 @@ model Threshold {
   // Actions
   minValueAction Boolean?    // what to do when below min
   maxValueAction Boolean?    // what to do when above max
+}
+
+model NotificationPreference {
+  id     String @id @default(cuid())
+  fk_user String
+  user    User   @relation(fields:[fk_user], references:[id], onDelete:Cascade)
+
+  // Event types + channel per event
+  minThreshold       NotifChannel @default(INAPP)
+  maxThreshold       NotifChannel @default(INAPP)
+  actuatorManual     NotifChannel @default(INAPP)
+  actuatorAuto       NotifChannel @default(INAPP)
+  mcuInactive        NotifChannel @default(INAPP)
+  deviceInactive     NotifChannel @default(INAPP)
+
+  @@unique([fk_user])  // one preference row per user
+}
+
+// ── In-app notifications ──────────────────────────────────────────
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  // Context
+  fk_user        String
+  user           User     @relation(fields:[fk_user], references:[id], onDelete:Cascade)
+
+  fk_sensor      String?
+  sensor         Sensor?  @relation(fields:[fk_sensor], references:[id], onDelete:SetNull)
+
+  fk_actuator    String?
+  actuator       Actuator? @relation(fields:[fk_actuator], references:[id], onDelete:SetNull)
+
+  fk_mcu         String?
+  mcu            MCU?     @relation(fields:[fk_mcu], references:[id], onDelete:SetNull)
+}
+
+enum NotifChannel {
+  INAPP
+  EMAIL
+  BOTH
+  NONE
+}
+
+enum NotificationType {
+  MIN_THRESHOLD
+  MAX_THRESHOLD
+  ACTUATOR_MANUAL
+  ACTUATOR_AUTO
+  MCU_INACTIVE
+  DEVICE_INACTIVE
 }

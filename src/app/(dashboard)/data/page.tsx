@@ -8,9 +8,6 @@ import { SensorsTable } from "@/components/data/SensorsTable"
 import { ActuatorsTable } from "@/components/data/ActuatorsTable"
 import { ThresholdsTable } from "@/components/data/ThresholdsTable"
 
-let FARM_ID:string;
-
-
 const tabs = [
   { value: "fields",    label: "Irrigation Fields" },
   { value: "mcus",      label: "MCUs" },
@@ -23,7 +20,7 @@ export default function DataPage() {
   const [activeTab, setActiveTab] = useState("fields")
   const { selectedField } = useFieldStore();
 
-  FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
+  const FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
 
   return (
     <div className="space-y-6">
