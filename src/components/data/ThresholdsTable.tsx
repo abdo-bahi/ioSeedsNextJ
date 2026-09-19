@@ -43,8 +43,8 @@ const emptyForm: ThresholdForm = {
   fk_actuator:    "",
   minValue:       "",
   maxValue:       "",
-  minValueAction: "true",   // default open
-  maxValueAction: "false",  // default close
+  minValueAction: "", 
+  maxValueAction: "",  
   isActive:       true,
 }
 
