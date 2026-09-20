@@ -18,7 +18,7 @@ function formatRelative(date: Date | string) {
   return `${Math.floor(diff / 3600)}h`
 }
 
-export function NotificationBell({ userId }: { userId: string }) {
+export function NotificationBell() {
   const utils = trpc.useUtils()
   const [open, setOpen] = useState(false)
 
@@ -31,13 +31,11 @@ export function NotificationBell({ userId }: { userId: string }) {
     onSuccess: () => utils.notification.getUnread.invalidate(),
   })
 
-  // Live push via SSE
+  // Live push via SSE — getUnread is session-scoped server-side,
+  // so any incoming notification event just triggers a refetch
   useSSE({
-    notification: (data) => {
-      const d = data as { userId?: string }
-      if (d?.userId === userId) {
-        utils.notification.getUnread.invalidate()
-      }
+    notification: () => {
+      utils.notification.getUnread.invalidate()
     },
   })
 
@@ -93,7 +91,7 @@ export function NotificationBell({ userId }: { userId: string }) {
             </div>
           )}
 
-          {notifications?.map(n => (
+          {notifications?.map((n:any) => (
             <div
               key={n.id}
               className="flex gap-3 px-4 py-3 border-b border-[#F0F7F3] hover:bg-[#F7F9F5] cursor-pointer"

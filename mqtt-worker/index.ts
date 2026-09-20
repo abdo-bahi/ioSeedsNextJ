@@ -183,7 +183,7 @@ async function handleSensorData(mcu: MCU, sensorId: string, data: MQTTData) {
     },
   });
 
-  // Broadcast to dashboard to use later incha'Allah
+  // Broadcast to dashboard 
   await broadcast("sensor_reading", {
     mcuId:      mcu.id,
     sensorId:   sensor.id,

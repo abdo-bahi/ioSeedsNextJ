@@ -13,15 +13,12 @@ import { ChevronDown, Sprout, RotateCcw } from "lucide-react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useFieldStore } from "@/store/field-store"
 import { usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 
 // to change selected field later from db + and fetch for actuel data ***********************
 
 
 export function DashboardTopbar() {
   const { fields, selectedField, setField } = useFieldStore()
-
-  const { data: session } = authClient.useSession();
 
   const pathname = usePathname();
 
@@ -76,7 +73,7 @@ export function DashboardTopbar() {
           <RotateCcw className="h-[16px] w-[16px]" />
         </Button>
 
-        <NotificationBell userId={session?.user?.id ?? ""} />
+        <NotificationBell />
       </div>
     </header>
   );
