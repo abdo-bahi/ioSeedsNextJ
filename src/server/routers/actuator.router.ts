@@ -18,6 +18,8 @@ export const actuatorRouter = router({
           id: true,
           name: true,
           targetState: true,
+          toggleTimeLimit: true,
+          toggleStartedAt: true,
           isActive: true,
           fk_mcu: true,
           actuatorType: { select: { name: true } },
@@ -55,6 +57,8 @@ export const actuatorRouter = router({
           latitude: true,
           longitude: true,
           targetState: true,
+          toggleTimeLimit: true,
+          toggleStartedAt: true,
           isActive: true,
           fk_mcu: true,
           mcu: {
@@ -83,6 +87,8 @@ export const actuatorRouter = router({
         latitude: a.latitude,
         longitude: a.longitude,
         targetState: a.targetState,
+        toggleTimeLimit: a.toggleTimeLimit,
+        toggleStartedAt: a.toggleStartedAt,
         isActive: a.isActive,
         fk_mcu: a.fk_mcu,
         mcuName: a.mcu?.name ?? "—",
@@ -140,10 +146,13 @@ export const actuatorRouter = router({
         },
       });
 
-      // Update targetState optimistically
+      // Update targetState optimistically — opening always restarts the countdown
       await prisma.actuator.update({
         where: { id: input.actuatorId },
-        data: { targetState: input.newState },
+        data: {
+          targetState:     input.newState,
+          toggleStartedAt: input.newState ? new Date() : null,
+        },
       });
 
       // ✅ Publish via worker HTTP — no instrumentation needed
@@ -176,6 +185,7 @@ export const actuatorRouter = router({
         latitude: z.number(),
         longitude: z.number(),
         targetState: z.boolean().default(false),
+        toggleTimeLimit: z.number().int().min(1).nullable().optional(),
         isActive: z.boolean().default(true),
         fk_mcu: z.string().optional(),
         fk_actuatorType: z.string().optional(),
@@ -195,6 +205,7 @@ export const actuatorRouter = router({
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         targetState: z.boolean().optional(),
+        toggleTimeLimit: z.number().int().min(1).nullable().optional(),
         isActive: z.boolean().optional(),
         fk_mcu: z.string().optional(),
         fk_actuatorType: z.string().optional(),

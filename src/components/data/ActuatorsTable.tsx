@@ -79,6 +79,7 @@ type ActuatorForm = {
   latitude:        string
   longitude:       string
   targetState:     boolean
+  toggleTimeLimit: string
   isActive:        boolean
   fk_mcu:          string
   fk_actuatorType: string
@@ -90,6 +91,7 @@ const emptyForm: ActuatorForm = {
   latitude:        "36.4703",
   longitude:       "2.8277",
   targetState:     false,
+  toggleTimeLimit: "",
   isActive:        true,
   fk_mcu:          "",
   fk_actuatorType: "",
@@ -231,6 +233,22 @@ function ActuatorModal({
             </div>
           </div>
 
+          {/* Time limit */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[12px] text-[#5A7A65]">Limite de temps (min)</Label>
+            <Input
+              placeholder="ex: 5"
+              type="number"
+              min={1}
+              value={form.toggleTimeLimit}
+              onChange={e => set("toggleTimeLimit", e.target.value)}
+              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+            />
+            <p className="text-[10px] text-[#8FAF9A]">
+              Fermeture auto après X min. Vide = aucune limite.
+            </p>
+          </div>
+
           {/* Initial state + isActive */}
           <div className="flex flex-col gap-3">
             
@@ -326,6 +344,7 @@ export function ActuatorsTable({
       latitude:        parseFloat(form.latitude),
       longitude:       parseFloat(form.longitude),
       targetState:     form.targetState,
+      toggleTimeLimit: form.toggleTimeLimit ? parseInt(form.toggleTimeLimit) : null,
       isActive:        form.isActive,
       fk_mcu:          form.fk_mcu || undefined,
       fk_actuatorType: form.fk_actuatorType || undefined,
@@ -341,6 +360,7 @@ export function ActuatorsTable({
       latitude:        parseFloat(form.latitude),
       longitude:       parseFloat(form.longitude),
       targetState:     form.targetState,
+      toggleTimeLimit: form.toggleTimeLimit ? parseInt(form.toggleTimeLimit) : null,
       isActive:        form.isActive,
       fk_mcu:          form.fk_mcu || undefined,
       fk_actuatorType: form.fk_actuatorType || undefined,
@@ -383,7 +403,7 @@ export function ActuatorsTable({
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
-              {["NOM", "TYPE", "MCU", "PARCELLE", "GPS", "MAC", "ÉTAT", "STATUT", "DERNIÈRE ACTION", "ACTIONS"].map(h => (
+              {["NOM", "TYPE", "MCU", "PARCELLE", "GPS", "MAC", "ÉTAT", "STATUT", "DERNIÈRE ACTION", "LIMITE", "ACTIONS"].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]">
                   {h}
                 </th>
@@ -393,7 +413,7 @@ export function ActuatorsTable({
           <tbody>
             {isLoading && [...Array(4)].map((_, i) => (
               <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
-                {[...Array(10)].map((_, j) => (
+                {[...Array(11)].map((_, j) => (
                   <td key={j} className="px-4 py-3.5">
                     <div className="h-3 bg-[#E8F4ED] rounded w-16" />
                   </td>
@@ -460,6 +480,14 @@ export function ActuatorsTable({
                     }
                   </td>
 
+                  {/* Time limit */}
+                  <td className="px-4 py-3.5 text-[12px] text-[#5A7A65]">
+                    {actuator.toggleTimeLimit
+                      ? <span className="font-mono">{actuator.toggleTimeLimit} min</span>
+                      : "—"
+                    }
+                  </td>
+
                   {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
@@ -483,7 +511,7 @@ export function ActuatorsTable({
 
             {!isLoading && actuators?.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
+                <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
                   Aucun actionneur trouvé.
                 </td>
               </tr>
@@ -521,6 +549,7 @@ export function ActuatorsTable({
             latitude:        String(editActuator.latitude),
             longitude:       String(editActuator.longitude),
             targetState:     editActuator.targetState,
+            toggleTimeLimit: editActuator.toggleTimeLimit?.toString() ?? "",
             isActive:        editActuator.isActive,
             fk_mcu:          editActuator.fk_mcu ?? "",
             fk_actuatorType: editActuator.actuatorType ?? "",

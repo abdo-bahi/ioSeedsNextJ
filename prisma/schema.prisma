@@ -242,6 +242,8 @@ model Actuator {
   latitude    Float
   longitude   Float
   targetState Boolean
+  toggleTimeLimit Int?      // max minutes an open state may last, null = no limit
+  toggleStartedAt DateTime? // when the current open state started, null when closed
   createdAt   DateTime @default(now())
   isActive    Boolean
 

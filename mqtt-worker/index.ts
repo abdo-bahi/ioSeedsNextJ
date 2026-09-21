@@ -250,10 +250,13 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
 
   const newState = data.state === true || data.state === "true";
 
-  // Update targetState optimistically
+  // Update targetState optimistically — opening always restarts the countdown
   await prisma.actuator.update({
     where: { id: actuatorId },
-    data: { targetState: newState },
+    data: {
+      targetState:     newState,
+      toggleStartedAt: newState ? new Date() : null,
+    },
   });
 
   if (actuator.targetState !== newState) {
@@ -264,7 +267,7 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
         sentAt: new Date(),
         fk_actuator: actuatorId,
         mcuAction: true,
-        fk_user:     null,          // ← null = auto
+        fk_user:     null,         
       },
     });
 
