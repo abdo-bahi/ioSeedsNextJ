@@ -8,6 +8,7 @@ import { mcuRouter } from "./mcu.router"
 import { notificationRouter } from "./notification.router"
 import { scheduleRouter } from "./schedule.router"
 import { sensorRouter } from "./sensor.router"
+import { statisticsRouter } from "./statistics.router"
 import { thresholdRouter } from "./threshold.router"
 import { userRouter } from "./user.router"
 
@@ -23,6 +24,7 @@ export const appRouter = router({
   user: userRouter,
   threshold: thresholdRouter,
   notification: notificationRouter,
+  stats: statisticsRouter,
 })
 
 export type AppRouter = typeof appRouter
