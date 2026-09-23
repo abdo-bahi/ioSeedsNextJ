@@ -63,12 +63,12 @@ export default function Statistics() {
 
   const fieldOptions = (fields ?? []).map((f) => ({ id: f.id, name: f.name ?? f.id }));
 
-  const fromMinutes = Math.max(
-    60,
-    Math.round(
-      (Date.now() - new Date(`${startDate}T00:00:00`).getTime()) / 60000
-    )
-  );
+  const chartStartIso = new Date(`${startDate}T00:00:00`).toISOString();
+  const chartToIso = new Date(`${endDate}T23:59:59.999`).toISOString();
+
+  const periodStartMs = new Date(`${startDate}T00:00:00`).getTime();
+  const periodEndMs = new Date(`${endDate}T23:59:59.999`).getTime();
+  const chartHourly = periodEndMs - periodStartMs <= 24 * 60 * 60 * 1000;
 
   const [exporting, setExporting] = useState(false);
 
@@ -163,7 +163,7 @@ export default function Statistics() {
   if (!FARM_ID) {
     return (
       <div className="text-[13px] text-[#8FAF9A]">
-        Sélectionnez d'abord un champ pour afficher les statistiques.
+        Sélectionnez d&apos;abord un champ pour afficher les statistiques.
       </div>
     );
   }
@@ -230,12 +230,20 @@ export default function Statistics() {
       {/* ── Realtime sensor chart ── */}
       <RealtimeSensorChart
         sensors={sensors ?? []}
-        fromMinutes={fromMinutes}
-        periodLabel={`Depuis le ${startDate}`}
+        startIso={chartStartIso}
+        toIso={chartToIso}
+        hourly={chartHourly}
+        startMs={periodStartMs}
+        endMs={periodEndMs}
+        periodLabel={`${startDate} → ${endDate}`}
       />
 
       {/* ── Sensor type averages ── */}
-      <SensorTypeAreaCharts data={sensorTypes ?? []} />
+      <SensorTypeAreaCharts
+        data={sensorTypes ?? []}
+        startMs={periodStartMs}
+        endMs={periodEndMs}
+      />
 
       {/* ── Actuator times ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

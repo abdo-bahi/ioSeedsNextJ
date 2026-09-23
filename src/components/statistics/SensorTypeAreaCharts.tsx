@@ -12,11 +12,24 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 
 type Series = { time: string; value: number };
 
-function TypeTooltip({ active, payload, label, unit, color }: any) {
+type TooltipProps = {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: number;
+  unit?: string;
+  color?: string;
+};
+
+function TypeTooltip({ active, payload, label, unit, color }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-[#D6E8DC] rounded-lg shadow-sm px-3 py-2">
-      <p className="text-[11px] text-[#8FAF9A] mb-1">{label}</p>
+      <p className="text-[11px] text-[#8FAF9A] mb-1">
+        {new Date(Number(label)).toLocaleDateString("fr-DZ", {
+          day: "2-digit",
+          month: "2-digit",
+        })}
+      </p>
       <p className="text-[14px] font-semibold" style={{ color }}>
         {Number(payload[0].value).toFixed(1)}
         {unit}
@@ -28,8 +41,12 @@ function TypeTooltip({ active, payload, label, unit, color }: any) {
 // ── One Area chart per sensor type (units can differ) ─────────────
 export function SensorTypeAreaCharts({
   data,
+  startMs,
+  endMs,
 }: {
   data: { sensorType: string; unit: string | null; series: Series[] }[];
+  startMs: number;
+  endMs: number;
 }) {
   if (!data || data.length === 0) {
     return (
@@ -83,7 +100,10 @@ export function SensorTypeAreaCharts({
               ) : (
                 <ChartContainer config={config} className="h-[180px] w-full">
                   <AreaChart
-                    data={item.series}
+                    data={item.series.map((p) => ({
+                      ts: new Date(p.time).getTime(),
+                      value: p.value,
+                    }))}
                     margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
                   >
                     <defs>
@@ -114,9 +134,11 @@ export function SensorTypeAreaCharts({
                     />
 
                     <XAxis
-                      dataKey="time"
-                      tickFormatter={(iso: string) =>
-                        new Date(iso).toLocaleDateString("fr-DZ", {
+                      dataKey="ts"
+                      type="number"
+                      domain={[startMs, endMs]}
+                      tickFormatter={(ms: number) =>
+                        new Date(Number(ms)).toLocaleDateString("fr-DZ", {
                           day: "2-digit",
                           month: "2-digit",
                         })
@@ -131,7 +153,7 @@ export function SensorTypeAreaCharts({
                       tick={{ fontSize: 10, fill: "#8FAF9A" }}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(v: any) => `${v}${unit}`}
+                      tickFormatter={(v: number) => `${v}${unit}`}
                     />
 
                     <ChartTooltip

@@ -86,9 +86,9 @@ const main = async () => {
   })
   await prisma.actuatorType.createMany({
     data: [
-      { name: "drip_valve", description: "Drip irrigation valve" },
-      { name: "sprinkler",  description: "Sprinkler head" },
-      { name: "pump",       description: "Water pump" },
+      { name: "drip_valve", description: "Drip irrigation valve", isForIrrigation: true },
+      { name: "sprinkler",  description: "Sprinkler head",        isForIrrigation: true },
+      { name: "pump",       description: "Water pump",            isForIrrigation: true },
     ],
     skipDuplicates: true,
   })

@@ -14,6 +14,10 @@ export function fmtMinutes(ms: number): number {
   return Math.round(ms / 60000)
 }
 
+export function fmtMinutes1(ms: number): number {
+  return Math.round((ms / 60000) * 10) / 10
+}
+
 export function fmtDurationShort(ms: number): string {
   const m = fmtMinutes(ms)
   if (m === 0) return "0"

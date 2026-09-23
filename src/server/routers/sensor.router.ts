@@ -184,15 +184,29 @@ export const sensorRouter = router({
       z.object({
         sensorId: z.string(),
         fromMinutes: z.number().default(60 * 24),
+        startIso: z.string().optional(),
+        toIso: z.string().optional(),
       })
     )
     .query(async ({ input }) => {
-      const from = new Date(Date.now() - input.fromMinutes * 60 * 1000);
+      const hasWindow = Boolean(input.startIso || input.toIso);
+      let from: Date;
+      let to: Date;
+      if (hasWindow) {
+        from = input.startIso
+          ? new Date(input.startIso)
+          : new Date(Date.now() - input.fromMinutes * 60 * 1000);
+        to = input.toIso ? new Date(input.toIso) : new Date();
+      } else {
+        from = new Date(Date.now() - input.fromMinutes * 60 * 1000);
+        to = new Date();
+      }
+      if (to.getTime() <= from.getTime()) to = new Date(from.getTime() + 1);
 
       const readings = await prisma.environmentData.findMany({
         where: {
           fk_sensor: input.sensorId,
-          createdAt: { gte: from },
+          createdAt: { gte: from, lte: to },
         },
         select: {
           value: true,
@@ -203,10 +217,12 @@ export const sensorRouter = router({
       });
 
       // ── Bucket by interval to avoid too many points ────────────
+      const spanMs = to.getTime() - from.getTime();
+      const d = 24 * 60 * 60 * 1000;
       const bucketMinutes =
-        input.fromMinutes <= 60 * 24
-          ? 30 // today    → 30min buckets
-          : input.fromMinutes <= 60 * 24 * 7
+        spanMs <= d
+          ? 30 // 1 day    → 30min buckets
+          : spanMs <= 7 * d
           ? 180 // 7 days   → 3h buckets
           : 720; // 30 days  → 12h buckets
 

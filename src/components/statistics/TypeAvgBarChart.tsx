@@ -35,10 +35,10 @@ export function TypeAvgBarChart({ data }: { data: Row[] }) {
     <div className="bg-white border border-[#D6E8DC] rounded-xl p-5">
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
-          Temps actif moyen par type d'actionneur
+          Temps actif moyen par type d&apos;actionneur
         </p>
         <p className="text-[12px] text-[#8FAF9A] mt-0.5">
-          Moyenne du temps d'ouverture par actionneur, par type.
+          Moyenne du temps d&apos;ouverture par actionneur, par type.
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export function TypeAvgBarChart({ data }: { data: Row[] }) {
               tick={{ fontSize: 10, fill: "#8FAF9A" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v: any) => `${v}min`}
+              tickFormatter={(v: number) => `${v}min`}
             />
 
             <YAxis

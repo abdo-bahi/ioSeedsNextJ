@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { useSSE } from "@/lib/use-sse";
 import { getSensorColor } from "@/lib/sensor-colors";
@@ -15,11 +15,26 @@ import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 
 type Sensor = { id: string; name: string; fk_sensorType: string | null; unit: string | null };
 
-function CustomTooltip({ active, payload, label, unit, color }: any) {
+type TooltipProps = {
+  active?: boolean;
+  payload?: { value: number }[];
+  label?: number;
+  unit?: string;
+  color?: string;
+};
+
+function CustomTooltip({ active, payload, label, unit, color }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-[#D6E8DC] rounded-lg shadow-sm px-3 py-2">
-      <p className="text-[11px] text-[#8FAF9A] mb-1">{label}</p>
+      <p className="text-[11px] text-[#8FAF9A] mb-1">
+        {new Date(Number(label)).toLocaleString("fr-DZ", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </p>
       <p className="text-[14px] font-semibold" style={{ color }}>
         {Number(payload[0].value).toFixed(1)}
         {unit}
@@ -28,36 +43,44 @@ function CustomTooltip({ active, payload, label, unit, color }: any) {
   );
 }
 
-// ── Realtime sensor chart (honors the toolbar period via fromMinutes) ──
+// ── Realtime sensor chart (honors the toolbar period via an explicit window) ──
 export function RealtimeSensorChart({
   sensors,
-  fromMinutes,
+  startIso,
+  toIso,
+  hourly,
+  startMs,
+  endMs,
   periodLabel,
 }: {
   sensors: Sensor[];
-  fromMinutes: number;
+  startIso: string;
+  toIso: string;
+  hourly: boolean;
+  startMs: number;
+  endMs: number;
   periodLabel: string;
 }) {
   const utils = trpc.useUtils();
   const [selectedSensorId, setSelectedSensorId] = useState("");
+  const [prevSensors, setPrevSensors] = useState(sensors);
 
-  useEffect(() => {
-    if (
-      sensors.length &&
-      !sensors.some((s) => s.id === selectedSensorId)
-    ) {
+  if (prevSensors !== sensors) {
+    setPrevSensors(sensors);
+    if (sensors.length && !sensors.some((s) => s.id === selectedSensorId)) {
       setSelectedSensorId(sensors[0].id);
     }
-  }, [sensors, selectedSensorId]);
+  }
 
   const { data: chartData, isLoading } = trpc.sensor.getChartData.useQuery(
-    { sensorId: selectedSensorId, fromMinutes },
+    { sensorId: selectedSensorId, startIso, toIso },
     { enabled: !!selectedSensorId }
   );
 
   useSSE({
-    sensor_reading: (data: any) => {
-      if (data.sensorId === selectedSensorId) {
+    sensor_reading: (data: unknown) => {
+      const d = data as { sensorId?: string };
+      if (d.sensorId === selectedSensorId) {
         utils.sensor.getChartData.invalidate({ sensorId: selectedSensorId });
       }
     },
@@ -68,6 +91,10 @@ export function RealtimeSensorChart({
   const chartConfig = {
     value: { label: colorInfo.label, color: colorInfo.color },
   };
+  const points = (chartData ?? []).map((p) => ({
+    ts: new Date(p.time).getTime(),
+    value: p.value,
+  }));
 
   return (
     <div className="bg-white border border-[#D6E8DC] rounded-xl p-5">
@@ -115,7 +142,7 @@ export function RealtimeSensorChart({
       ) : (
         <ChartContainer config={chartConfig} className="h-[240px] w-full">
           <AreaChart
-            data={chartData}
+            data={points}
             margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
           >
             <defs>
@@ -128,10 +155,12 @@ export function RealtimeSensorChart({
             <CartesianGrid strokeDasharray="3 3" stroke="#E8F4ED" vertical={false} />
 
             <XAxis
-              dataKey="time"
-              tickFormatter={(iso: string) => {
-                const d = new Date(iso);
-                if (fromMinutes <= 60 * 24) {
+              dataKey="ts"
+              type="number"
+              domain={[startMs, endMs]}
+              tickFormatter={(ms: number) => {
+                const d = new Date(Number(ms));
+                if (hourly) {
                   return d.toLocaleTimeString("fr-DZ", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -152,7 +181,7 @@ export function RealtimeSensorChart({
               tick={{ fontSize: 10, fill: "#8FAF9A" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v: any) => `${v}${colorInfo.unit}`}
+              tickFormatter={(v: number) => `${v}${colorInfo.unit}`}
             />
 
             <ChartTooltip

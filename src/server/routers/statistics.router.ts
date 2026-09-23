@@ -4,7 +4,6 @@ import { protectedProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 
 // Types considered as irrigation hardware (used for the irrigation KPIs)
-const IRRIGATION_TYPES = ["drip_valve", "sprinkler", "pump"]
 const SOIL_MOISTURE_TYPES = ["soil_moisture", "soilMoisture"]
 
 const periodInput = z.object({
@@ -41,7 +40,7 @@ async function getActuatorTimes(fieldIds: string[], start: Date, end: Date) {
     select: {
       id: true,
       name: true,
-      actuatorType: { select: { name: true } },
+      actuatorType: { select: { name: true, isForIrrigation: true } },
       mcu: { select: { name: true } },
     },
   })
@@ -80,13 +79,14 @@ async function getActuatorTimes(fieldIds: string[], start: Date, end: Date) {
   )
 
   const results: {
-    actuatorId:   string
-    actuatorName: string
-    mcuName:      string
-    actuatorType: string | null
-    manualMs:     number
-    autoMs:       number
-    sessions:     number
+    actuatorId:     string
+    actuatorName:   string
+    mcuName:        string
+    actuatorType:   string | null
+    isForIrrigation: boolean
+    manualMs:       number
+    autoMs:         number
+    sessions:       number
   }[] = []
 
   for (let i = 0; i < actuators.length; i++) {
@@ -140,10 +140,11 @@ async function getActuatorTimes(fieldIds: string[], start: Date, end: Date) {
     }
 
     results.push({
-      actuatorId:   act.id,
-      actuatorName: act.name,
-      mcuName:      act.mcu?.name ?? "—",
-      actuatorType: act.actuatorType?.name ?? null,
+      actuatorId:     act.id,
+      actuatorName:   act.name,
+      mcuName:        act.mcu?.name ?? "—",
+      actuatorType:   act.actuatorType?.name ?? null,
+      isForIrrigation: act.actuatorType?.isForIrrigation === true,
       manualMs,
       autoMs,
       sessions,
@@ -176,9 +177,7 @@ export const statisticsRouter = router({
       const fieldIds = await getFieldIds(input.farmId, input.fieldId)
       const rows = await getActuatorTimes(fieldIds, start, end)
 
-      const irrigation = rows.filter(
-        (r) => r.actuatorType && IRRIGATION_TYPES.includes(r.actuatorType)
-      )
+      const irrigation = rows.filter((r) => r.isForIrrigation)
       const totalMs = irrigation.reduce((s, r) => s + r.manualMs + r.autoMs, 0)
       const sessions = irrigation.reduce((s, r) => s + r.sessions, 0)
       const manualMs = irrigation.reduce((s, r) => s + r.manualMs, 0)
