@@ -30,6 +30,15 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   Serial.println("\n📥 Message received!");
   Serial.println("   Topic: " + String(topic));
 
+  // Config topics (actuators / sensors / schedules / ...) — retained
+  // full-list snapshots; just log them (the MCU replaces its whole list).
+  if (!String(topic).endsWith("/cmd")) {
+    Serial.print("   ⚙️ Config payload: ");
+    Serial.write(payload, length);
+    Serial.println();
+    return;
+  }
+
   // Parse JSON
   StaticJsonDocument<512> doc;
   DeserializationError err = deserializeJson(doc, payload, length);
@@ -82,6 +91,17 @@ void connectMQTT() {
 
       mqtt.subscribe(cmdTopic.c_str(), 1);
       Serial.println("📡 Subscribed to: " + cmdTopic);
+
+       // Device config topics — server publishes the full actuator/sensor
+       // lists on create/update/delete (retained → delivered on boot).
+      String actuatorsTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
+                              + "/" + MCU_ID + "/actuators";
+      String sensorsTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
+                              + "/" + MCU_ID + "/sensors";
+      mqtt.subscribe(actuatorsTopic.c_str(), 1);
+      mqtt.subscribe(sensorsTopic.c_str(), 1);
+      Serial.println("📡 Subscribed to: " + actuatorsTopic);
+      Serial.println("📡 Subscribed to: " + sensorsTopic);
 
     } else {
       Serial.printf(" ❌ Failed rc=%d — retry in 5s\n", mqtt.state());

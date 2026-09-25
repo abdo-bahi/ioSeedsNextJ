@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
+import { syncSensorsToMCU } from "./device-sync";
 
 export const sensorRouter = router({
   getLatestPerField: publicProc
@@ -176,7 +177,12 @@ export const sensorRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return prisma.sensor.create({ data: input });
+      const created = await prisma.sensor.create({ data: input });
+
+      // Publish the refreshed sensor list to the MCU (retained)
+      if (created.fk_mcu) await syncSensorsToMCU(created.fk_mcu);
+
+      return created;
     }),
 
   getChartData: protectedProc
@@ -296,14 +302,35 @@ export const sensorRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      return prisma.sensor.update({ where: { id }, data });
+
+      const prev = await prisma.sensor.findUnique({
+        where: { id },
+        select: { fk_mcu: true },
+      });
+
+      const updated = await prisma.sensor.update({ where: { id }, data });
+
+      // Refresh both the old MCU (device moved away) and the new one
+      const mcus = new Set<string>();
+      if (prev?.fk_mcu) mcus.add(prev.fk_mcu);
+      if (updated.fk_mcu) mcus.add(updated.fk_mcu);
+      await Promise.all([...mcus].map((m) => syncSensorsToMCU(m)));
+
+      return updated;
     }),
 
   // ── Delete ────────────────────────────────────────────────────
   delete: publicProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      return prisma.sensor.delete({ where: { id: input.id } });
+      const prev = await prisma.sensor.findUnique({
+        where: { id: input.id },
+        select: { fk_mcu: true },
+      });
+
+      await prisma.sensor.delete({ where: { id: input.id } });
+
+      if (prev?.fk_mcu) await syncSensorsToMCU(prev.fk_mcu);
     }),
   getLastReading: publicProc
     .input(z.object({ sensorId: z.string() }))

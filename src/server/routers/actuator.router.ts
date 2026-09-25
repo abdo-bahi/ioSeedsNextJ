@@ -4,6 +4,7 @@ import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { notify } from "@/lib/notifications";
 import { TRPCError } from "@trpc/server";
+import { syncActuatorsToMCU } from "./device-sync";
 
 export const actuatorRouter = router({
   // ── Get all for a field (dashboard quick actions) ─────────────
@@ -193,7 +194,12 @@ export const actuatorRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return prisma.actuator.create({ data: input });
+      const created = await prisma.actuator.create({ data: input });
+
+      // Publish the refreshed actuator list to the MCU (retained)
+      if (created.fk_mcu) await syncActuatorsToMCU(created.fk_mcu);
+
+      return created;
     }),
 
   // ── Update ────────────────────────────────────────────────────
@@ -214,13 +220,34 @@ export const actuatorRouter = router({
     )
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
-      return prisma.actuator.update({ where: { id }, data });
+
+      const prev = await prisma.actuator.findUnique({
+        where: { id },
+        select: { fk_mcu: true },
+      });
+
+      const updated = await prisma.actuator.update({ where: { id }, data });
+
+      // Refresh both the old MCU (device moved away) and the new one
+      const mcus = new Set<string>();
+      if (prev?.fk_mcu) mcus.add(prev.fk_mcu);
+      if (updated.fk_mcu) mcus.add(updated.fk_mcu);
+      await Promise.all([...mcus].map((m) => syncActuatorsToMCU(m)));
+
+      return updated;
     }),
 
   // ── Delete ────────────────────────────────────────────────────
   delete: publicProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      return prisma.actuator.delete({ where: { id: input.id } });
+      const prev = await prisma.actuator.findUnique({
+        where: { id: input.id },
+        select: { fk_mcu: true },
+      });
+
+      await prisma.actuator.delete({ where: { id: input.id } });
+
+      if (prev?.fk_mcu) await syncActuatorsToMCU(prev.fk_mcu);
     }),
 });
