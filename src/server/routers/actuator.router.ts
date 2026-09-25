@@ -155,14 +155,15 @@ export const actuatorRouter = router({
         },
       });
 
-      // ✅ Publish via worker HTTP — no instrumentation needed
+      // ✅ Publish via worker HTTP (retained → broker keeps the latest state)
       await publishToMCU(
         `irrigation/${farmId}/${fieldId}/${mcuId}/actuator/${input.actuatorId}/cmd`,
         {
           commandId: action.id,
           actuatorId: input.actuatorId,
           targetState: input.newState,
-        }
+        },
+        { retain: true }
       );
 
       await notify({

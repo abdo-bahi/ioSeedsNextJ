@@ -35,7 +35,7 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   DeserializationError err = deserializeJson(doc, payload, length);
 
   if (err) {
-    Serial.println("❌ JSON parse error: " + String(err.c_str()))
+    Serial.println("❌ JSON parse error: " + String(err.c_str()));
     return;
   }
   // ── Actuator command ──────────────────────────────────────────
@@ -49,6 +49,10 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   }
 
   Serial.printf("   commandId: %s\n", commandId);
+
+  // Apply the state (live command OR retained message pushed right after
+  // subscribe) and confirm it back to the dashboard.
+  reportActuatorState(targetState);
   }
 // ─────────────────────────────────────────────────────────────────
 void connectWifi() {
@@ -70,7 +74,9 @@ void connectMQTT() {
 
     if (mqtt.connect("esp32-ioseeds", MQTT_USER, MQTT_PASS)) {
       Serial.println(" ✅ Connected!");
-       // Subscribe to actuator command topic
+       // Subscribe to actuator command topic.
+       // Because the server publishes with { retain: true }, Mosquitto
+       // instantly pushes the latest retained command to us here.
       String cmdTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
                       + "/" + MCU_ID + "/actuator/" + ACTUATOR_ID + "/cmd";
 
@@ -109,6 +115,21 @@ void sendSensorData() {
   Serial.printf("💧 Sent: %.1f%% — %s\n", value, ok ? "✅" : "❌ FAILED");
 }
 
+void reportActuatorState(bool state) {
+  StaticJsonDocument<256> doc;
+  doc["apiKey"] = API_KEY;
+  doc["state"] = state;
+
+  char buf[256];
+  serializeJson(doc, buf);
+
+  String topic = String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID
+                 + "/actuator/" + ACTUATOR_ID + "/state";
+
+  bool ok = mqtt.publish(topic.c_str(), buf);
+  Serial.printf("🔁 Actuator state reported: %s — %s\n", state ? "OPEN" : "CLOSED", ok ? "✅" : "❌ FAILED");
+}
+
 // ─────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
@@ -117,7 +138,7 @@ void setup() {
 
   connectWifi();
 
-  mqtt.setBufferSize(512);
+  mqtt.setBufferSize(2048);
   mqtt.setServer(MQTT_BROKER, MQTT_PORT);
   mqtt.setCallback(onMessage); 
 }

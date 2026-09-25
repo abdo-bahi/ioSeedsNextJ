@@ -82,7 +82,8 @@ async function syncSchedulesToMCU(mcuId: string) {
     {
       commandId: `schedules-${Date.now()}`,
       schedules, // full list — MCU replaces its entire schedule list
-    }
+    },
+    { retain: true }
   );
 
   console.log(`📤 Synced ${schedules.length} schedules to MCU ${mcuId}`);

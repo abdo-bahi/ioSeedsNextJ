@@ -171,7 +171,8 @@ async function syncThresholdsToMCU(mcuId: string) {
     {
       commandId:  `thresholds-${Date.now()}`,
       thresholds,
-    }
+    },
+    { retain: true }
   )
 
   console.log(`📤 Synced ${thresholds.length} thresholds to MCU ${mcu.name}`)

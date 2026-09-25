@@ -1,4 +1,8 @@
-export async function publishToMCU(topic: string, payload: object) {
+export async function publishToMCU(
+    topic: string,
+    payload: object,
+    options?: { retain?: boolean }
+  ) {
     try {
       const res = await fetch(`${process.env.WORKER_HTTP_URL}`, {
         method:  "POST",
@@ -6,7 +10,7 @@ export async function publishToMCU(topic: string, payload: object) {
           "Content-Type":  "application/json",
           "x-worker-key":  process.env.WORKER_SECRET ?? "",
         },
-        body: JSON.stringify({ topic, payload }),
+        body: JSON.stringify({ topic, payload, retain: options?.retain ?? false }),
       })
   
       if (!res.ok) {
@@ -40,6 +44,7 @@ export async function publishToMCU(topic: string, payload: object) {
       {
         commandId: `schedules-${Date.now()}`,
         schedules,
-      }
+      },
+      { retain: true }
     )
   }

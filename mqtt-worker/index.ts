@@ -47,9 +47,12 @@ const httpServer = http.createServer(async (req, res) => {
   });
   req.on("end", () => {
     try {
-      const { topic, payload } = JSON.parse(body);
-      client.publish(topic, JSON.stringify(payload), { qos: 2 });
-      console.log(`📤 Published to ${topic}`);
+      const { topic, payload, retain } = JSON.parse(body);
+      client.publish(topic, JSON.stringify(payload), {
+        qos: 2,
+        retain: retain === true, // keep the latest state on the broker
+      });
+      console.log(`📤 Published to ${topic}${retain === true ? " (retained)" : ""}`);
       res.writeHead(200);
       res.end(JSON.stringify({ ok: true }));
     } catch {
@@ -360,8 +363,10 @@ export function publishActuatorCommand(
 ) {
   const topic = `irrigation/${farmId}/${fieldId}/${mcuId}/actuator/${actuatorId}/cmd`;
   const payload = JSON.stringify({ commandId, actuatorId, targetState });
-  client.publish(topic, payload, { qos: 1 });
-  console.log(`📤 Actuator cmd → ${actuatorId}: state=${targetState}`);
+  // Retained: broker keeps the last state → a reconnecting MCU instantly
+  // receives the current command when it (re)subscribes.
+  client.publish(topic, payload, { qos: 1, retain: true });
+  console.log(`📤 Actuator cmd → ${actuatorId}: state=${targetState} (retained)`);
 }
 
 // Send config update to MCU
@@ -379,8 +384,8 @@ export function publishMCUConfig(
 ) {
   const topic = `irrigation/${farmId}/${fieldId}/${mcuId}/config`;
   const payload = JSON.stringify({ commandId, ...config });
-  client.publish(topic, payload, { qos: 1 });
-  console.log(`📤 Config → MCU ${mcuId}:`, config);
+  client.publish(topic, payload, { qos: 1, retain: true });
+  console.log(`📤 Config → MCU ${mcuId}:`, config, "(retained)");
 }
 
 // ── Graceful shutdown ──────────────────────────────────────────────
