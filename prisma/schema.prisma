@@ -169,8 +169,6 @@ model IrrigationField {
 model MCU {
   id                       String    @id @default(cuid())
   name                     String?
-  minSoilMoisture          Float
-  maxSoilMoisture          Float
   sleepingTime             Float
   macAddress               String?
   autoControlledIrrigation Boolean

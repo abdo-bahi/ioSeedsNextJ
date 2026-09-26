@@ -169,7 +169,7 @@ export const sensorRouter = router({
         longitude: z.number(),
         minAnalogue: z.number(),
         maxAnalogue: z.number(),
-        unit: z.string().max(5).optional(),
+        unit: z.string().max(5).default("%"),
         rowValueConversion: z.boolean().default(false),
         isActive: z.boolean().default(true),
         fk_mcu: z.string().optional(),

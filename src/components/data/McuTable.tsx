@@ -30,8 +30,6 @@ type McuForm = {
   name: string;
   macAddress: string;
   sleepingTime: string;
-  minSoilMoisture: string;
-  maxSoilMoisture: string;
   autoControlledIrrigation: boolean;
   isActive: boolean;
   fk_irrigationField: string;
@@ -41,8 +39,6 @@ const emptyForm: McuForm = {
   name: "",
   macAddress: "",
   sleepingTime: "30",
-  minSoilMoisture: "20",
-  maxSoilMoisture: "80",
   autoControlledIrrigation: true,
   isActive: true,
   fk_irrigationField: "",
@@ -103,24 +99,6 @@ function formatRelative(date: Date | string | null): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-// ── Moisture range visual ─────────────────────────────────────────
-function MoistureRange({ min, max }: { min: number; max: number }) {
-  return (
-    <div className="flex flex-col gap-1 min-w-[80px]">
-      <div className="relative h-[5px] bg-[#E8F4ED] rounded-full w-full">
-        <div
-          className="absolute h-full bg-gradient-to-r from-[#E89B2D] to-[#4CAF7D] rounded-full"
-          style={{ left: `${min}%`, width: `${max - min}%` }}
-        />
-      </div>
-      <div className="flex justify-between">
-        <span className="text-[10px] text-[#E89B2D] font-medium">{min}%</span>
-        <span className="text-[10px] text-[#4CAF7D] font-medium">{max}%</span>
-      </div>
-    </div>
-  );
-}
-
 // ── MCU Form Modal ────────────────────────────────────────────────
 function McuModal({
   open,
@@ -153,10 +131,6 @@ function McuModal({
   function set<K extends keyof McuForm>(key: K, val: McuForm[K]) {
     setForm((p) => ({ ...p, [key]: val }));
   }
-
-  // Moisture range preview
-  const min = parseFloat(form.minSoilMoisture) || 0;
-  const max = parseFloat(form.maxSoilMoisture) || 100;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -273,59 +247,6 @@ function McuModal({
               onChange={(e) => set("sleepingTime", e.target.value)}
               className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
             />
-          </div>
-
-          {/* ── Soil moisture thresholds ── */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
-              Seuils d&apos;humidité
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-[#5A7A65]">
-                  minSoilMoisture (%)
-                </Label>
-                <Input
-                  placeholder="20"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={form.minSoilMoisture}
-                  onChange={(e) => set("minSoilMoisture", e.target.value)}
-                  className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-[#5A7A65]">
-                  maxSoilMoisture (%)
-                </Label>
-                <Input
-                  placeholder="80"
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={form.maxSoilMoisture}
-                  onChange={(e) => set("maxSoilMoisture", e.target.value)}
-                  className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
-                />
-              </div>
-            </div>
-
-            {/* Live range preview */}
-            <div className="relative h-[6px] bg-[#E8F4ED] rounded-full">
-              <div
-                className="absolute h-full bg-gradient-to-r from-[#E89B2D] to-[#4CAF7D] rounded-full transition-all"
-                style={{ left: `${min}%`, width: `${Math.max(max - min, 0)}%` }}
-              />
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[11px] text-[#E89B2D] font-medium">
-                Min: {min}%
-              </span>
-              <span className="text-[11px] text-[#4CAF7D] font-medium">
-                Max: {max}%
-              </span>
-            </div>
           </div>
 
           {/* ── API Key section (edit mode only) ── */}
@@ -459,8 +380,6 @@ export function MCUsTable({
       name: form.name,
       macAddress: form.macAddress || undefined,
       sleepingTime: parseFloat(form.sleepingTime),
-      minSoilMoisture: parseFloat(form.minSoilMoisture),
-      maxSoilMoisture: parseFloat(form.maxSoilMoisture),
       autoControlledIrrigation: form.autoControlledIrrigation,
       isActive: form.isActive,
     });
@@ -473,8 +392,6 @@ export function MCUsTable({
       name: form.name,
       macAddress: form.macAddress || undefined,
       sleepingTime: parseFloat(form.sleepingTime),
-      minSoilMoisture: parseFloat(form.minSoilMoisture),
-      maxSoilMoisture: parseFloat(form.maxSoilMoisture),
       autoControlledIrrigation: form.autoControlledIrrigation,
       isActive: form.isActive,
       fk_irrigationField: form.fk_irrigationField || irrigationFieldId,
@@ -507,7 +424,6 @@ export function MCUsTable({
                 "NOM",
                 "MAC",
                 "MODE",
-                "HUMIDITÉ",
                 "VEILLE",
                 "STATUT",
                 "VU LE",
@@ -553,14 +469,6 @@ export function MCUsTable({
                   {/* Mode */}
                   <td className="px-4 py-3.5">
                     <ModeBadge auto={mcu.autoControlledIrrigation} />
-                  </td>
-
-                  {/* Moisture range */}
-                  <td className="px-4 py-3.5">
-                    <MoistureRange
-                      min={mcu.minSoilMoisture}
-                      max={mcu.maxSoilMoisture}
-                    />
                   </td>
 
                   {/* Sleeping time */}
@@ -650,8 +558,6 @@ export function MCUsTable({
             name: editMcu.name ?? "",
             macAddress: editMcu.macAddress ?? "",
             sleepingTime: String(editMcu.sleepingTime),
-            minSoilMoisture: String(editMcu.minSoilMoisture),
-            maxSoilMoisture: String(editMcu.maxSoilMoisture),
             autoControlledIrrigation: editMcu.autoControlledIrrigation,
             isActive: editMcu.isActive,
             fk_irrigationField: editMcu.fk_irrigationField ?? irrigationFieldId,

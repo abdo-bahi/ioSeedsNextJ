@@ -21,8 +21,6 @@ export const mcuRouter = router({
           name: true,
           isActive: true,
           status: true,
-          minSoilMoisture: true,
-          maxSoilMoisture: true,
           sleepingTime: true,
           macAddress: true,
           autoControlledIrrigation: true,
@@ -46,8 +44,6 @@ export const mcuRouter = router({
       z.object({
         fk_irrigationField: z.string(),
         name: z.string().min(1),
-        minSoilMoisture: z.number().min(0).max(100),
-        maxSoilMoisture: z.number().min(0).max(100),
         sleepingTime: z.number().min(5),
         macAddress: z.string().optional(),
         autoControlledIrrigation: z.boolean().default(true),
@@ -80,8 +76,6 @@ export const mcuRouter = router({
       z.object({
         id: z.string(),
         name: z.string().min(1).optional(),
-        minSoilMoisture: z.number().min(0).max(100).optional(),
-        maxSoilMoisture: z.number().min(0).max(100).optional(),
         sleepingTime: z.number().min(5).optional(),
         macAddress: z.string().optional(),
         autoControlledIrrigation: z.boolean().optional(),
@@ -109,12 +103,10 @@ export const mcuRouter = router({
 
 
         // ✅ Publish via worker HTTP (retained → MCU gets the latest config on boot)
-        if(data.minSoilMoisture)
+        if (data.sleepingTime !== undefined || data.autoControlledIrrigation !== undefined)
         await publishToMCU(
           `irrigation/${farmId}/${fieldId}/${mcuId}/config`,
           {
-            minSoilMoisture: input.minSoilMoisture ?? null,
-            maxSoilMoisture: input.maxSoilMoisture ?? null,
             sleepingTime: input.sleepingTime ?? null,
             autoControlledIrrigation: input.autoControlledIrrigation  ?? null,
           },

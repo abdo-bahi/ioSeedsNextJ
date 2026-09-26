@@ -390,7 +390,7 @@ function ScheduleCard({
   const isWeekdays = schedule.weekDays?.length > 0;
 
   const triggerLabel = schedule.toggleAtThresholds
-    ? `seuil min ${schedule.actuator?.mcu?.minSoilMoisture ?? "?"}%`
+    ? "seuil d'humidité"
     : null;
 
   const repeatLabel = isWeekdays

@@ -119,30 +119,11 @@ export function KPIGrid() {
   const nbMcu = mcus?.length ?? 0;
   const nbActiveMcu = mcus?.filter((mcu: any) => mcu.isActive).length ?? 0;
 
-  const avgMinSoilMoisture = mcus?.length
-    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.minSoilMoisture, 0) /
-      mcus.length
-    : null;
-
-  const avgMaxSoilMoisture = mcus?.length
-    ? mcus.reduce((sum: any, mcu: any) => sum + mcu.maxSoilMoisture, 0) /
-      mcus.length
-    : null;
-
   // ── Color based on MCU thresholds ─────────────────────────────
   function getSensorColor(
     sensorType: string,
     average: number
   ): "green" | "amber" | "red" | "blue" {
-    if (
-      sensorType === "soil_moisture" &&
-      avgMinSoilMoisture &&
-      avgMaxSoilMoisture
-    ) {
-      if (average < avgMinSoilMoisture) return "red"; // too dry
-      if (average > avgMaxSoilMoisture) return "amber"; // too wet
-      return "green"; // optimal
-    }
     if (sensorType === "temperature") {
       if (average > 35) return "red";
       if (average > 28) return "amber";

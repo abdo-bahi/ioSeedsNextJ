@@ -137,7 +137,6 @@ export const scheduleRouter = router({
               mcu: {
                 select: {
                   name: true,
-                  minSoilMoisture: true,
                   irrigationField: { select: { name: true } },
                 },
               },

@@ -377,8 +377,6 @@ export function publishMCUConfig(
   commandId: string,
   config: {
     sleepingTime?: number;
-    minSoilMoisture?: number;
-    maxSoilMoisture?: number;
     autoControlledIrrigation?: boolean;
   }
 ) {

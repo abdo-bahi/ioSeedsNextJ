@@ -180,7 +180,7 @@ const main = async () => {
     where: { fk_irrigationField_name: { fk_irrigationField: parcelleA.id, name: "MCU-A1" } },
     update: {},
     create: {
-      name: "MCU-A1", minSoilMoisture: 20, maxSoilMoisture: 80,
+      name: "MCU-A1",
       sleepingTime: 30, macAddress: "AA:BB:CC:DD:EE:01",
       autoControlledIrrigation: true, isActive: true,
       apiKeyHash: "demo-api-key-hash-a1", status: "ONLINE",
@@ -191,7 +191,7 @@ const main = async () => {
     where: { fk_irrigationField_name: { fk_irrigationField: parcelleB.id, name: "MCU-B1" } },
     update: {},
     create: {
-      name: "MCU-B1", minSoilMoisture: 25, maxSoilMoisture: 75,
+      name: "MCU-B1",
       sleepingTime: 60, macAddress: "AA:BB:CC:DD:EE:02",
       autoControlledIrrigation: false, isActive: true,
       apiKeyHash: "demo-api-key-hash-b1", status: "SLEEPING",
@@ -202,7 +202,7 @@ const main = async () => {
     where: { fk_irrigationField_name: { fk_irrigationField: parcelleC.id, name: "MCU-C1" } },
     update: {},
     create: {
-      name: "MCU-C1", minSoilMoisture: 15, maxSoilMoisture: 70,
+      name: "MCU-C1",
       sleepingTime: 45, macAddress: "AA:BB:CC:DD:EE:03",
       autoControlledIrrigation: true, isActive: false,
       apiKeyHash: "demo-api-key-hash-c1", status: "OFFLINE",
