@@ -6,25 +6,33 @@ import { Label } from "@/components/ui/label"
 import { ArrowDownToLine } from "lucide-react"
 
 type CalibrationProps = {
-  sensorId?:          string         // undefined on create
-  minAnalogue:        string
-  maxAnalogue:        string
-  unit:               string
-  rowValueConversion: boolean
-  onMinChange:        (val: string)  => void
-  onMaxChange:        (val: string)  => void
-  onUnitChange:       (val: string)  => void
-  onConversionToggle: (val: boolean) => void
+  sensorId?:            string         // undefined on create
+  minAnalogue:          string
+  maxAnalogue:          string
+  minToConvertValue:    string
+  maxToConvertValue:    string
+  unit:                 string
+  rowValueConversion:   boolean
+  onMinChange:          (val: string) => void
+  onMaxChange:          (val: string) => void
+  onMinToChange:        (val: string) => void
+  onMaxToChange:        (val: string) => void
+  onUnitChange:         (val: string) => void
+  onConversionToggle:   (val: boolean) => void
 }
 
 export function SensorCalibrationSection({
   sensorId,
   minAnalogue,
   maxAnalogue,
+  minToConvertValue,
+  maxToConvertValue,
   unit,
   rowValueConversion,
   onMinChange,
   onMaxChange,
+  onMinToChange,
+  onMaxToChange,
   onUnitChange,
   onConversionToggle,
 }: CalibrationProps) {
@@ -36,18 +44,21 @@ export function SensorCalibrationSection({
   )
 
   const lastRaw = lastReading?.rawValue ?? null
-  const min     = parseFloat(minAnalogue) || 0
-  const max     = parseFloat(maxAnalogue) || 1023
+  const minAna  = parseFloat(minAnalogue)        || 0
+  const maxAna  = parseFloat(maxAnalogue)        || 1023
+  const minTo   = parseFloat(minToConvertValue)  || 0
+  const maxTo   = parseFloat(maxToConvertValue)  || 100
+  const spanAna = (maxAna - minAna) || 1
 
   // ── Conversion preview ─────────────────────────────────────────
-  // displayValue = min + (rawValue / 1023) × (max - min)
+  // converti = minTo + (raw − minAnalogue) / (maxAnalogue − minAnalogue) × (maxTo − minTo)
   const previewValue = lastRaw !== null
-    ? min + (lastRaw / 1023) * (max - min)
+    ? minTo + ((lastRaw - minAna) / spanAna) * (maxTo - minTo)
     : null
 
-  // ── Gradient bar fill % ────────────────────────────────────────
+  // ── Gradient bar fill % (raw position inside the analogue span) ─
   const fillPct = lastRaw !== null
-    ? Math.min(100, Math.max(0, (lastRaw / 1023) * 100))
+    ? Math.min(100, Math.max(0, ((lastRaw - minAna) / spanAna) * 100))
     : 50
 
   return (
@@ -63,7 +74,7 @@ export function SensorCalibrationSection({
             Conversion analogique
           </p>
           <p className="text-[10px] text-[#4CAF7D] font-mono mt-0.5">
-            displayValue = min + (rawValue / 1023) × (max − min)
+            converti = minTo + (raw − minAnalogue) × (maxTo − minTo) / (maxAnalogue − minAnalogue)
           </p>
         </div>
         <button
@@ -90,13 +101,18 @@ export function SensorCalibrationSection({
         />
       </div>
 
-      {/* ── Min + Max ── */}
+      {/* ── Input range: minAnalogue / maxAnalogue ── */}
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[12px] text-[#8FAF9A]">
+          Intervalle analogique (brute du capteur)
+        </Label>
+      </div>
       <div className="grid grid-cols-2 gap-3">
 
-        {/* Min */}
+        {/* Min analogue */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-[#5A7A65]">
-            Valeur min analogique (%)
+            Min analogique
           </Label>
           <Input
             placeholder="0"
@@ -127,10 +143,10 @@ export function SensorCalibrationSection({
           )}
         </div>
 
-        {/* Max */}
+        {/* Max analogue */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-[#5A7A65]">
-            Valeur max analogique (%)
+            Max analogique
           </Label>
           <Input
             placeholder="1023"
@@ -154,6 +170,45 @@ export function SensorCalibrationSection({
               </span>
             </button>
           )}
+        </div>
+      </div>
+
+      {/* ── Output range: minToConvertValue / maxToConvertValue ── */}
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[12px] text-[#8FAF9A]">
+          Valeur convertie cible ({unit || "unité"})
+        </Label>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+
+        {/* Min converted */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-[12px] text-[#5A7A65]">
+            Min valeur convertie
+          </Label>
+          <Input
+            placeholder="0"
+            type="number"
+            value={minToConvertValue}
+            onChange={e => onMinToChange(e.target.value)}
+            disabled={!rowValueConversion}
+            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+          />
+        </div>
+
+        {/* Max converted */}
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-[12px] text-[#5A7A65]">
+            Max valeur convertie
+          </Label>
+          <Input
+            placeholder="100"
+            type="number"
+            value={maxToConvertValue}
+            onChange={e => onMaxToChange(e.target.value)}
+            disabled={!rowValueConversion}
+            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+          />
         </div>
       </div>
 
@@ -183,7 +238,7 @@ export function SensorCalibrationSection({
 
           <div className="flex justify-between items-center">
             <span className="text-[11px] text-[#8FAF9A]">
-              {min}{unit}
+              {minTo}{unit}
             </span>
             {/* Current converted value */}
             {previewValue !== null && (
@@ -192,7 +247,7 @@ export function SensorCalibrationSection({
               </span>
             )}
             <span className="text-[11px] text-[#8FAF9A]">
-              {max}{unit}
+              {maxTo}{unit}
             </span>
           </div>
 

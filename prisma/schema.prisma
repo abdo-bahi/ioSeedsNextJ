@@ -214,6 +214,8 @@ model Sensor {
   longitude   Float
   minAnalogue Float
   maxAnalogue Float
+  minToConvertValue Float @default(0)
+  maxToConvertValue Float @default(100)
   unit        String?
   rowValueConversion Boolean @default(false)
   createdAt   DateTime @default(now())

@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { SensorCalibrationSection } from "./SensorCalibrationSection";
+import { resolveSensorValue } from "@/lib/sensor-conversion";
 
 // ── Helpers ───────────────────────────────────────────────────────
 function formatRelative(date: Date | string | null): string {
@@ -67,6 +68,8 @@ type SensorForm = {
   longitude: string;
   minAnalogue: string;
   maxAnalogue: string;
+  minToConvertValue: string;
+  maxToConvertValue: string;
   unit: string;
   rowValueConversion: boolean;
   isActive: boolean;
@@ -81,8 +84,10 @@ const emptyForm: SensorForm = {
   longitude: "2.8277",
   minAnalogue: "0",
   maxAnalogue: "1023",
+  minToConvertValue: "0",
+  maxToConvertValue: "100",
   unit: "%",
-  rowValueConversion: false,
+  rowValueConversion: true,
   isActive: true,
   fk_mcu: "",
   fk_sensorType: "",
@@ -235,10 +240,14 @@ function SensorModal({
             sensorId={sensorId}
             minAnalogue={form.minAnalogue}
             maxAnalogue={form.maxAnalogue}
+            minToConvertValue={form.minToConvertValue}
+            maxToConvertValue={form.maxToConvertValue}
             unit={form.unit}
             rowValueConversion={form.rowValueConversion}
             onMinChange={(val) => set("minAnalogue", val)}
             onMaxChange={(val) => set("maxAnalogue", val)}
+            onMinToChange={(val) => set("minToConvertValue", val)}
+            onMaxToChange={(val) => set("maxToConvertValue", val)}
             onUnitChange={(val) => set("unit", val)}
             onConversionToggle={(val) => set("rowValueConversion", val)}
           />
@@ -382,6 +391,8 @@ export function SensorsTable({
       longitude: parseFloat(form.longitude),
       minAnalogue: parseFloat(form.minAnalogue),
       maxAnalogue: parseFloat(form.maxAnalogue),
+      minToConvertValue: parseFloat(form.minToConvertValue),
+      maxToConvertValue: parseFloat(form.maxToConvertValue),
       unit: form.unit || "%",
       rowValueConversion: form.rowValueConversion,
       isActive: form.isActive,
@@ -400,6 +411,8 @@ export function SensorsTable({
       longitude: parseFloat(form.longitude),
       minAnalogue: parseFloat(form.minAnalogue),
       maxAnalogue: parseFloat(form.maxAnalogue),
+      minToConvertValue: parseFloat(form.minToConvertValue),
+      maxToConvertValue: parseFloat(form.maxToConvertValue),
       unit: form.unit || "%",
       rowValueConversion: form.rowValueConversion,
       isActive: form.isActive,
@@ -454,7 +467,7 @@ export function SensorsTable({
                 "MCU",
                 "PARCELLE",
                 "DERNIÈRE VALEUR",
-                "PLAGE ANALOGIQUE",
+                "CALIBRATION",
                 "STATUT",
                 "ACTIONS",
               ].map((h) => (
@@ -517,22 +530,34 @@ export function SensorsTable({
                     {sensor.fieldName}
                   </td>
 
-                  {/* Last reading */}
+                  {/* Last reading (converted) */}
                   <td className="px-4 py-3.5">
                     {sensor.lastReading ? (
                       <div>
-                        <span
-                          className={`font-semibold ${
-                            sensor.lastReading.value < 30
-                              ? "text-[#D95F5F]"
-                              : sensor.lastReading.value < 50
-                              ? "text-[#E89B2D]"
-                              : "text-[#4CAF7D]"
-                          }`}
-                        >
-                          {sensor.lastReading.value}
-                          {sensor.lastReading.unit}
-                        </span>
+                        {(() => {
+                          const resolved = resolveSensorValue(
+                            sensor.lastReading,
+                            sensor
+                          );
+                          return resolved !== null ? (
+                            <span
+                              className={`font-semibold ${
+                                resolved < 30
+                                  ? "text-[#D95F5F]"
+                                  : resolved < 50
+                                  ? "text-[#E89B2D]"
+                                  : "text-[#4CAF7D]"
+                              }`}
+                            >
+                              {resolved.toFixed(1)}
+                              {sensor.unit ?? ""}
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-[#1A2E22]">
+                              {sensor.lastReading.value}
+                            </span>
+                          );
+                        })()}
                         <p className="text-[10px] text-[#8FAF9A] mt-0.5">
                           {formatRelative(sensor.lastReading.createdAt)}
                         </p>
@@ -542,9 +567,12 @@ export function SensorsTable({
                     )}
                   </td>
 
-                  {/* Analogue range */}
+                  {/* Calibration ranges */}
                   <td className="px-4 py-3.5 text-[12px] text-[#5A7A65] font-mono">
-                    {sensor.minAnalogue} → {sensor.maxAnalogue}
+                    <div>{sensor.minAnalogue}→{sensor.maxAnalogue}</div>
+                    <div className="text-[10px] text-[#8FAF9A]">
+                      → {sensor.minToConvertValue}→{sensor.maxToConvertValue}{sensor.unit ?? ""}
+                    </div>
                   </td>
 
                   {/* Status */}
@@ -568,36 +596,6 @@ export function SensorsTable({
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                  </td>
-
-                  <td className="px-4 py-3.5">
-                    {sensor.lastReading ? (
-                      <div>
-                        {sensor.rowValueConversion &&
-                        sensor.lastReading.rawValue !== null ? (
-                          // Show converted value
-                          <span className="font-semibold text-[#4CAF7D]">
-                            {(
-                              sensor.minAnalogue +
-                              (sensor.lastReading.rawValue / 1023) *
-                                (sensor.maxAnalogue - sensor.minAnalogue)
-                            ).toFixed(1)}
-                            {sensor.unit ?? ""}
-                          </span>
-                        ) : (
-                          // Show raw value
-                          <span className="font-semibold text-[#1A2E22]">
-                            {sensor.lastReading.rawValue ??
-                              sensor.lastReading.value}
-                          </span>
-                        )}
-                        <p className="text-[10px] text-[#8FAF9A] mt-0.5">
-                          {formatRelative(sensor.lastReading.createdAt)}
-                        </p>
-                      </div>
-                    ) : (
-                      <span className="text-[#8FAF9A]">—</span>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -647,6 +645,8 @@ export function SensorsTable({
             longitude: String(editSensor.longitude),
             minAnalogue: String(editSensor.minAnalogue),
             maxAnalogue: String(editSensor.maxAnalogue),
+            minToConvertValue: String(editSensor.minToConvertValue),
+            maxToConvertValue: String(editSensor.maxToConvertValue),
             isActive: editSensor.isActive,
             unit: editSensor.unit ?? "%",
             rowValueConversion: editSensor.rowValueConversion,

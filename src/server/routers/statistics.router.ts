@@ -183,15 +183,12 @@ export const statisticsRouter = router({
       const manualMs = irrigation.reduce((s, r) => s + r.manualMs, 0)
       const autoMs = irrigation.reduce((s, r) => s + r.autoMs, 0)
 
-      const soil = await prisma.environmentData.aggregate({
-        _avg: { value: true },
+      const soilSensors = await prisma.sensor.findMany({
         where: {
-          createdAt: { gte: start, lte: end },
-          sensor: {
-            fk_sensorType: { in: SOIL_MOISTURE_TYPES },
-            mcu: { fk_irrigationField: { in: fieldIds } },
-          },
+          fk_sensorType: { in: SOIL_MOISTURE_TYPES },
+          mcu: { fk_irrigationField: { in: fieldIds } },
         },
+        select: { id: true },
       })
       const soilUnit =
         (await prisma.sensor.findFirst({
@@ -202,15 +199,32 @@ export const statisticsRouter = router({
           select: { unit: true },
         }))?.unit ?? "%"
 
+      let avgSoil: number | null = null
+      if (soilSensors.length > 0) {
+        const placeholders = soilSensors.map((_, i) => `$${i + 1}`).join(", ")
+        const rows = await prisma.$queryRawUnsafe<{ avg: number }[]>(
+          `SELECT avg(CASE WHEN s."rowValueConversion"
+                      THEN s."minToConvertValue" + ((COALESCE(e."rawValue", e."value") - s."minAnalogue") / NULLIF(s."maxAnalogue" - s."minAnalogue", 0)) * (s."maxToConvertValue" - s."minToConvertValue")
+                      ELSE e."value" END)::float8 AS avg
+           FROM "EnvironmentData" e
+           JOIN "Sensor" s ON s."id" = e."fk_sensor"
+           WHERE e."fk_sensor" IN (${placeholders})
+             AND e."createdAt" >= $${soilSensors.length + 1}
+             AND e."createdAt" <= $${soilSensors.length + 2}`,
+          ...soilSensors.map((s) => s.id),
+          start,
+          end
+        )
+        avgSoil = rows[0]?.avg != null ? parseFloat(rows[0].avg.toFixed(1)) : null
+      }
+
       const denom = manualMs + autoMs || 1
 
       return {
         totalIrrigationMs: totalMs,
         irrigationSessions: sessions,
         avgSessionMs: sessions ? Math.round(totalMs / sessions) : 0,
-        avgSoilMoisture: soil._avg.value
-          ? parseFloat(soil._avg.value.toFixed(1))
-          : null,
+        avgSoilMoisture: avgSoil,
         soilMoistureUnit: soilUnit,
         manualMs,
         autoMs,
@@ -312,12 +326,15 @@ export const statisticsRouter = router({
         const n = info.ids.length
         const placeholders = info.ids.map((_, i) => `$${i + 2}`).join(", ")
         const rows = await prisma.$queryRawUnsafe<{ bucket: Date; value: number }[]>(
-          `SELECT to_timestamp(floor(extract(epoch from "createdAt") / $1) * $1) AS bucket,
-                  avg("value")::float8 AS value
-           FROM "EnvironmentData"
-           WHERE "fk_sensor" IN (${placeholders})
-             AND "createdAt" >= $${n + 2}
-             AND "createdAt" <= $${n + 3}
+          `SELECT to_timestamp(floor(extract(epoch from e."createdAt") / $1) * $1) AS bucket,
+                  avg(CASE WHEN s."rowValueConversion"
+                       THEN s."minToConvertValue" + ((COALESCE(e."rawValue", e."value") - s."minAnalogue") / NULLIF(s."maxAnalogue" - s."minAnalogue", 0)) * (s."maxToConvertValue" - s."minToConvertValue")
+                       ELSE e."value" END)::float8 AS value
+           FROM "EnvironmentData" e
+           JOIN "Sensor" s ON s."id" = e."fk_sensor"
+           WHERE e."fk_sensor" IN (${placeholders})
+             AND e."createdAt" >= $${n + 2}
+             AND e."createdAt" <= $${n + 3}
            GROUP BY 1
            ORDER BY 1`,
           bucketSec,

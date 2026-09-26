@@ -87,6 +87,8 @@ export async function syncSensorsToMCU(mcuId: string) {
       fk_sensorType: true,
       minAnalogue: true,
       maxAnalogue: true,
+      minToConvertValue: true,
+      maxToConvertValue: true,
       rowValueConversion: true,
     },
   });
@@ -103,6 +105,8 @@ export async function syncSensorsToMCU(mcuId: string) {
         sensorType:         s.fk_sensorType,
         minAnalogue:        s.minAnalogue,
         maxAnalogue:        s.maxAnalogue,
+        minToConvertValue:  s.minToConvertValue,
+        maxToConvertValue:  s.maxToConvertValue,
         rowValueConversion: s.rowValueConversion,
       })),
     },

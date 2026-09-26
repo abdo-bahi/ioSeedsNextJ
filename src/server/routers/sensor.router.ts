@@ -2,6 +2,7 @@ import { z } from "zod";
 import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { syncSensorsToMCU } from "./device-sync";
+import { resolveSensorValue } from "@/lib/sensor-conversion";
 
 export const sensorRouter = router({
   getLatestPerField: publicProc
@@ -20,10 +21,15 @@ export const sensorRouter = router({
           id: true,
           fk_sensorType: true,
           unit: true,
+          rowValueConversion: true,
+          minAnalogue: true,
+          maxAnalogue: true,
+          minToConvertValue: true,
+          maxToConvertValue: true,
           environmentData: {
             orderBy: { createdAt: "desc" },
             take: 1,
-            select: { value: true, createdAt: true },
+            select: { value: true, rawValue: true, createdAt: true },
           },
         },
       });
@@ -67,8 +73,11 @@ export const sensorRouter = router({
           };
         }
 
+        // Apply the sensor's analogue calibration (raw span → converted span)
+        const display = resolveSensorValue(reading, sensor);
+
         // Running sum — divide at the end
-        grouped[type].average += reading.value;
+        grouped[type].average += display ?? 0;
         grouped[type].sensorCount += 1;
 
         // Track most recent reading across all sensors of this type
@@ -112,6 +121,8 @@ export const sensorRouter = router({
           longitude: true,
           minAnalogue: true,
           maxAnalogue: true,
+          minToConvertValue: true,
+          maxToConvertValue: true,
           rowValueConversion: true,
           isActive: true,
           fk_mcu: true,
@@ -141,6 +152,8 @@ export const sensorRouter = router({
         longitude: s.longitude,
         minAnalogue: s.minAnalogue,
         maxAnalogue: s.maxAnalogue,
+        minToConvertValue: s.minToConvertValue,
+        maxToConvertValue: s.maxToConvertValue,
         isActive: s.isActive,
         fk_mcu: s.fk_mcu,
         mcuName: s.mcu?.name ?? "—",
@@ -169,6 +182,8 @@ export const sensorRouter = router({
         longitude: z.number(),
         minAnalogue: z.number(),
         maxAnalogue: z.number(),
+        minToConvertValue: z.number().default(0),
+        maxToConvertValue: z.number().default(100),
         unit: z.string().max(5).default("%"),
         rowValueConversion: z.boolean().default(false),
         isActive: z.boolean().default(true),
@@ -216,7 +231,17 @@ export const sensorRouter = router({
         },
         select: {
           value: true,
-          sensor: { select: { unit: true } },
+          rawValue: true,
+          sensor: {
+            select: {
+              unit: true,
+              rowValueConversion: true,
+              minAnalogue: true,
+              maxAnalogue: true,
+              minToConvertValue: true,
+              maxToConvertValue: true,
+            },
+          },
           createdAt: true,
         },
         orderBy: { createdAt: "asc" },
@@ -254,7 +279,9 @@ export const sensorRouter = router({
           buckets.set(bucket, { sum: 0, count: 0, unit: r.sensor.unit });
         }
         const b = buckets.get(bucket)!;
-        b.sum += r.value;
+        // Apply the sensor's analogue calibration (raw span → converted span)
+        const display = resolveSensorValue(r, r.sensor) ?? 0;
+        b.sum += display;
         b.count += 1;
       }
 
@@ -293,6 +320,8 @@ export const sensorRouter = router({
         longitude: z.number().optional(),
         minAnalogue: z.number().optional(),
         maxAnalogue: z.number().optional(),
+        minToConvertValue: z.number().optional(),
+        maxToConvertValue: z.number().optional(),
         unit: z.string().max(5).optional(),
         rowValueConversion: z.boolean().optional(),
         isActive: z.boolean().optional(),

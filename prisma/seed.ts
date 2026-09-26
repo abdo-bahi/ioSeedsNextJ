@@ -218,8 +218,8 @@ const main = async () => {
     create: {
       name: "Sensor-A1-Moisture", macAddress: "AA:BB:CC:DD:EE:11",
       latitude: 36.4703, longitude: 2.8277,
-      minAnalogue: 0, maxAnalogue: 1023, isActive: true,
-      unit: "%", rowValueConversion: false,
+      minAnalogue: 0, maxAnalogue: 1023, minToConvertValue: 0, maxToConvertValue: 100, isActive: true,
+      unit: "%", rowValueConversion: true,
       fk_mcu: mcuA.id, fk_sensorType: "soil_moisture",
     },
   })
@@ -229,8 +229,8 @@ const main = async () => {
     create: {
       name: "Sensor-A1-Temp", macAddress: "AA:BB:CC:DD:EE:12",
       latitude: 36.4704, longitude: 2.8278,
-      minAnalogue: 0, maxAnalogue: 1023, isActive: true,
-      unit: "°C", rowValueConversion: false,
+      minAnalogue: 0, maxAnalogue: 1023, minToConvertValue: 0, maxToConvertValue: 60, isActive: true,
+      unit: "°C", rowValueConversion: true,
       fk_mcu: mcuA.id, fk_sensorType: "temperature",
     },
   })
@@ -240,8 +240,8 @@ const main = async () => {
     create: {
       name: "Sensor-B1-Moisture", macAddress: "AA:BB:CC:DD:EE:13",
       latitude: 36.4710, longitude: 2.8290,
-      minAnalogue: 0, maxAnalogue: 1023, isActive: true,
-      unit: "%", rowValueConversion: false,
+      minAnalogue: 0, maxAnalogue: 1023, minToConvertValue: 0, maxToConvertValue: 100, isActive: true,
+      unit: "%", rowValueConversion: true,
       fk_mcu: mcuB.id, fk_sensorType: "soil_moisture",
     },
   })
@@ -251,8 +251,8 @@ const main = async () => {
     create: {
       name: "Sensor-C1-Moisture", macAddress: "AA:BB:CC:DD:EE:14",
       latitude: 36.4720, longitude: 2.8310,
-      minAnalogue: 0, maxAnalogue: 1023, isActive: true,
-      unit: "%", rowValueConversion: false,
+      minAnalogue: 0, maxAnalogue: 1023, minToConvertValue: 0, maxToConvertValue: 100, isActive: true,
+      unit: "%", rowValueConversion: true,
       fk_mcu: mcuC.id, fk_sensorType: "soil_moisture",
     },
   })
