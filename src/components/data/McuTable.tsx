@@ -486,7 +486,7 @@ export function MCUsTable({
 
                   {/* Last seen */}
                   <td className="px-4 py-3.5 text-[12px] text-[#8FAF9A]">
-                    {formatRelative(mcu.updatedAt)}
+                    {formatRelative(mcu.lastSeenAt)}
                   </td>
 
                   {/* Actions */}

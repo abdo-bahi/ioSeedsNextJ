@@ -25,6 +25,30 @@ PubSubClient mqtt(wifiClient);
 
 unsigned long lastSend = 0;
 
+// ── Device presence ─────────────────────────────────────────────
+// PubSubClient only stores POINTERS to the will topic/payload,
+// so they must be globals that outlive connect().
+char willTopic[256];
+char willBuf[200];
+char statusBuf[200];
+
+String statusTopic() {
+  return String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID + "/status";
+}
+
+// Publish ONLINE/OFFLINE status (retained) to the dashboard worker.
+void publishStatus(const char* status, const char* source) {
+  StaticJsonDocument<256> doc;
+  doc["apiKey"] = API_KEY;
+  doc["status"] = status;
+  doc["source"] = source;
+  serializeJson(doc, statusBuf);
+
+  String topic = statusTopic();
+  bool ok = mqtt.publish(topic.c_str(), statusBuf, true);
+  Serial.printf("📡 Status %s (%s) → %s %s\n", status, source, topic.c_str(), ok ? "✅" : "❌ FAILED");
+}
+
 // -- callback for mqtt subscriber ----------------------
 void onMessage(char* topic, byte* payload, unsigned int length) {
   Serial.println("\n📥 Message received!");
@@ -81,8 +105,22 @@ void connectMQTT() {
   while (!mqtt.connected()) {
     Serial.print("🔌 Connecting to MQTT...");
 
-    if (mqtt.connect("esp32-ioseeds", MQTT_USER, MQTT_PASS)) {
+    // ── LWT will: the broker auto-publishes OFFLINE if we drop without
+    //    a clean DISCONNECT (Wi-Fi loss, power cut) — this is what makes
+    //    offline detection reliable instead of relying on us.
+    StaticJsonDocument<256> willDoc;
+    willDoc["apiKey"] = API_KEY;
+    willDoc["status"] = "OFFLINE";
+    willDoc["source"] = "will";
+    serializeJson(willDoc, willBuf);
+    statusTopic().toCharArray(willTopic, sizeof(willTopic));
+
+    if (mqtt.connect("esp32-ioseeds", MQTT_USER, MQTT_PASS,
+                     willTopic, 1, true, willBuf)) {
       Serial.println(" ✅ Connected!");
+      // Tell the dashboard we are back online (overrides the retained will)
+      publishStatus("ONLINE", "connect");
+
        // Subscribe to actuator command topic.
        // Because the server publishes with { retain: true }, Mosquitto
        // instantly pushes the latest retained command to us here.
@@ -164,7 +202,12 @@ void setup() {
 }
 
 void loop() {
-  if (!mqtt.connected()) connectMQTT();
+  if (!mqtt.connected()) {
+    // Report the drop here too (broker will ALSO fire via LWT — the worker
+    // dedupes, so only the first OFFLINE produces a log/notification).
+    publishStatus("OFFLINE", "disconnect");
+    connectMQTT();
+  }
   mqtt.loop();
 
   if (millis() - lastSend > 5000) {

@@ -126,6 +126,20 @@ model ConnectionLog {
   success   Boolean  @default(true) // ← add this, useful for detecting brute force
 }
 
+// Device connectivity tracking — one row per connect/disconnect/status event
+model DeviceConnectionLog {
+  id         String   @id @default(cuid())
+  deviceType String   // "MCU" | "SENSOR" | "ACTUATOR"
+  deviceId   String
+  deviceName String?
+  event      String   // ON / OFF / SLEEPING / ERROR
+  source     String   // connect | disconnect | will | status | watchdog | message
+  dateTime   DateTime @default(now())
+
+  @@index([deviceId, dateTime])
+  @@index([deviceType, dateTime])
+}
+
 // ─── IoT Domain ──────────────────────────────────────────────────
 
 model FarmingUnit {
@@ -175,6 +189,7 @@ model MCU {
   isActive                 Boolean
   apiKeyHash               String
   status                   MCUStatus
+  lastSeenAt               DateTime?
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 
@@ -218,6 +233,7 @@ model Sensor {
   maxToConvertValue Float @default(100)
   unit        String?
   rowValueConversion Boolean @default(false)
+  lastSeenAt  DateTime?
   createdAt   DateTime @default(now())
   isActive    Boolean
 
@@ -244,6 +260,7 @@ model Actuator {
   targetState Boolean
   toggleTimeLimit Int?      // max minutes an open state may last, null = no limit
   toggleStartedAt DateTime? // when the current open state started, null when closed
+  lastSeenAt  DateTime?
   createdAt   DateTime @default(now())
   isActive    Boolean
 

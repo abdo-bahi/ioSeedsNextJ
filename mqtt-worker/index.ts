@@ -7,7 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client";
-import type { MCU, MCUStatus } from "../generated/prisma/client";
+import type { MCU } from "../generated/prisma/client";
 import { notify } from "../src/lib/notifications";
 
 import http from "http";
@@ -18,6 +18,7 @@ interface MQTTData {
   unit?:       string
   state?:      string | boolean
   status?:     string
+  source?:     string
   apiKey?:     string
   commandId?:  string
   success?:    boolean
@@ -115,6 +116,112 @@ async function broadcast(event: string, data: unknown) {
   }
 }
 
+// ── Device presence / connectivity tracking ─────────────────────────
+async function logDeviceEvent(
+  deviceType: "MCU" | "SENSOR" | "ACTUATOR",
+  deviceId: string,
+  deviceName: string | null,
+  event: "ON" | "OFF" | "SLEEPING" | "ERROR",
+  source: "connect" | "disconnect" | "will" | "status" | "watchdog" | "message"
+) {
+  try {
+    await prisma.deviceConnectionLog.create({
+      data: { deviceType, deviceId, deviceName, event, source },
+    });
+  } catch (e) {
+    console.error("❌ Failed to log device event:", e);
+  }
+}
+
+// Update an MCU's presence in DB + log + broadcast. No-ops when unchanged.
+async function setMCUPresence(
+  mcu: MCU,
+  status: "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR",
+  source: "connect" | "disconnect" | "will" | "status" | "watchdog" | "message"
+) {
+  const changed = mcu.status !== status;
+  // Log connectivity events (connect/disconnect/will) even when the status
+  // didn't change (e.g. MCU was already ONLINE) so every session is recorded.
+  const loggable = changed || source === "connect" || source === "disconnect" || source === "will";
+  const event = status === "ONLINE" ? ("ON" as const)
+    : status === "OFFLINE" ? ("OFF" as const) : status; // SLEEPING / ERROR
+
+  await prisma.mCU.update({
+    where: { id: mcu.id },
+    // The watchdog flags a device OFFLINE without any inbound message —
+    // keep the real lastSeenAt instead of overwriting it with the flag time.
+    data: {
+      status,
+      ...(source !== "watchdog" ? { lastSeenAt: new Date() } : {}),
+    },
+  });
+
+  if (loggable) {
+    await logDeviceEvent("MCU", mcu.id, mcu.name, event, source);
+    console.log(`📡 MCU ${mcu.name} → ${status} (${source})`);
+  }
+
+  await broadcast("device_status", {
+    mcuId: mcu.id,
+    name: mcu.name,
+    fieldId: mcu.fk_irrigationField,
+    status,
+    lastSeenAt: new Date().toISOString(),
+  });
+
+  if (changed && status === "OFFLINE") {
+    await notify(
+      {
+        type:    "MCU_INACTIVE",
+        title:   "📡 MCU hors ligne",
+        message: `${mcu.name} est passé hors ligne`,
+        fk_mcu:  mcu.id,
+        fieldId: mcu.fk_irrigationField,
+      },
+      (d) => broadcast("notification", d)
+    );
+  }
+}
+
+// Any valid message = the MCU is alive → touch lastSeenAt (+ ONLINE if it dropped).
+async function touchMCU(mcu: MCU) {
+  if (mcu.status !== "ONLINE") {
+    await setMCUPresence(mcu, "ONLINE", "message" as const);
+  } else {
+    await prisma.mCU.update({
+      where: { id: mcu.id },
+      data: { lastSeenAt: new Date() },
+    });
+  }
+}
+
+// ── Watchdog: flag MCUs that stopped talking ────────────────────────
+async function checkDevicePresence() {
+  try {
+    const mcus = await prisma.mCU.findMany({
+      where: { isActive: true },
+      select: {
+        id: true, name: true, status: true, lastSeenAt: true,
+        sleepingTime: true, fk_irrigationField: true,
+      },
+    });
+    const now = Date.now();
+    for (const mcu of mcus) {
+      if (!mcu.lastSeenAt || mcu.status === "OFFLINE") continue;
+      const staleMs = now - mcu.lastSeenAt.getTime();
+      const allowedMs = mcu.sleepingTime > 0
+        ? Math.max(mcu.sleepingTime * 2 * 1000, 60_000)
+        : 120_000;
+      if (staleMs > allowedMs) {
+        await setMCUPresence(mcu as MCU, "OFFLINE", "watchdog" as const);
+      }
+    }
+  } catch (e) {
+    console.error("❌ Watchdog error:", e);
+  }
+}
+setInterval(checkDevicePresence, 30_000);
+
 // ── Subscribe ──────────────────────────────────────────────────────
 client.on("connect", () => {
   console.log("✅ MQTT Worker connected");
@@ -146,6 +253,9 @@ client.on("message", async (topic, payload) => {
       console.warn(`⚠️  Rejected message — invalid apiKey for mcuId=${mcuId}`);
       return;
     }
+
+    // Any valid message proves the MCU is connected → refresh presence
+    await touchMCU(mcu);
 
     // Route by topic pattern
     if (parts[4] === "sensor" && parts[6] === "data") {
@@ -184,6 +294,12 @@ async function handleSensorData(mcu: MCU, sensorId: string, data: MQTTData) {
       fk_sensor: sensor.id,
       fk_action: null,
     },
+  });
+
+  // Track sensor liveness
+  await prisma.sensor.update({
+    where: { id: sensor.id },
+    data: { lastSeenAt: new Date() },
   });
 
   // Broadcast to dashboard 
@@ -259,6 +375,7 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
     data: {
       targetState:     newState,
       toggleStartedAt: newState ? new Date() : null,
+      lastSeenAt:      new Date(),
     },
   });
 
@@ -303,32 +420,16 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
 async function handleMCUStatus(mcu: MCU, data: MQTTData) {
   const status = (data.status as string)?.toUpperCase() ?? "OFFLINE";
 
-  await prisma.mCU.update({
-    where: { id: mcu.id },
-    data: { status: status as MCUStatus },
-  });
+  // Preserve the firmware/broker-reported source (connect / will / disconnect),
+  // otherwise derive from the status value.
+  const source =
+    data.source === "will" || data.source === "connect" || data.source === "disconnect"
+      ? (data.source as "will" | "connect" | "disconnect")
+      : status === "OFFLINE"
+      ? ("disconnect" as const)
+      : ("status" as const);
 
-  await broadcast("device_status", {
-    mcuId: mcu.id,
-    name: mcu.name,
-    fieldId: mcu.fk_irrigationField,
-    status,
-  });
-
-  if (status === "OFFLINE") {
-    await notify(
-      {
-        type:    "MCU_INACTIVE",
-        title:   "📡 MCU hors ligne",
-        message: `${mcu.name} est passé hors ligne`,
-        fk_mcu:  mcu.id,
-        fieldId: mcu.fk_irrigationField,
-      },
-      (d) => broadcast("notification", d)
-    );
-  }
-
-  console.log(`📡 MCU ${mcu.name} → ${status}`);
+  await setMCUPresence(mcu, status as "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR", source);
 }
 
 // ── 4. Ack handler ─────────────────────────────────────────────────

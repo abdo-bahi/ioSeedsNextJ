@@ -125,6 +125,7 @@ export const sensorRouter = router({
           maxToConvertValue: true,
           rowValueConversion: true,
           isActive: true,
+          lastSeenAt: true,
           fk_mcu: true,
           mcu: {
             select: {
@@ -154,6 +155,7 @@ export const sensorRouter = router({
         maxAnalogue: s.maxAnalogue,
         minToConvertValue: s.minToConvertValue,
         maxToConvertValue: s.maxToConvertValue,
+        lastSeenAt: s.lastSeenAt,
         isActive: s.isActive,
         fk_mcu: s.fk_mcu,
         mcuName: s.mcu?.name ?? "—",

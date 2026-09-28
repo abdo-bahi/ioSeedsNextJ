@@ -21,6 +21,7 @@ export const mcuRouter = router({
           name: true,
           isActive: true,
           status: true,
+          lastSeenAt: true,
           sleepingTime: true,
           macAddress: true,
           autoControlledIrrigation: true,
@@ -137,9 +138,19 @@ export const mcuRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      return prisma.mCU.update({
+return prisma.mCU.update({
         where: { id: input.id },
         data: { status: input.status },
+      });
+    }),
+
+  // ── Device connectivity log ────────────────────────────────────
+  getConnectionLog: publicProc
+    .input(z.object({ limit: z.number().default(40) }))
+    .query(async ({ input }) => {
+      return prisma.deviceConnectionLog.findMany({
+        orderBy: { dateTime: "desc" },
+        take: Math.min(input.limit, 200),
       });
     }),
 

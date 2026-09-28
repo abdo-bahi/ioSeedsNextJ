@@ -21,6 +21,7 @@ export const actuatorRouter = router({
           targetState: true,
           toggleTimeLimit: true,
           toggleStartedAt: true,
+          lastSeenAt: true,
           isActive: true,
           fk_mcu: true,
           actuatorType: { select: { name: true } },
@@ -60,6 +61,7 @@ export const actuatorRouter = router({
           targetState: true,
           toggleTimeLimit: true,
           toggleStartedAt: true,
+          lastSeenAt: true,
           isActive: true,
           fk_mcu: true,
           mcu: {
@@ -90,6 +92,7 @@ export const actuatorRouter = router({
         targetState: a.targetState,
         toggleTimeLimit: a.toggleTimeLimit,
         toggleStartedAt: a.toggleStartedAt,
+        lastSeenAt: a.lastSeenAt,
         isActive: a.isActive,
         fk_mcu: a.fk_mcu,
         mcuName: a.mcu?.name ?? "—",
