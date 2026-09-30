@@ -5,9 +5,9 @@
 
 // ── Config ────────────────────────────────────────────────────────
 const char* WIFI_SSID = "IdoomFibre_Bh";
-const char* WIFI_PASSWORD = "********";
-const char* MQTT_BROKER = "192.168.100.9";
-const int MQTT_PORT = 1883;
+const char* WIFI_PASSWORD = "tMtkKH96";
+const char* MQTT_BROKER = "192.168.100.35";
+const int MQTT_PORT = 28883;
 const char* MQTT_USER = "admin";
 const char* MQTT_PASS = "ioseeds2026";
 

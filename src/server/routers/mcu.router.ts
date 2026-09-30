@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
-import { MCUStatus } from "../../../generated/prisma/client";
+import { MCUStatus, Prisma } from "../../../generated/prisma/client";
 import crypto from "crypto";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { TRPCError } from "@trpc/server";
@@ -144,14 +144,45 @@ return prisma.mCU.update({
       });
     }),
 
-  // ── Device connectivity log ────────────────────────────────────
+  // ── Device connectivity log (paginated, date-filtered) ─────────
   getConnectionLog: publicProc
-    .input(z.object({ limit: z.number().default(40) }))
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(50).default(20),
+        // "YYYY-MM-DD" — full local-day range
+        from: z.string().optional(),
+        to: z.string().optional(),
+        deviceType: z.enum(["MCU", "SENSOR", "ACTUATOR"]).optional(),
+      })
+    )
     .query(async ({ input }) => {
-      return prisma.deviceConnectionLog.findMany({
-        orderBy: { dateTime: "desc" },
-        take: Math.min(input.limit, 200),
-      });
+      const { page, pageSize, from, to, deviceType } = input;
+      const where: Prisma.DeviceConnectionLogWhereInput = {};
+      if (deviceType) where.deviceType = deviceType;
+      if (from || to) {
+        where.dateTime = {};
+        if (from) where.dateTime.gte = new Date(`${from}T00:00:00.000`);
+        if (to) where.dateTime.lte = new Date(`${to}T23:59:59.999`);
+      }
+
+      const [total, items] = await prisma.$transaction([
+        prisma.deviceConnectionLog.count({ where }),
+        prisma.deviceConnectionLog.findMany({
+          where,
+          orderBy: { dateTime: "desc" },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+      ]);
+
+      return {
+        items,
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      };
     }),
 
   regenerateApiKey: protectedProc

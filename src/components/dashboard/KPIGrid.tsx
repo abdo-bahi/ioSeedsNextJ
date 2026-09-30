@@ -21,7 +21,7 @@ const sensorIconMap: Record<string, LucideIcon> = {
   flow_rate: TriangleAlert,
 };
 
-function formatRelative(date: Date | null): string {
+function formatRelative(date: Date | string | null): string {
   if (!date) return "Aucune donnée";
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   if (diff < 60) return `il y a ${diff}s`;
@@ -62,6 +62,7 @@ export function KPIGrid() {
     { irrigationFieldId: selectedField?.id ?? "" },
     {
       enabled: !!selectedField?.id,
+      refetchInterval: 30000,
     }
   );
 
@@ -116,8 +117,11 @@ export function KPIGrid() {
   }, [selectedField?.id, queryClient]);
 
   // ── MCU derived values ────────────────────────────────────────
+  // "Actifs" = MCUs actually connected right now (source of truth:
+  // status is kept by the worker + watchdog), not the config flag.
   const nbMcu = mcus?.length ?? 0;
-  const nbActiveMcu = mcus?.filter((mcu: any) => mcu.isActive).length ?? 0;
+  const nbActiveMcu =
+    mcus?.filter((mcu) => mcu.status === "ONLINE").length ?? 0;
 
   // ── Color based on MCU thresholds ─────────────────────────────
   function getSensorColor(
@@ -184,7 +188,7 @@ export function KPIGrid() {
 
         {!sensorsLoading &&
           !sensorsError &&
-          sensorReadings?.map((sensor: any) => (
+          sensorReadings?.map((sensor) => (
             <KPICard
               key={sensor.sensorType} // ✅ key added
               title={sensor.sensorType.replace(/_/g, " ").toUpperCase()}

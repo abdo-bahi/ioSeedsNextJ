@@ -1,38 +1,139 @@
 // src/components/dashboard/ActivityFeed.tsx
 "use client";
 
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { useFieldStore } from "@/store/field-store";
+import { Activity, X } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { DateFilter } from "@/components/dashboard/DateFilter";
+import { PaginationControls } from "@/components/dashboard/PaginationControls";
 
-function formatRelative(date: Date): string {
+function formatRelative(date: string | Date): string {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60) return `il y a ${diff}s`;
+  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+  return `il y a ${Math.floor(diff / 86400)} j`;
 }
+
+const PAGE_SIZE = 8;
+
+const selectCls =
+  "h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[11px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]";
 
 export function ActivityFeed() {
   const { selectedField } = useFieldStore();
 
-  const { data: activities, isLoading } =
-    trpc.activity.getRecentByField.useQuery(
-      { irrigationFieldId: selectedField?.id ?? "", limit: 8 },
-      {
-        enabled: !!selectedField?.id,
-        refetchInterval: 10000,
-      }
-    );
+  const [page, setPage] = useState(1);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [mcuId, setMcuId] = useState("");
+  const [actuatorId, setActuatorId] = useState("");
+
+  const { data: actuatorList } = trpc.actuator.getAllByField.useQuery(
+    { irrigationFieldId: selectedField?.id ?? "" },
+    { enabled: !!selectedField?.id }
+  );
+
+  const { data: mcuList } = trpc.mcu.getAllMcus.useQuery(
+    { irrigationFieldId: selectedField?.id ?? "" },
+    { enabled: !!selectedField?.id }
+  );
+
+  const { data, isLoading } = trpc.activity.getRecentByField.useQuery(
+    {
+      irrigationFieldId: selectedField?.id ?? "",
+      page,
+      pageSize: PAGE_SIZE,
+      from: from || undefined,
+      to: to || undefined,
+      actuatorId: actuatorId || undefined,
+    },
+    {
+      enabled: !!selectedField?.id,
+      refetchInterval: 10000,
+    }
+  );
+
+  // MCUs that own at least one actuator in this field
+  const mcuOptions = useMemo(() => {
+    const mcuName = new Map((mcuList ?? []).map((m) => [m.id, m.name ?? m.id]));
+    const ids = new Set<string>();
+    for (const a of actuatorList ?? []) if (a.fk_mcu) ids.add(a.fk_mcu);
+    return [...ids].map((id) => ({ id, name: mcuName.get(id) ?? id }));
+  }, [actuatorList, mcuList]);
+
+  // Actuators of the selected MCU (all if no MCU chosen)
+  const actuatorOptions = useMemo(
+    () =>
+      (actuatorList ?? []).filter(
+        (a) => !mcuId || a.fk_mcu === mcuId
+      ),
+    [actuatorList, mcuId]
+  );
+
+  const activities = data?.items ?? [];
+  const onFrom = (v: string) => { setFrom(v); setPage(1); };
+  const onTo = (v: string) => { setTo(v); setPage(1); };
+  const onMcu = (v: string) => { setMcuId(v); setActuatorId(""); setPage(1); };
+  const onActuator = (v: string) => { setActuatorId(v); setPage(1); };
+  const resetFilters = () => { setMcuId(""); setActuatorId(""); setFrom(""); setTo(""); setPage(1); };
+  const hasFilters = !!(mcuId || actuatorId || from || to);
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-4">
+    <div className="bg-white border border-[#D6E8DC] rounded-xl p-4 flex flex-col">
       {/* Header */}
-      <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase mb-3">
-        Activité Récente
-      </p>
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase flex items-center gap-1.5">
+          <Activity className="h-3 w-3" /> Activité Récente
+        </p>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="flex items-center gap-1 text-[11px] text-[#5A7A65] hover:text-[#D95F5F] transition-colors"
+          >
+            <X className="h-3 w-3" /> Réinitialiser
+          </button>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-end gap-2 flex-wrap mb-2">
+        {/* MCU */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-[10px] text-[#8FAF9A]">MCU</Label>
+          <select value={mcuId} onChange={(e) => onMcu(e.target.value)} className={selectCls}>
+            <option value="">Tous les MCUs</option>
+            {mcuOptions.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Actuator */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-[10px] text-[#8FAF9A]">Actionneur</Label>
+          <select
+            value={actuatorId}
+            onChange={(e) => onActuator(e.target.value)}
+            className={selectCls}
+            disabled={!mcuId && actuatorOptions.length === 0}
+          >
+            <option value="">Tous les actionneurs</option>
+            {actuatorOptions.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Dates */}
+        <DateFilter from={from} to={to} onFrom={onFrom} onTo={onTo} />
+      </div>
 
       {/* List */}
-      <div className="flex flex-col gap-0">
+      <div className="flex flex-col gap-0 flex-1">
         {isLoading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -47,13 +148,13 @@ export function ActivityFeed() {
           </div>
         )}
 
-        {!isLoading && (!activities || activities.length === 0) && (
+        {!isLoading && activities.length === 0 && (
           <p className="text-[12px] text-[#8FAF9A] text-center py-4">
-            Aucune activité récente
+            Aucune activité {from || to || mcuId || actuatorId ? "avec ces filtres" : "récente"}
           </p>
         )}
 
-        {activities?.map((activity: any, index: any) => (
+        {activities?.map((activity, index) => (
           <div
             key={activity.id}
             className={`flex gap-3 py-2.5 ${
@@ -78,9 +179,9 @@ export function ActivityFeed() {
 
               {/* Who made the action + type */}
               <p className="text-[11px] text-[#8FAF9A] mt-0.5">
-                {(activity.isMcuAction)
+                {activity.isMcuAction
                   ? `${activity.mcu ?? "MCU"} (Auto)`
-                  : `${activity.user ?? "Unknown"} (Manual)`}
+                  : `${activity.user ?? "Unknown"} (Manuel)`}
               </p>
 
               <p className="text-[11px] text-[#8FAF9A] mt-0.5">
@@ -90,6 +191,18 @@ export function ActivityFeed() {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
+      {!!data && data.total > 0 && (
+        <div className="pt-3 border-t border-[#F0F7F3]">
+          <PaginationControls
+            page={data.page}
+            totalPages={data.totalPages}
+            total={data.total}
+            onPage={setPage}
+          />
+        </div>
+      )}
     </div>
   );
 }
