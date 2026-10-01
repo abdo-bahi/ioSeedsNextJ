@@ -140,13 +140,15 @@ export const actuatorRouter = router({
       const fieldId = actuator.mcu.fk_irrigationField;
       const mcuId = actuator.fk_mcu!;
 
-      // Create action record
+      // Create action record — this is the dashboard → MCU command,
+      // initially WAITING until the MCU acknowledges it.
       const action = await prisma.actions.create({
         data: {
           actionVal: input.newState,
           sentAt: new Date(),
           fk_actuator: input.actuatorId,
           fk_user:     ctx.session?.user.id,   // ← set = manual
+          cmdStatus:   "WAITING",
         },
       });
 

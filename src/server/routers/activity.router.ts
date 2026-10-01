@@ -44,6 +44,7 @@ export const activityRouter = router({
             actionVal: true,
             createdAt: true,
             mcuAction: true,
+            cmdStatus: true,
             user: {select: {name:true}},
             actuator: {
               select: {
@@ -63,6 +64,7 @@ export const activityRouter = router({
         label:     `${a.actuator.name} ${a.actionVal ? "ouvert" : "fermé"}`,
         sublabel:  a.actuator.actuatorType?.name ?? "",
         isOpen:    a.actionVal,
+        cmdStatus: a.cmdStatus,
         createdAt: a.createdAt,
         mcu: a.actuator.mcu?.name,
         user: a.user?.name,

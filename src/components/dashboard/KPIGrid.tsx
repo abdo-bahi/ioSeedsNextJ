@@ -11,7 +11,7 @@ import {
 import { KPICard } from "@/components/dashboard/KPICard";
 import { useFieldStore } from "@/store/field-store";
 import { trpc } from "@/lib/trpc/client";
-import { useEffect } from "react";
+import { useSSE } from "@/lib/use-sse";
 
 // ── Icon + color maps ─────────────────────────────────────────────
 const sensorIconMap: Record<string, LucideIcon> = {
@@ -66,55 +66,23 @@ export function KPIGrid() {
     }
   );
 
-  useEffect(() => {
-    if (!selectedField?.id) return;
-
-    console.log("🔌 Opening SSE connection...");
-
-    const eventSource = new EventSource("/api/sse");
-
-    eventSource.onopen = () => {
-      console.log("🟢 SSE CONNECTED");
-    };
-
-    eventSource.addEventListener("connected", (event) => {
-      console.log("🟢 SSE INITIALIZED:", event.data);
-    });
-
-    eventSource.addEventListener("sensor_reading", (event) => {
-      console.log("📡 SENSOR EVENT RECEIVED:", event.data);
-
+  useSSE({
+    sensor_reading: () => {
       queryClient.sensor.getLatestPerField.invalidate({
-        irrigationFieldId: selectedField.id,
+        irrigationFieldId: selectedField?.id ?? "",
       });
-    });
-
-    eventSource.addEventListener("actuator_state", (event) => {
-      console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data);
-
+    },
+    actuator_state: () => {
       queryClient.mcu.getAllMcus.invalidate({
-        irrigationFieldId: selectedField.id,
+        irrigationFieldId: selectedField?.id ?? "",
       });
-    });
-
-    eventSource.addEventListener("device_status", (event) => {
-      console.log("📱 DEVICE EVENT RECEIVED:", event.data);
-
+    },
+    device_status: () => {
       queryClient.mcu.getAllMcus.invalidate({
-        irrigationFieldId: selectedField.id,
+        irrigationFieldId: selectedField?.id ?? "",
       });
-    });
-
-    eventSource.onerror = (error) => {
-      console.error("🔴 SSE ERROR:", error);
-      console.log("SSE readyState:", eventSource.readyState);
-    };
-
-    return () => {
-      console.log("🔌 Closing SSE connection");
-      eventSource.close();
-    };
-  }, [selectedField?.id, queryClient]);
+    },
+  });
 
   // ── MCU derived values ────────────────────────────────────────
   // "Actifs" = MCUs actually connected right now (source of truth:

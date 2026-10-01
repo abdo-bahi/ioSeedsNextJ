@@ -49,6 +49,39 @@ void publishStatus(const char* status, const char* source) {
   Serial.printf("📡 Status %s (%s) → %s %s\n", status, source, topic.c_str(), ok ? "✅" : "❌ FAILED");
 }
 
+// ── Command tracking: report the lifecycle of a dashboard command ──
+String ackTopic() {
+  return String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID + "/ack";
+}
+
+// status: "delivered" (received) | "executed" (actuator operated) | "failed"
+void publishAck(const char* commandId, const char* status, const char* message) {
+  StaticJsonDocument<256> doc;
+  doc["apiKey"] = API_KEY;
+  doc["commandId"] = commandId;
+  doc["status"] = status;
+  if (strlen(message) > 0) doc["message"] = message;
+
+  char buf[256];
+  serializeJson(doc, buf);
+
+  String topic = ackTopic();
+  bool ok = mqtt.publish(topic.c_str(), buf);
+  Serial.printf("📨 Ack %s → %s (%s) %s\n", commandId, status, message, ok ? "✅" : "❌ FAILED");
+}
+
+// Physically operate the actuator. Returns false when the actuator is
+// unreachable or the action could not be completed (→ a "failed" ack).
+// TODO(real hardware): drive the relay/pin and verify the actuator.
+bool executeActuator(bool targetState) {
+  if (targetState) {
+    Serial.println("🔓 OPEN (relay ON)");
+  } else {
+    Serial.println("🔒 CLOSED (relay OFF)");
+  }
+  return true; // simulated: wire a real relay + feedback here
+}
+
 // -- callback for mqtt subscriber ----------------------
 void onMessage(char* topic, byte* payload, unsigned int length) {
   Serial.println("\n📥 Message received!");
@@ -75,17 +108,20 @@ void onMessage(char* topic, byte* payload, unsigned int length) {
   bool targetState = doc["targetState"] | false;
   const char* commandId = doc["commandId"] | "unknown";
 
-  if (targetState) {
-    Serial.println("🔓 OPEN");
-  } else {
-    Serial.println("🔒 CLOSED");
-  }
+  // 1) Confirm receipt → the dashboard command becomes "delivered".
+  publishAck(commandId, "delivered", "cmd_received");
 
   Serial.printf("   commandId: %s\n", commandId);
 
-  // Apply the state (live command OR retained message pushed right after
-  // subscribe) and confirm it back to the dashboard.
-  reportActuatorState(targetState);
+  // 2) Execute on the actuator (live command OR retained message pushed
+  //    right after subscribe) — report executed / failed back to the
+  //    dashboard.
+  if (executeActuator(targetState)) {
+    publishAck(commandId, "executed", targetState ? "opened" : "closed");
+    reportActuatorState(targetState);
+  } else {
+    publishAck(commandId, "failed", "actuator_unreachable");
+  }
   }
 // ─────────────────────────────────────────────────────────────────
 void connectWifi() {

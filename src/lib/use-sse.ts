@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
+import { subscribe } from "@/lib/sse-client"
 
 type SSEHandlers = {
   sensor_reading?: (data: unknown) => void
@@ -11,27 +12,27 @@ type SSEHandlers = {
   connected?:      (data: unknown) => void
 }
 
+// Subscribes to the app-wide shared EventSource (see sse-client).
+// The effect only subscribes once; events are dispatched through the latest
+// handlers via a ref, so closures never go stale across re-renders.
 export function useSSE(handlers: SSEHandlers) {
+  const handlersRef = useRef(handlers)
+
   useEffect(() => {
-    const es = new EventSource("/api/sse")
+    handlersRef.current = handlers
+  })
 
-    function attach(event: string, handler?: (data: unknown) => void) {
-      if (!handler) return
-      es.addEventListener(event, (e: MessageEvent) => {
-        try   { handler(JSON.parse(e.data)) }
-        catch { handler(e.data) }
+  useEffect(() => {
+    const events = Object.keys(handlersRef.current) as (keyof SSEHandlers)[]
+    const unsubs = events.map((event) =>
+      subscribe(event, (data) => {
+        const handler = handlersRef.current[event]
+        if (handler) handler(data)
       })
+    )
+
+    return () => {
+      for (const unsub of unsubs) unsub()
     }
-
-    attach("connected",      handlers.connected)
-    attach("sensor_reading", handlers.sensor_reading)
-    attach("actuator_state", handlers.actuator_state)
-    attach("device_status",  handlers.device_status)
-    attach("command_ack",    handlers.command_ack)
-    attach("notification",   handlers.notification)
-
-    es.onerror = () => console.warn("SSE disconnected — will reconnect")
-
-    return () => es.close()
   }, [])
 }

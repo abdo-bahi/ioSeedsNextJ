@@ -8,6 +8,7 @@ import { Activity, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { DateFilter } from "@/components/dashboard/DateFilter";
 import { PaginationControls } from "@/components/dashboard/PaginationControls";
+import { useSSE } from "@/lib/use-sse";
 
 function formatRelative(date: string | Date): string {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -22,14 +23,30 @@ const PAGE_SIZE = 8;
 const selectCls =
   "h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[11px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]";
 
+// Command tracking badges (dashboard → MCU commands)
+const cmdBadge: Record<string, { cls: string; label: string }> = {
+  WAITING:   { cls: "bg-[#FEF3DC] text-[#B8780E]", label: "En attente" },
+  DELIVERED: { cls: "bg-[#E8F0FB] text-[#2D5C8E]", label: "Livrée" },
+  EXECUTED:  { cls: "bg-[#E6F7ED] text-[#2D8653]", label: "Exécutée" },
+  FAILED:    { cls: "bg-[#FDEAEA] text-[#B84040]", label: "Échouée" },
+};
+
 export function ActivityFeed() {
   const { selectedField } = useFieldStore();
+  const queryClient = trpc.useUtils();
 
   const [page, setPage] = useState(1);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [mcuId, setMcuId] = useState("");
   const [actuatorId, setActuatorId] = useState("");
+
+  // Live-refresh command states (WAITING → DELIVERED → EXECUTED|FAILED)
+  useSSE({
+    command_ack: () => {
+      queryClient.activity.getRecentByField.invalidate();
+    },
+  });
 
   const { data: actuatorList } = trpc.actuator.getAllByField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
@@ -170,10 +187,19 @@ export function ActivityFeed() {
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-[#1A2E22] leading-snug">
+              <p className="text-[13px] text-[#1A2E22] leading-snug flex items-center gap-2 flex-wrap">
                 {activity.label}
                 {activity.sublabel && (
                   <span className="text-[#8FAF9A]"> — {activity.sublabel}</span>
+                )}
+                {activity.cmdStatus ? (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${cmdBadge[activity.cmdStatus]?.cls ?? "bg-[#F0F7F3] text-[#6B6F6D]"}`}>
+                    {cmdBadge[activity.cmdStatus]?.label ?? activity.cmdStatus}
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F0F7F3] text-[#6B6F6D] font-semibold">
+                    Événement MCU
+                  </span>
                 )}
               </p>
 

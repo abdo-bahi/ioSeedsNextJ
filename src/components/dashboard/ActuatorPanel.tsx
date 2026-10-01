@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc/client"
 import { useFieldStore } from "@/store/field-store"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useEffect } from "react"
+import { useSSE } from "@/lib/use-sse"
 
 function ActuatorSkeleton() {
   return (
@@ -40,47 +40,21 @@ export function ActuatorPanel() {
     }
   })
 
-  useEffect(() => {
-    if (!selectedField?.id) return;
-
-    console.log("🔌 Opening SSE connection...");
-
-    const eventSource = new EventSource("/api/sse");
-
-    eventSource.onopen = () => {
-      console.log("🟢 SSE CONNECTED");
-    };
-
-    eventSource.addEventListener("connected", (event) => {
-      console.log("🟢 SSE INITIALIZED:", event.data);
-    });
-
-    eventSource.addEventListener("actuator_state", (event) => {
-      console.log("⚙️ ACTUATOR EVENT RECEIVED:", event.data);
-
+  useSSE({
+    connected: () => {
+      console.log("🟢 SSE INITIALIZED")
+    },
+    actuator_state: () => {
       queryClient.actuator.getAllByField.invalidate({
-        irrigationFieldId: selectedField.id,
-      });
-    });
-
-    eventSource.addEventListener("device_status", (event) => {
-      console.log("📱 DEVICE EVENT RECEIVED:", event.data);
-
+        irrigationFieldId: selectedField?.id ?? "",
+      })
+    },
+    device_status: () => {
       queryClient.actuator.getAllByField.invalidate({
-        irrigationFieldId: selectedField.id,
-      });
-    });
-
-    eventSource.onerror = (error) => {
-      console.error("🔴 SSE ERROR:", error);
-      console.log("SSE readyState:", eventSource.readyState);
-    };
-
-    return () => {
-      console.log("🔌 Closing SSE connection");
-      eventSource.close();
-    };
-  }, [selectedField?.id, queryClient]);
+        irrigationFieldId: selectedField?.id ?? "",
+      })
+    },
+  })
 
 
 
@@ -107,7 +81,7 @@ export function ActuatorPanel() {
           </p>
         )}
 
-        {actuators?.map((actuator:any) => {
+        {actuators?.map((actuator) => {
           // Real state from last action
           const isOpen      = actuator?.targetState
           const isToggling  = toggle.isPending

@@ -303,9 +303,19 @@ model Actions {
   createdAt       DateTime          @default(now())
   sentAt          DateTime?
   ackedAt         DateTime?
+  cmdStatus       CommandStatus?    // command tracking (dashboard → MCU)
   fk_actuator     String
   actuator        Actuator          @relation(fields: [fk_actuator], references: [id], onDelete: Cascade) // reverse relations
   environmentData EnvironmentData[]
+}
+
+// Lifecycle of a command sent from the dashboard to an MCU.
+// WAITING → DELIVERED → EXECUTED | FAILED
+enum CommandStatus {
+  WAITING   // sent, MCU asleep/offline — not yet delivered
+  DELIVERED // MCU acknowledged receipt
+  EXECUTED  // MCU ran the command on the actuator
+  FAILED    // actuator unreachable / MCU couldn't do the action
 }
 
 model Schedule {

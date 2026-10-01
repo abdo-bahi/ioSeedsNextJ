@@ -433,22 +433,47 @@ async function handleMCUStatus(mcu: MCU, data: MQTTData) {
 }
 
 // ── 4. Ack handler ─────────────────────────────────────────────────
+// MCU feedback for a command sent from the dashboard:
+//   status "delivered" → command received
+//   status "executed"  → actuator operated successfully
+//   status "failed"    → actuator unreachable / action could not be done
 async function handleAck(mcu: MCU, data: MQTTData) {
   if (!data.commandId) return;
 
+  const raw = String(data.status ?? "delivered").toUpperCase();
+  const next: "WAITING" | "DELIVERED" | "EXECUTED" | "FAILED" =
+    raw === "EXECUTED" ? "EXECUTED"
+    : raw === "FAILED" ? "FAILED"
+    : "DELIVERED";
+
+  const action = await prisma.actions.findUnique({
+    where: { id: data.commandId },
+  });
+  if (!action) {
+    console.warn(`⚠️  Ack for unknown command ${data.commandId}`);
+    return;
+  }
+
+  const current = action.cmdStatus ?? "WAITING";
+  // Forward-only transitions: WAITING → {DELIVERED, EXECUTED, FAILED},
+  // DELIVERED → {EXECUTED, FAILED}; EXECUTED/FAILED are terminal.
+  const accepted =
+    current === "WAITING" || (current === "DELIVERED" && (next === "EXECUTED" || next === "FAILED"));
+  if (!accepted || current === next) return;
+
   await prisma.actions.update({
     where: { id: data.commandId },
-    data: { ackedAt: new Date() },
+    data: { cmdStatus: next, ackedAt: new Date() },
   });
 
   await broadcast("command_ack", {
     mcuId: mcu.id,
     commandId: data.commandId,
-    success: data.success,
+    status: next,
     message: data.message,
   });
 
-  console.log(`✅ Ack: commandId=${data.commandId} success=${data.success}`);
+  console.log(`✅ Ack: commandId=${data.commandId} status=${next}`);
 }
 
 // ── Publish helpers (called from Next.js via HTTP or direct import) ─
