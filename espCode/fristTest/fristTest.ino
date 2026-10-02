@@ -57,7 +57,7 @@ String ackTopic() {
 // status: "delivered" (received) | "executed" (actuator operated) | "failed"
 void publishAck(const char* commandId, const char* status, const char* message) {
   StaticJsonDocument<256> doc;
-  doc["apiKey"] = API_KEY;
+  doc["apiKey"] = API_KEY;show per sensor data popup on dashboard kpigrid ( show details smal btn )
   doc["commandId"] = commandId;
   doc["status"] = status;
   if (strlen(message) > 0) doc["message"] = message;

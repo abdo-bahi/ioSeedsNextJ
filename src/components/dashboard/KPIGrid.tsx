@@ -9,9 +9,11 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { KPICard } from "@/components/dashboard/KPICard";
+import { SensorDetailsDialog } from "@/components/dashboard/SensorDetailsDialog";
 import { useFieldStore } from "@/store/field-store";
 import { trpc } from "@/lib/trpc/client";
 import { useSSE } from "@/lib/use-sse";
+import { useState } from "react";
 
 // ── Icon + color maps ─────────────────────────────────────────────
 const sensorIconMap: Record<string, LucideIcon> = {
@@ -42,6 +44,7 @@ function KPICardSkeleton() {
 export function KPIGrid() {
   const { selectedField } = useFieldStore();
   const queryClient = trpc.useUtils();
+  const [detailsType, setDetailsType] = useState<string | null>(null);
 
   const {
     data: sensorReadings,
@@ -164,9 +167,22 @@ export function KPIGrid() {
               subtitle={formatRelative(sensor.lastReadAt)}
               icon={sensorIconMap[sensor.sensorType] ?? Thermometer}
               color={getSensorColor(sensor.sensorType, sensor.average)}
+              onDetails={
+                sensor.sensorType !== "example"
+                  ? () => setDetailsType(sensor.sensorType)
+                  : undefined
+              }
             />
           ))}
       </div>
+
+      {detailsType && selectedField?.id && (
+        <SensorDetailsDialog
+          sensorType={detailsType}
+          fieldId={selectedField.id}
+          onClose={() => setDetailsType(null)}
+        />
+      )}
     </div>
   );
 }

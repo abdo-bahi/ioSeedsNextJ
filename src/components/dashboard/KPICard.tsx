@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { LucideIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ListChecks, LucideIcon } from "lucide-react"
 
 type KPICardProps = {
   title:    string
@@ -7,6 +8,7 @@ type KPICardProps = {
   subtitle: string
   icon:     LucideIcon
   color:    "green" | "amber" | "red" | "blue"
+  onDetails?: () => void
 }
 
 // ── Safe color map — Tailwind needs full class strings, not dynamic ones
@@ -33,7 +35,7 @@ const colorMap = {
   },
 }
 
-export function KPICard({ title, value, subtitle, icon: Icon, color }: KPICardProps) {
+export function KPICard({ title, value, subtitle, icon: Icon, color, onDetails }: KPICardProps) {
   const c = colorMap[color]
 
   return (
@@ -53,10 +55,24 @@ export function KPICard({ title, value, subtitle, icon: Icon, color }: KPICardPr
           {value}
         </p>
 
-        {/* Subtitle */}
-        <p className="text-[12px] text-[#8FAF9A] mt-2">
-          {subtitle}
-        </p>
+        {/* Footer — subtitle + optional details button */}
+        <div className="flex items-center justify-between gap-2 mt-2">
+          <p className="text-[12px] text-[#8FAF9A]">
+            {subtitle}
+          </p>
+          {onDetails && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onDetails}
+              className="h-6 px-2 text-[10px] font-semibold text-[#4CAF7D] hover:text-[#2D8653] hover:bg-[#E6F7ED] rounded-md"
+            >
+              <ListChecks className="h-3 w-3 mr-1" />
+              Détails
+            </Button>
+          )}
+        </div>
 
       </CardContent>
     </Card>
