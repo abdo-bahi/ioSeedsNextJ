@@ -28,12 +28,12 @@ function displayValue(v: number | null): string {
 
 function RowSkeleton() {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] animate-pulse">
+    <div className="flex items-center justify-between p-3 rounded-lg border border-border animate-pulse">
       <div className="space-y-1.5">
-        <div className="h-3 w-28 bg-[#E8F4ED] rounded" />
-        <div className="h-2 w-20 bg-[#E8F4ED] rounded" />
+        <div className="h-3 w-28 bg-green-soft rounded" />
+        <div className="h-2 w-20 bg-green-soft rounded" />
       </div>
-      <div className="h-5 w-12 bg-[#E8F4ED] rounded" />
+      <div className="h-5 w-12 bg-green-soft rounded" />
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function SensorDetailsDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Radio className="h-4 w-4 text-[#4CAF7D]" />
+            <Radio className="h-4 w-4 text-primary" />
             {title}
             <Badge className="bg-[#E6F7ED] text-[#2D8653] border-0 rounded-full">
               {sensors.length}
@@ -87,7 +87,7 @@ export function SensorDetailsDialog({
           )}
 
           {!isLoading && sensors.length === 0 && (
-            <p className="text-[12px] text-[#8FAF9A] text-center py-6">
+            <p className="text-[12px] text-muted-foreground text-center py-6">
               Aucune donnée pour ce type de capteur
             </p>
           )}
@@ -99,14 +99,14 @@ export function SensorDetailsDialog({
             return (
               <div
                 key={s.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-[#D6E8DC] hover:bg-[#F7F9F5] transition-colors"
+                className="flex items-center justify-between gap-3 p-3 rounded-lg border border-border hover:bg-canvas transition-colors"
               >
                 {/* Name + MCU */}
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-[#1A2E22] truncate">
+                  <p className="text-[13px] font-medium text-foreground truncate">
                     {s.name}
                   </p>
-                  <p className="text-[11px] text-[#8FAF9A] flex items-center gap-1">
+                  <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     {hasDeviceSignal ? (
                       <Wifi className="h-3 w-3" />
                     ) : (
@@ -118,18 +118,18 @@ export function SensorDetailsDialog({
 
                 {/* Value + freshness */}
                 <div className="text-right flex-shrink-0">
-                  <p className="text-[15px] font-bold text-[#1A3C2E] leading-none">
+                  <p className="text-[15px] font-bold text-foreground leading-none">
                     {displayValue(current)}
-                    <span className="text-[11px] font-medium text-[#8FAF9A] ml-0.5">
+                    <span className="text-[11px] font-medium text-muted-foreground ml-0.5">
                       {unit}
                     </span>
                   </p>
                   {s.rowValueConversion && s.lastReading?.rawValue != null && (
-                    <p className="text-[10px] text-[#8FAF9A] mt-0.5">
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
                       brut {Math.round(s.lastReading.rawValue)}
                     </p>
                   )}
-                  <p className="text-[10px] text-[#8FAF9A] mt-0.5">
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     {formatRelative(readingAt)}
                   </p>
                 </div>

@@ -25,15 +25,15 @@ function InfoTile({
   value: string | null | undefined
 }) {
   return (
-    <div className="flex items-start gap-3 p-4 rounded-xl bg-[#F7F9F5] border border-[#E8F4ED]">
-      <div className="h-9 w-9 rounded-lg bg-white border border-[#D6E8DC] flex items-center justify-center flex-shrink-0">
-        <Icon className="h-4 w-4 text-[#4CAF7D]" />
+    <div className="flex items-start gap-3 p-4 rounded-xl bg-canvas border border-[#E8F4ED]">
+      <div className="h-9 w-9 rounded-lg bg-card border border-border flex items-center justify-center flex-shrink-0">
+        <Icon className="h-4 w-4 text-primary" />
       </div>
       <div>
-        <p className="text-[11px] font-semibold text-[#8FAF9A] uppercase tracking-wider mb-0.5">
+        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">
           {label}
         </p>
-        <p className="text-[14px] text-[#1A2E22] font-medium">
+        <p className="text-[14px] text-foreground font-medium">
           {value ?? "—"}
         </p>
       </div>
@@ -79,22 +79,22 @@ function EditFarmModal({
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Nom de la ferme</Label>
+            <Label className="text-[12px] text-muted-foreground">Nom de la ferme</Label>
             <Input
               placeholder="Ferme El Baraka"
               value={form.name}
               onChange={e => set("name", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* Wilaya */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Wilaya</Label>
+            <Label className="text-[12px] text-muted-foreground">Wilaya</Label>
             <select
               value={form.fk_wilaya}
               onChange={e => set("fk_wilaya", e.target.value)}
-              className="h-10 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-10 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="">— Sélectionner une wilaya —</option>
               {wilayas.map(w => (
@@ -107,40 +107,40 @@ function EditFarmModal({
 
           {/* Address */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Adresse</Label>
+            <Label className="text-[12px] text-muted-foreground">Adresse</Label>
             <Input
               placeholder="Route nationale 29, Beni Mered, Blida"
               value={form.address}
               onChange={e => set("address", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Description</Label>
+            <Label className="text-[12px] text-muted-foreground">Description</Label>
             <textarea
               placeholder="Exploitation maraîchère — tomates, pommes de terre, légumes..."
               value={form.description}
               onChange={e => set("description", e.target.value)}
               rows={3}
-              className="w-full rounded-md border border-[#D6E8DC] bg-[#F7F9F5] px-3 py-2 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D] resize-none"
+              className="w-full rounded-md border border-border bg-canvas px-3 py-2 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
             />
           </div>
 
           {/* isActive */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-[#1A2E22]">Ferme active</p>
-              <p className="text-[11px] text-[#8FAF9A]">Désactiver pour masquer cette ferme</p>
+              <p className="text-[13px] font-medium text-foreground">Ferme active</p>
+              <p className="text-[11px] text-muted-foreground">Désactiver pour masquer cette ferme</p>
             </div>
             <button
               onClick={() => set("isActive", !form.isActive)}
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                form.isActive ? "bg-primary" : "bg-border"
               }`}
             >
-              <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                 form.isActive ? "translate-x-4" : "translate-x-0.5"
               }`} />
             </button>
@@ -152,14 +152,14 @@ function EditFarmModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white gap-2"
+            className="bg-primary hover:bg-primary/90 text-white gap-2"
           >
             {isLoading ? "..." : (
               <>
@@ -221,12 +221,12 @@ function NotificationPreferences() {
   }) as NotifPrefs
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-[#D6E8DC]">
-        <p className="text-[14px] font-semibold text-[#1A2E22]">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-border">
+        <p className="text-[14px] font-semibold text-foreground">
           Préférences de notification
         </p>
-        <p className="text-[12px] text-[#8FAF9A] mt-0.5">
+        <p className="text-[12px] text-muted-foreground mt-0.5">
           Choisissez comment recevoir chaque type d&apos;alerte
         </p>
       </div>
@@ -234,7 +234,7 @@ function NotificationPreferences() {
       <div className="divide-y divide-[#F0F7F3]">
         {events.map(event => (
           <div key={event.key} className="flex items-center justify-between px-5 py-3.5">
-            <p className="text-[13px] text-[#1A2E22]">{event.label}</p>
+            <p className="text-[13px] text-foreground">{event.label}</p>
             <select
               value={value[event.key]}
               onChange={e => {
@@ -243,7 +243,7 @@ function NotificationPreferences() {
                 }
                 update.mutate(payload)
               }}
-              className="h-8 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-8 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {channels.map(c => (
                 <option key={c} value={c}>{channelLabel[c]}</option>
@@ -292,14 +292,14 @@ export default function ParametersPage() {
   if (isLoading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="h-[120px] bg-white border border-[#D6E8DC] rounded-xl" />
-        <div className="h-[200px] bg-white border border-[#D6E8DC] rounded-xl" />
+        <div className="h-[120px] bg-card border border-border rounded-xl" />
+        <div className="h-[200px] bg-card border border-border rounded-xl" />
       </div>
     )
   }
 
   if (!farm) return (
-    <div className="text-center text-[#8FAF9A] py-12">
+    <div className="text-center text-muted-foreground py-12">
       Ferme introuvable.
     </div>
   )
@@ -308,12 +308,12 @@ export default function ParametersPage() {
     <div className="space-y-6 max-w-6xl">
 
       {/* ── Hero card ── */}
-      <div className="rounded-xl overflow-hidden border border-[#D6E8DC]">
+      <div className="rounded-xl overflow-hidden border border-border">
 
         {/* Green header */}
-        <div className="bg-[#1A3C2E] px-6 py-5 flex items-start justify-between">
+        <div className="bg-primary px-6 py-5 flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-[#4CAF7D] flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
               <Leaf className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -328,7 +328,7 @@ export default function ParametersPage() {
           <Button
             onClick={() => setEditOpen(true)}
             variant="outline"
-            className="border-white/30 text-white bg-white/10 hover:bg-white/20 gap-2 text-[13px]"
+            className="border-white/30 text-white bg-card/10 hover:bg-card/20 gap-2 text-[13px]"
           >
             <Pencil className="h-3.5 w-3.5" />
             Modifier
@@ -336,7 +336,7 @@ export default function ParametersPage() {
         </div>
 
         {/* Info tiles grid */}
-        <div className="bg-white p-5 grid grid-cols-2 gap-3">
+        <div className="bg-card p-5 grid grid-cols-2 gap-3">
           <InfoTile
             icon={User}
             label="Propriétaire"
@@ -363,11 +363,11 @@ export default function ParametersPage() {
 
         {/* Description */}
         {farm.description && (
-          <div className="bg-white border-t border-[#D6E8DC] px-5 py-4 pb-5">
-            <p className="text-[11px] font-semibold text-[#8FAF9A] uppercase tracking-wider mb-2">
+          <div className="bg-card border-t border-border px-5 py-4 pb-5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Description
             </p>
-            <p className="text-[13px] text-[#5A7A65] leading-relaxed">
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
               {farm.description}
             </p>
           </div>
@@ -383,12 +383,12 @@ export default function ParametersPage() {
         ].map(s => (
           <div
             key={s.label}
-            className={`bg-white border border-[#D6E8DC] rounded-xl p-4 border-l-4 ${s.color}`}
+            className={`bg-card border border-border rounded-xl p-4 border-l-4 ${s.color}`}
           >
-            <p className="text-[11px] text-[#8FAF9A] uppercase tracking-wider mb-1">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">
               {s.label}
             </p>
-            <p className="text-[22px] font-bold text-[#1A2E22] font-serif">
+            <p className="text-[22px] font-bold text-foreground font-serif">
               {s.value}
             </p>
           </div>

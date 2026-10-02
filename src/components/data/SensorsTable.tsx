@@ -31,7 +31,7 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <Badge
       className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
-        isActive ? "bg-[#E6F7ED] text-[#2D8653]" : "bg-[#F5F5F5] text-[#888]"
+        isActive ? "bg-[#E6F7ED] text-[#2D8653]" : "bg-muted text-muted-foreground"
       }`}
     >
       {isActive ? "• Online" : "• Inactif"}
@@ -52,7 +52,7 @@ const typeColors: Record<string, string> = {
 };
 
 function TypeTag({ type }: { type: string }) {
-  const color = typeColors[type] ?? "bg-[#F5F5F5] text-[#888]";
+  const color = typeColors[type] ?? "bg-muted text-muted-foreground";
   return (
     <span className={`text-[11px] px-2 py-0.5 rounded font-medium ${color}`}>
       {type}
@@ -147,34 +147,34 @@ function SensorModal({
           {/* Name + MAC */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Nom du capteur
               </Label>
               <Input
                 placeholder="Sol-A1"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Adresse MAC</Label>
+              <Label className="text-[12px] text-muted-foreground">Adresse MAC</Label>
               <Input
                 placeholder="AA:BB:CC:DD:EE:FF"
                 value={form.macAddress}
                 onChange={(e) => set("macAddress", e.target.value)}
-                className="border-[#D6E8DC] font-mono text-[12px] focus-visible:ring-[#4CAF7D]"
+                className="border-border font-mono text-[12px] focus-visible:ring-primary"
               />
             </div>
           </div>
 
           {/* Type */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Type</Label>
+            <Label className="text-[12px] text-muted-foreground">Type</Label>
             <select
               value={form.fk_sensorType}
               onChange={(e) => set("fk_sensorType", e.target.value)}
-              className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="">— Sélectionner un type —</option>
               {sensorTypes.map((t) => (
@@ -186,21 +186,21 @@ function SensorModal({
           </div>
 
           {/* Field → MCU selector */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               MCU parent
             </p>
 
             {/* Step 1 — select field */}
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Parcelle</Label>
+              <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
               <select
                 value={selectedFieldId}
                 onChange={(e) => {
                   setSelectedFieldId(e.target.value);
                   set("fk_mcu", ""); // reset MCU when field changes
                 }}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">— Sélectionner une parcelle —</option>
                 {fields.map((f) => (
@@ -213,12 +213,12 @@ function SensorModal({
 
             {/* Step 2 — select MCU from that field */}
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">MCU</Label>
+              <Label className="text-[12px] text-muted-foreground">MCU</Label>
               <select
                 value={form.fk_mcu}
                 onChange={(e) => set("fk_mcu", e.target.value)}
                 disabled={!selectedFieldId || filteredMcus.length === 0}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D] disabled:opacity-50"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
               >
                 <option value="">— Sélectionner un MCU —</option>
                 {filteredMcus.map((m) => (
@@ -255,45 +255,45 @@ function SensorModal({
           {/* GPS */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">Latitude</Label>
               <Input
                 placeholder="36.4703"
                 type="number"
                 value={form.latitude}
                 onChange={(e) => set("latitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] font-mono text-[12px]"
+                className="border-border focus-visible:ring-primary font-mono text-[12px]"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">Longitude</Label>
               <Input
                 placeholder="2.8277"
                 type="number"
                 value={form.longitude}
                 onChange={(e) => set("longitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] font-mono text-[12px]"
+                className="border-border focus-visible:ring-primary font-mono text-[12px]"
               />
             </div>
           </div>
 
           {/* isActive toggle */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-[#1A2E22]">
+              <p className="text-[13px] font-medium text-foreground">
                 Capteur actif
               </p>
-              <p className="text-[11px] text-[#8FAF9A]">
+              <p className="text-[11px] text-muted-foreground">
                 Désactiver pour ignorer ce capteur
               </p>
             </div>
             <button
               onClick={() => set("isActive", !form.isActive)}
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                form.isActive ? "bg-primary" : "bg-border"
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                   form.isActive ? "translate-x-4.5" : "translate-x-0.5"
                 }`}
               />
@@ -305,14 +305,14 @@ function SensorModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : "Sauvegarder"}
           </Button>
@@ -424,18 +424,18 @@ export function SensorsTable({
   const editSensor = sensors?.find((s: any) => s.id === editTarget);
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Sensors
           </p>
           {/* MCU filter */}
           <select
             value={mcuFilter}
             onChange={(e) => setMcuFilter(e.target.value)}
-            className="h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+            className="h-7 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">Tous les MCUs</option>
             {mcus?.map((m: any) => (
@@ -447,7 +447,7 @@ export function SensorsTable({
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8 px-3 gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
           Ajouter capteur
@@ -458,7 +458,7 @@ export function SensorsTable({
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
+            <tr className="border-b border-border bg-canvas">
               {[
                 "NOM",
                 "TYPE",
@@ -473,7 +473,7 @@ export function SensorsTable({
               ].map((h) => (
                 <th
                   key={h}
-                  className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]"
+                  className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
                 >
                   {h}
                 </th>
@@ -486,7 +486,7 @@ export function SensorsTable({
                 <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
                   {[...Array(10)].map((_, j) => (
                     <td key={j} className="px-4 py-3.5">
-                      <div className="h-3 bg-[#E8F4ED] rounded w-16" />
+                      <div className="h-3 bg-green-soft rounded w-16" />
                     </td>
                   ))}
                 </tr>
@@ -496,10 +496,10 @@ export function SensorsTable({
               sensors?.map((sensor: any) => (
                 <tr
                   key={sensor.id}
-                  className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors"
+                  className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors"
                 >
                   {/* Name */}
-                  <td className="px-4 py-3.5 font-semibold text-[#1A2E22]">
+                  <td className="px-4 py-3.5 font-semibold text-foreground">
                     {sensor.name}
                   </td>
 
@@ -509,24 +509,24 @@ export function SensorsTable({
                   </td>
 
                   {/* GPS */}
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-[#8FAF9A]">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
                     {sensor.latitude.toFixed(4)}°N
                     <br />
                     {sensor.longitude.toFixed(4)}°E
                   </td>
 
                   {/* MAC */}
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-[#5A7A65]">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
                     {sensor.macAddress ?? "—"}
                   </td>
 
                   {/* MCU */}
-                  <td className="px-4 py-3.5 text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {sensor.mcuName}
                   </td>
 
                   {/* Field */}
-                  <td className="px-4 py-3.5 text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {sensor.fieldName}
                   </td>
 
@@ -546,31 +546,31 @@ export function SensorsTable({
                                   ? "text-[#D95F5F]"
                                   : resolved < 50
                                   ? "text-[#E89B2D]"
-                                  : "text-[#4CAF7D]"
+                                  : "text-primary"
                               }`}
                             >
                               {resolved.toFixed(1)}
                               {sensor.unit ?? ""}
                             </span>
                           ) : (
-                            <span className="font-semibold text-[#1A2E22]">
+                            <span className="font-semibold text-foreground">
                               {sensor.lastReading.value}
                             </span>
                           );
                         })()}
-                        <p className="text-[10px] text-[#8FAF9A] mt-0.5">
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
                           {formatRelative(sensor.lastReading.createdAt)}
                         </p>
                       </div>
                     ) : (
-                      <span className="text-[#8FAF9A]">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </td>
 
                   {/* Calibration ranges */}
-                  <td className="px-4 py-3.5 text-[12px] text-[#5A7A65] font-mono">
+                  <td className="px-4 py-3.5 text-[12px] text-muted-foreground font-mono">
                     <div>{sensor.minAnalogue}→{sensor.maxAnalogue}</div>
-                    <div className="text-[10px] text-[#8FAF9A]">
+                    <div className="text-[10px] text-muted-foreground">
                       → {sensor.minToConvertValue}→{sensor.maxToConvertValue}{sensor.unit ?? ""}
                     </div>
                   </td>
@@ -585,13 +585,13 @@ export function SensorsTable({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setEditTarget(sensor.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(sensor.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -604,7 +604,7 @@ export function SensorsTable({
               <tr>
                 <td
                   colSpan={10}
-                  className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]"
+                  className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                 >
                   Aucun capteur trouvé.
                 </td>
@@ -662,7 +662,7 @@ export function SensorsTable({
           <DialogHeader>
             <DialogTitle>Supprimer ce capteur ?</DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Toutes les données de ce capteur seront supprimées.
           </p>
           <DialogFooter className="gap-2">

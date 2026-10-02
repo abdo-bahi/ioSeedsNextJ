@@ -15,8 +15,8 @@ type KPICardProps = {
 const colorMap = {
   green: {
     border:  "border-t-[#4CAF7D]",
-    icon:    "text-[#4CAF7D]",
-    value:   "text-[#1A3C2E]",
+    icon:    "text-primary",
+    value:   "text-foreground",
   },
   amber: {
     border:  "border-t-[#E89B2D]",
@@ -31,7 +31,7 @@ const colorMap = {
   blue: {
     border:  "border-t-[#6BA3D6]",
     icon:    "text-[#6BA3D6]",
-    value:   "text-[#1A3C2E]",
+    value:   "text-foreground",
   },
 }
 
@@ -44,7 +44,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, color, onDetails }
 
         {/* Title + icon row */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] font-semibold tracking-wider text-[#8FAF9A] uppercase">
+          <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
             {title}
           </p>
           <Icon className={`h-[18px] w-[18px] ${c.icon}`} />
@@ -57,7 +57,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, color, onDetails }
 
         {/* Footer — subtitle + optional details button */}
         <div className="flex items-center justify-between gap-2 mt-2">
-          <p className="text-[12px] text-[#8FAF9A]">
+          <p className="text-[12px] text-muted-foreground">
             {subtitle}
           </p>
           {onDetails && (
@@ -66,7 +66,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, color, onDetails }
               variant="ghost"
               size="sm"
               onClick={onDetails}
-              className="h-6 px-2 text-[10px] font-semibold text-[#4CAF7D] hover:text-[#2D8653] hover:bg-[#E6F7ED] rounded-md"
+              className="h-6 px-2 text-[10px] font-semibold text-primary hover:text-[#2D8653] hover:bg-[#E6F7ED] rounded-md"
             >
               <ListChecks className="h-3 w-3 mr-1" />
               Détails

@@ -23,8 +23,8 @@ type TooltipProps = {
 function TypeTooltip({ active, payload, label, unit, color }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-lg shadow-sm px-3 py-2">
-      <p className="text-[11px] text-[#8FAF9A] mb-1">
+    <div className="bg-card border border-border rounded-lg shadow-sm px-3 py-2">
+      <p className="text-[11px] text-muted-foreground mb-1">
         {new Date(Number(label)).toLocaleDateString("fr-DZ", {
           day: "2-digit",
           month: "2-digit",
@@ -50,11 +50,11 @@ export function SensorTypeAreaCharts({
 }) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white border border-[#D6E8DC] rounded-xl p-5">
-        <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+      <div className="bg-card border border-border rounded-xl p-5">
+        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
           Moyennes par type de capteur
         </p>
-        <p className="text-[13px] text-[#8FAF9A] mt-4">
+        <p className="text-[13px] text-muted-foreground mt-4">
           Aucune donnée de capteur sur cette période.
         </p>
       </div>
@@ -62,12 +62,12 @@ export function SensorTypeAreaCharts({
   }
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-5 space-y-5">
+    <div className="bg-card border border-border rounded-xl p-5 space-y-5">
       <div>
-        <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
           Moyennes par type de capteur
         </p>
-        <p className="text-[12px] text-[#8FAF9A] mt-0.5">
+        <p className="text-[12px] text-muted-foreground mt-0.5">
           Valeur moyenne des lectures par période, séparée par type.
         </p>
       </div>
@@ -82,19 +82,19 @@ export function SensorTypeAreaCharts({
           return (
             <div
               key={item.sensorType}
-              className="border border-[#D6E8DC] rounded-xl p-4"
+              className="border border-border rounded-xl p-4"
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[13px] font-semibold text-[#1A3C2E]">
+                <p className="text-[13px] font-semibold text-foreground">
                   {colorInfo.label}
                 </p>
-                <span className="text-[11px] text-[#8FAF9A] font-mono">
+                <span className="text-[11px] text-muted-foreground font-mono">
                   {unit}
                 </span>
               </div>
 
               {item.series.length === 0 ? (
-                <div className="h-[180px] flex items-center justify-center text-[12px] text-[#8FAF9A]">
+                <div className="h-[180px] flex items-center justify-center text-[12px] text-muted-foreground">
                   Aucune donnée
                 </div>
               ) : (

@@ -54,14 +54,14 @@ function StatusBadge({
 }) {
   if (!isActive)
     return (
-      <Badge className="text-[11px] px-2 py-0.5 border-0 rounded-full bg-[#F5F5F5] text-[#888]">
+      <Badge className="text-[11px] px-2 py-0.5 border-0 rounded-full bg-muted text-muted-foreground">
         • Inactif
       </Badge>
     );
 
   const map = {
     ONLINE: { bg: "bg-[#E6F7ED]", text: "text-[#2D8653]", label: "Online" },
-    OFFLINE: { bg: "bg-[#F5F5F5]", text: "text-[#888]", label: "Offline" },
+    OFFLINE: { bg: "bg-muted", text: "text-muted-foreground", label: "Offline" },
     SLEEPING: { bg: "bg-[#FEF3DC]", text: "text-[#B8780E]", label: "Warning" },
     ERROR: { bg: "bg-[#FDEAEA]", text: "text-[#B84040]", label: "Error" },
   };
@@ -145,34 +145,34 @@ function McuModal({
           {/* ── Name + MAC ── */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Nom du MCU</Label>
+              <Label className="text-[12px] text-muted-foreground">Nom du MCU</Label>
               <Input
                 placeholder="MCU-01"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Adresse MAC</Label>
+              <Label className="text-[12px] text-muted-foreground">Adresse MAC</Label>
               <Input
                 placeholder="AA:BB:CC:DD:EE:FF"
                 value={form.macAddress}
                 onChange={(e) => set("macAddress", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] font-mono text-[12px]"
+                className="border-border focus-visible:ring-primary font-mono text-[12px]"
               />
             </div>
           </div>
 
           {/* ── Irrigation field selector ── */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">
+            <Label className="text-[12px] text-muted-foreground">
               Parcelle associée
             </Label>
             <select
               value={form.fk_irrigationField}
               onChange={(e) => set("fk_irrigationField", e.target.value)}
-              className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {fields.map((f) => (
                 <option key={f.id} value={f.id}>
@@ -184,7 +184,7 @@ function McuModal({
 
           {/* ── Mode ── */}
           <div className="flex flex-col gap-2">
-            <Label className="text-[12px] text-[#5A7A65]">
+            <Label className="text-[12px] text-muted-foreground">
               Mode de contrôle
             </Label>
             <div className="flex gap-4">
@@ -196,7 +196,7 @@ function McuModal({
                   onChange={() => set("autoControlledIrrigation", true)}
                   className="accent-[#4CAF7D]"
                 />
-                <span className="text-[13px] text-[#1A2E22]">Automatique</span>
+                <span className="text-[13px] text-foreground">Automatique</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -206,29 +206,29 @@ function McuModal({
                   onChange={() => set("autoControlledIrrigation", false)}
                   className="accent-[#4CAF7D]"
                 />
-                <span className="text-[13px] text-[#1A2E22]">Manuel</span>
+                <span className="text-[13px] text-foreground">Manuel</span>
               </label>
             </div>
           </div>
 
           {/* ── isActive ── */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-[#1A2E22]">
+              <p className="text-[13px] font-medium text-foreground">
                 MCU Actif
               </p>
-              <p className="text-[11px] text-[#8FAF9A]">
+              <p className="text-[11px] text-muted-foreground">
                 Désactiver pour ignorer ce MCU
               </p>
             </div>
             <button
               onClick={() => set("isActive", !form.isActive)}
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                form.isActive ? "bg-primary" : "bg-border"
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                   form.isActive ? "translate-x-4.5" : "translate-x-0"
                 }`}
               />
@@ -237,7 +237,7 @@ function McuModal({
 
           {/* ── Sleeping time ── */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">
+            <Label className="text-[12px] text-muted-foreground">
               Taux de mise à jour (secondes)
             </Label>
             <Input
@@ -245,17 +245,17 @@ function McuModal({
               type="number"
               value={form.sleepingTime}
               onChange={(e) => set("sleepingTime", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* ── API Key section (edit mode only) ── */}
           {initial && (
             <div className="flex flex-col gap-2 p-3 rounded-lg border border-[#D95F5F]/30 bg-[#FDEAEA]/40">
-              <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+              <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
                 Clé API
               </p>
-              <p className="text-[12px] text-[#5A7A65]">
+              <p className="text-[12px] text-muted-foreground">
                 La clé actuelle est masquée pour des raisons de sécurité.
                 Régénérez-en une nouvelle si le MCU est compromis.
               </p>
@@ -275,14 +275,14 @@ function McuModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading
               ? "..."
@@ -401,15 +401,15 @@ export function MCUsTable({
   const editMcu = mcus?.find((m: any) => m.id === editTarget);
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
-        <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
           MCU Devices
         </p>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8 px-3 gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />+ Enregistrer MCU
         </Button>
@@ -419,7 +419,7 @@ export function MCUsTable({
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
+            <tr className="border-b border-border bg-canvas">
               {[
                 "NOM",
                 "MAC",
@@ -431,7 +431,7 @@ export function MCUsTable({
               ].map((h) => (
                 <th
                   key={h}
-                  className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]"
+                  className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
                 >
                   {h}
                 </th>
@@ -444,7 +444,7 @@ export function MCUsTable({
                 <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
                   {[...Array(8)].map((_, j) => (
                     <td key={j} className="px-4 py-3.5">
-                      <div className="h-3 bg-[#E8F4ED] rounded w-16" />
+                      <div className="h-3 bg-green-soft rounded w-16" />
                     </td>
                   ))}
                 </tr>
@@ -454,15 +454,15 @@ export function MCUsTable({
               mcus?.map((mcu: any) => (
                 <tr
                   key={mcu.id}
-                  className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors"
+                  className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors"
                 >
                   {/* Name */}
-                  <td className="px-4 py-3.5 font-semibold text-[#1A2E22]">
+                  <td className="px-4 py-3.5 font-semibold text-foreground">
                     {mcu.name ?? "—"}
                   </td>
 
                   {/* MAC */}
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-[#5A7A65]">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
                     {mcu.macAddress ?? "—"}
                   </td>
 
@@ -472,7 +472,7 @@ export function MCUsTable({
                   </td>
 
                   {/* Sleeping time */}
-                  <td className="px-4 py-3.5 text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {mcu.sleepingTime}s
                   </td>
 
@@ -485,7 +485,7 @@ export function MCUsTable({
                   </td>
 
                   {/* Last seen */}
-                  <td className="px-4 py-3.5 text-[12px] text-[#8FAF9A]">
+                  <td className="px-4 py-3.5 text-[12px] text-muted-foreground">
                     {formatRelative(mcu.lastSeenAt)}
                   </td>
 
@@ -494,14 +494,14 @@ export function MCUsTable({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setEditTarget(mcu.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                         title="Configurer"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(mcu.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                         title="Supprimer"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -515,7 +515,7 @@ export function MCUsTable({
               <tr>
                 <td
                   colSpan={8}
-                  className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]"
+                  className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                 >
                   Aucun MCU enregistré. Cliquez sur &quot;+ Enregistrer
                   MCU&quot; pour commencer.
@@ -573,7 +573,7 @@ export function MCUsTable({
               Supprimer ce MCU ?
             </DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Cette action supprimera le MCU et tous ses capteurs, actionneurs et
             données associées.
           </p>
@@ -581,7 +581,7 @@ export function MCUsTable({
             <Button
               variant="outline"
               onClick={() => setDeleteTarget(null)}
-              className="border-[#D6E8DC]"
+              className="border-border"
             >
               Annuler
             </Button>
@@ -610,7 +610,7 @@ export function MCUsTable({
             </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3 py-2">
-            <p className="text-[13px] text-[#5A7A65]">
+            <p className="text-[13px] text-muted-foreground">
               Cette action va <strong>invalider immédiatement</strong> la clé
               actuelle du MCU. Le dispositif physique ne pourra plus communiquer
               tant que vous ne mettez pas à jour sa configuration avec la
@@ -627,7 +627,7 @@ export function MCUsTable({
             <Button
               variant="outline"
               onClick={() => setConfirmRegenTarget(null)}
-              className="border-[#D6E8DC]"
+              className="border-border"
             >
               Annuler
             </Button>
@@ -678,7 +678,7 @@ export function MCUsTable({
 
             {/* Key display */}
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Clé API (raw)
               </Label>
               <div className="flex gap-2">
@@ -687,12 +687,12 @@ export function MCUsTable({
                     type={showGeneratedKey ? "text" : "password"}
                     value={apiKeyModal?.apiKey ?? ""}
                     readOnly
-                    className="border-[#D6E8DC] font-mono text-[11px] bg-[#F7F9F5] pr-10"
+                    className="border-border font-mono text-[11px] bg-canvas pr-10"
                   />
                 </div>
                 <button
                   onClick={() => setShowGeneratedKey((s) => !s)}
-                  className="h-9 w-9 rounded-md border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#1A3C2E] transition-colors"
+                  className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                   title={showGeneratedKey ? "Masquer" : "Afficher"}
                 >
                   {showGeneratedKey ? (
@@ -705,7 +705,7 @@ export function MCUsTable({
                   onClick={() => {
                     navigator.clipboard.writeText(apiKeyModal?.apiKey ?? "");
                   }}
-                  className="h-9 w-9 rounded-md border border-[#4CAF7D] flex items-center justify-center text-[#4CAF7D] hover:bg-[#E6F7ED] transition-colors"
+                  className="h-9 w-9 rounded-md border border-primary flex items-center justify-center text-primary hover:bg-[#E6F7ED] transition-colors"
                   title="Copier"
                 >
                   <Key className="h-4 w-4" />
@@ -714,11 +714,11 @@ export function MCUsTable({
             </div>
 
             {/* Usage hint */}
-            <div className="p-3 rounded-lg bg-[#F7F9F5] border border-[#D6E8DC]">
-              <p className="text-[11px] text-[#8FAF9A] font-medium uppercase tracking-wider mb-1">
+            <div className="p-3 rounded-lg bg-canvas border border-border">
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mb-1">
                 Utilisation dans le firmware ESP32
               </p>
-              <code className="text-[11px] text-[#1A2E22] font-mono break-all">
+              <code className="text-[11px] text-foreground font-mono break-all">
                 const char* API_KEY = &quot;
                 {showGeneratedKey ? apiKeyModal?.apiKey : "••••••••••••••••"}
                 &quot;;
@@ -732,7 +732,7 @@ export function MCUsTable({
                 setApiKeyModal(null);
                 setShowGeneratedKey(false);
               }}
-              className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               J&apos;ai copié la clé — Fermer
             </Button>

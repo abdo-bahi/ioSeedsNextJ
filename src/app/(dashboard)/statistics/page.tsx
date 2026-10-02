@@ -162,7 +162,7 @@ export default function Statistics() {
 
   if (!FARM_ID) {
     return (
-      <div className="text-[13px] text-[#8FAF9A]">
+      <div className="text-[13px] text-muted-foreground">
         Sélectionnez d&apos;abord un champ pour afficher les statistiques.
       </div>
     );

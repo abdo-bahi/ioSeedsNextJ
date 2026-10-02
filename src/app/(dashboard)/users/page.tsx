@@ -31,14 +31,14 @@ const roleColors: Record<string, string> = {
   ADMIN: "bg-[#FDEAEA] text-[#B84040]",
   FARMER: "bg-[#E6F7ED] text-[#2D8653]",
   OPERATOR: "bg-[#EEF2FF] text-[#4F6EF7]",
-  VIEWER: "bg-[#F5F5F5] text-[#888]",
+  VIEWER: "bg-muted text-muted-foreground",
 };
 
 function RoleBadge({ role }: { role: string }) {
   return (
     <span
       className={`text-[11px] px-2 py-0.5 rounded font-medium ${
-        roleColors[role] ?? "bg-[#F5F5F5] text-[#888]"
+        roleColors[role] ?? "bg-muted text-muted-foreground"
       }`}
     >
       {role}
@@ -98,29 +98,29 @@ function UserModal({
           {/* Name + Email */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Nom complet</Label>
+              <Label className="text-[12px] text-muted-foreground">Nom complet</Label>
               <Input
                 placeholder="Bahi Abderrahmane"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Email</Label>
+              <Label className="text-[12px] text-muted-foreground">Email</Label>
               <Input
                 type="email"
                 placeholder="abderrahmane@ferme.dz"
                 value={form.email}
                 onChange={(e) => set("email", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">
+            <Label className="text-[12px] text-muted-foreground">
               {isEdit
                 ? "Nouveau mot de passe (laisser vide = inchangé)"
                 : "Mot de passe"}
@@ -130,28 +130,28 @@ function UserModal({
               placeholder={isEdit ? "••••••••" : "Min. 8 caractères"}
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* Address */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Adresse</Label>
+            <Label className="text-[12px] text-muted-foreground">Adresse</Label>
             <Input
               placeholder="Route nationale, Blida"
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* Wilaya */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Wilaya</Label>
+            <Label className="text-[12px] text-muted-foreground">Wilaya</Label>
             <select
               value={form.fk_wilaya}
               onChange={(e) => set("fk_wilaya", e.target.value)}
-              className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="">— Sélectionner —</option>
               {wilayas.map((w) => (
@@ -163,23 +163,23 @@ function UserModal({
           </div>
 
           {/* isActive */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-[#1A2E22]">
+              <p className="text-[13px] font-medium text-foreground">
                 Compte actif
               </p>
-              <p className="text-[11px] text-[#8FAF9A]">
+              <p className="text-[11px] text-muted-foreground">
                 Désactiver pour bloquer la connexion
               </p>
             </div>
             <button
               onClick={() => set("isActive", !form.isActive)}
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                form.isActive ? "bg-primary" : "bg-border"
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                   form.isActive ? "translate-x-4" : "translate-x-0.5"
                 }`}
               />
@@ -191,14 +191,14 @@ function UserModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name || !form.email}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : "Enregistrer"}
           </Button>
@@ -244,25 +244,25 @@ function RoleModal({
           {/* Existing roles */}
           {existingRoles.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] font-semibold text-[#8FAF9A] uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Rôles actuels
               </p>
               {existingRoles.map((rm) => (
                 <div
                   key={rm.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-[#F7F9F5] border border-[#D6E8DC]"
+                  className="flex items-center justify-between p-2 rounded-lg bg-canvas border border-border"
                 >
                   <div className="flex items-center gap-2">
                     <RoleBadge role={rm.fk_role} />
                     {rm.fieldName && (
-                      <span className="text-[11px] text-[#8FAF9A]">
+                      <span className="text-[11px] text-muted-foreground">
                         sur {rm.fieldName}
                       </span>
                     )}
                   </div>
                   <button
                     onClick={() => onRemove(rm.id)}
-                    className="text-[#8FAF9A] hover:text-[#D95F5F] transition-colors"
+                    className="text-muted-foreground hover:text-[#D95F5F] transition-colors"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -272,17 +272,17 @@ function RoleModal({
           )}
 
           {/* Add new role */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[11px] font-semibold text-[#8FAF9A] uppercase tracking-wider">
+          <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Ajouter un rôle
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Rôle</Label>
+              <Label className="text-[12px] text-muted-foreground">Rôle</Label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 {["ADMIN", "FARMER", "OPERATOR", "VIEWER"].map((r) => (
                   <option key={r} value={r}>
@@ -293,13 +293,13 @@ function RoleModal({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Parcelle (optionnel)
               </Label>
               <select
                 value={fieldId}
                 onChange={(e) => setFieldId(e.target.value)}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">— Toutes les parcelles —</option>
                 {fields.map((f) => (
@@ -313,7 +313,7 @@ function RoleModal({
             <Button
               onClick={() => onAssign(role, fieldId || undefined)}
               disabled={isLoading}
-              className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8"
+              className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8"
             >
               <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
               Assigner
@@ -325,7 +325,7 @@ function RoleModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC]"
+            className="border-border"
           >
             Fermer
           </Button>
@@ -435,14 +435,14 @@ export default function UsersPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-bold text-[#1A2E22]">Utilisateurs</h1>
-          <p className="text-[12px] text-[#8FAF9A]">
+          <h1 className="text-[18px] font-bold text-foreground">Utilisateurs</h1>
+          <p className="text-[12px] text-muted-foreground">
             {users?.length ?? 0} utilisateur(s) enregistré(s)
           </p>
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white gap-1.5"
         >
           <Plus className="h-4 w-4" />
           Ajouter utilisateur
@@ -450,11 +450,11 @@ export default function UsersPage() {
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
+              <tr className="border-b border-border bg-canvas">
                 {[
                   "NOM",
                   "EMAIL",
@@ -466,7 +466,7 @@ export default function UsersPage() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]"
+                    className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
                   >
                     {h}
                   </th>
@@ -482,7 +482,7 @@ export default function UsersPage() {
                   >
                     {[...Array(7)].map((_, j) => (
                       <td key={j} className="px-4 py-3.5">
-                        <div className="h-3 bg-[#E8F4ED] rounded w-20" />
+                        <div className="h-3 bg-green-soft rounded w-20" />
                       </td>
                     ))}
                   </tr>
@@ -492,25 +492,25 @@ export default function UsersPage() {
                 users?.map((user: any) => (
                   <tr
                     key={user.id}
-                    className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors"
+                    className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors"
                   >
                     {/* Name */}
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-full bg-[#4CAF7D] flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
+                        <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
                           {user.name?.[0]?.toUpperCase() ?? "?"}
                         </div>
-                        <span className="font-semibold text-[#1A2E22]">
+                        <span className="font-semibold text-foreground">
                           {user.name ?? "—"}
                         </span>
                       </div>
                     </td>
 
                     {/* Email */}
-                    <td className="px-4 py-3.5 text-[#5A7A65]">{user.email}</td>
+                    <td className="px-4 py-3.5 text-muted-foreground">{user.email}</td>
 
                     {/* Wilaya */}
-                    <td className="px-4 py-3.5 text-[#5A7A65]">
+                    <td className="px-4 py-3.5 text-muted-foreground">
                       {user.wilaya?.name ?? "—"}
                     </td>
 
@@ -523,7 +523,7 @@ export default function UsersPage() {
                             <RoleBadge key={i} role={rm.fk_role} />
                           ))
                         ) : (
-                          <span className="text-[#8FAF9A] text-[11px]">
+                          <span className="text-muted-foreground text-[11px]">
                             Aucun rôle
                           </span>
                         )} */}
@@ -542,7 +542,7 @@ export default function UsersPage() {
                         className={`text-[11px] px-2 py-0.5 rounded-full border-0 font-medium transition-colors ${
                           user.isActive
                             ? "bg-[#E6F7ED] text-[#2D8653] hover:bg-[#FDEAEA] hover:text-[#B84040]"
-                            : "bg-[#F5F5F5] text-[#888] hover:bg-[#E6F7ED] hover:text-[#2D8653]"
+                            : "bg-muted text-muted-foreground hover:bg-[#E6F7ED] hover:text-[#2D8653]"
                         }`}
                         title={
                           user.isActive
@@ -555,7 +555,7 @@ export default function UsersPage() {
                     </td>
 
                     {/* Created at */}
-                    <td className="px-4 py-3.5 text-[12px] text-[#8FAF9A]">
+                    <td className="px-4 py-3.5 text-[12px] text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString("fr-DZ")}
                     </td>
 
@@ -567,21 +567,21 @@ export default function UsersPage() {
 
                         {/* <button
                           onClick={() => setRoleTarget(user.id)}
-                          className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                           title="Gérer les rôles"
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
                         </button> */}
                         <button
                           onClick={() => setEditTarget(user.id)}
-                          className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                           title="Modifier"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         {/* <button
                           onClick={() => setDeleteTarget(user.id)}
-                          className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                           title="Supprimer"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -595,7 +595,7 @@ export default function UsersPage() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]"
+                    className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                   >
                     Aucun utilisateur. Cliquez sur &quot;Ajouter
                     utilisateur&quot; pour commencer.
@@ -669,7 +669,7 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Supprimer cet utilisateur ?</DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Cette action est irréversible. Toutes les données associées seront
             supprimées.
           </p>

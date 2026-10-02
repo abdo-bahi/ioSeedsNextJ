@@ -48,29 +48,29 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
-          <div className="h-14 w-14 rounded-2xl bg-[#2D5C42] flex items-center justify-center shadow-lg">
+          <div className="h-14 w-14 rounded-2xl bg-primary/90 flex items-center justify-center shadow-lg">
             {/* Water drop leaf icon */}
-            <svg viewBox="0 0 24 24" className="h-7 w-7 fill-[#4CAF7D]">
+            <svg viewBox="0 0 24 24" className="h-7 w-7 fill-primary">
               <path d="M12 2C6 8 4 12 4 15a8 8 0 0016 0c0-3-2-7-8-13z"/>
             </svg>
           </div>
           <div className="text-center">
-            <h1 className="text-[22px] font-bold text-[#1A2E22]">IOSeeds</h1>
-            <p className="text-[11px] font-medium tracking-[0.2em] text-[#5A7A65] uppercase">
+            <h1 className="text-[22px] font-bold text-foreground">IOSeeds</h1>
+            <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
               Smart Irrigation
             </p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="w-full bg-white rounded-2xl border border-[#D6E8DC] shadow-sm p-6">
-          <h2 className="text-[16px] font-semibold text-[#1A2E22] mb-5">
+        <div className="w-full bg-card rounded-2xl border border-border shadow-sm p-6">
+          <h2 className="text-[16px] font-semibold text-foreground mb-5">
             Connexion
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Adresse e-mail
               </Label>
               <Input
@@ -79,12 +79,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-11"
+                className="border-border focus-visible:ring-primary h-11"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Mot de passe
               </Label>
               <Input
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-11"
+                className="border-border focus-visible:ring-primary h-11"
               />
             </div>
 
@@ -106,7 +106,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white h-11 text-[14px] font-medium mt-1 rounded-xl"
+              className="bg-primary hover:bg-primary/90 text-white h-11 text-[14px] font-medium mt-1 rounded-xl"
             >
               {loading ? "Connexion..." : "Se connecter"}
             </Button>

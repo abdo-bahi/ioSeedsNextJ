@@ -26,7 +26,7 @@ export default function DataPage() {
     <div className="space-y-6">
 
       {/* ── Custom tabs ── */}
-      <div className="border-b border-[#D6E8DC] flex gap-0">
+      <div className="border-b border-border flex gap-0">
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -35,8 +35,8 @@ export default function DataPage() {
               px-5 py-2.5 text-[13px] font-medium
               border-b-2 -mb-px transition-colors
               ${activeTab === tab.value
-                ? "border-[#4CAF7D] text-[#1A3C2E] font-semibold"
-                : "border-transparent text-[#8FAF9A] hover:text-[#1A3C2E]"
+                ? "border-primary text-foreground font-semibold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
               }
             `}
           >

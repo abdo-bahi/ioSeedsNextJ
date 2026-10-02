@@ -31,14 +31,14 @@ export function StatsToolbar({
   exporting,
 }: StatsToolbarProps) {
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-5 space-y-4">
+    <div className="bg-card border border-border rounded-xl p-5 space-y-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
             Statistiques
           </p>
-          <p className="text-[12px] text-[#8FAF9A] mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             Filtrez la période et la parcelle pour recalculer les indicateurs
             et graphiques.
           </p>
@@ -47,7 +47,7 @@ export function StatsToolbar({
         <Button
           onClick={onExport}
           disabled={exporting}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8 px-3 gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           {exporting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -61,31 +61,31 @@ export function StatsToolbar({
       {/* ── Filters ── */}
       <div className="flex items-end gap-4 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">Date début</Label>
+          <Label className="text-[12px] text-muted-foreground">Date début</Label>
           <Input
             type="date"
             value={startDate}
             onChange={(e) => onStartChange(e.target.value)}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-8 text-[12px] w-[150px]"
+            className="border-border focus-visible:ring-primary h-8 text-[12px] w-[150px]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">Date fin</Label>
+          <Label className="text-[12px] text-muted-foreground">Date fin</Label>
           <Input
             type="date"
             value={endDate}
             onChange={(e) => onEndChange(e.target.value)}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-8 text-[12px] w-[150px]"
+            className="border-border focus-visible:ring-primary h-8 text-[12px] w-[150px]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">Parcelle</Label>
+          <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
           <select
             value={fieldId}
             onChange={(e) => onFieldChange(e.target.value)}
-            className="h-8 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+            className="h-8 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">
               Tous les champs ({fieldOptions.length})

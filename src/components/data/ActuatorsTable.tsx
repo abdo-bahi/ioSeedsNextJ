@@ -30,7 +30,7 @@ const typeColors: Record<string, string> = {
 }
 
 function TypeTag({ type }: { type: string }) {
-  const color = typeColors[type] ?? "bg-[#F5F5F5] text-[#888]"
+  const color = typeColors[type] ?? "bg-muted text-muted-foreground"
   return (
     <span className={`text-[11px] px-2 py-0.5 rounded font-medium ${color}`}>
       {type}
@@ -44,7 +44,7 @@ function StateBadge({ isOpen }: { isOpen: boolean }) {
     <Badge className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
       isOpen
         ? "bg-[#E6F7ED] text-[#2D8653]"
-        : "bg-[#F5F5F5] text-[#888]"
+        : "bg-muted text-muted-foreground"
     }`}>
       • {isOpen ? "Open" : "Closed"}
     </Badge>
@@ -54,13 +54,13 @@ function StateBadge({ isOpen }: { isOpen: boolean }) {
 // ── MCU status badge ──────────────────────────────────────────────
 function StatusBadge({ status, isActive }: { status: string; isActive: boolean }) {
   if (!isActive) return (
-    <Badge className="text-[11px] px-2 py-0.5 border-0 rounded-full bg-[#F5F5F5] text-[#888]">
+    <Badge className="text-[11px] px-2 py-0.5 border-0 rounded-full bg-muted text-muted-foreground">
       • Inactif
     </Badge>
   )
   const map: Record<string, { bg: string; text: string; label: string }> = {
     ONLINE:   { bg: "bg-[#E6F7ED]", text: "text-[#2D8653]", label: "Online" },
-    OFFLINE:  { bg: "bg-[#F5F5F5]", text: "text-[#888]",    label: "Offline" },
+    OFFLINE:  { bg: "bg-muted", text: "text-muted-foreground",    label: "Offline" },
     SLEEPING: { bg: "bg-[#FEF3DC]", text: "text-[#B8780E]", label: "Warning" },
     ERROR:    { bg: "bg-[#FDEAEA]", text: "text-[#B84040]", label: "Error" },
   }
@@ -135,32 +135,32 @@ function ActuatorModal({
           {/* Name + MAC */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Nom de l&apos;actionneur</Label>
+              <Label className="text-[12px] text-muted-foreground">Nom de l&apos;actionneur</Label>
               <Input
                 placeholder="Vanne-A1"
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Adresse MAC</Label>
+              <Label className="text-[12px] text-muted-foreground">Adresse MAC</Label>
               <Input
                 placeholder="AA:BB:CC:DD:EE:FF"
                 value={form.macAddress}
                 onChange={e => set("macAddress", e.target.value)}
-                className="border-[#D6E8DC] font-mono text-[12px] focus-visible:ring-[#4CAF7D]"
+                className="border-border font-mono text-[12px] focus-visible:ring-primary"
               />
             </div>
           </div>
 
           {/* Type */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Type d&apos;actionneur</Label>
+            <Label className="text-[12px] text-muted-foreground">Type d&apos;actionneur</Label>
             <select
               value={form.fk_actuatorType}
               onChange={e => set("fk_actuatorType", e.target.value)}
-              className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+              className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="">— Sélectionner un type —</option>
               {actuatorTypes.map(t => (
@@ -170,19 +170,19 @@ function ActuatorModal({
           </div>
 
           {/* Field → MCU selector */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               MCU parent
             </p>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Parcelle</Label>
+              <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
               <select
                 value={selectedFieldId}
                 onChange={e => {
                   setSelectedFieldId(e.target.value)
                   set("fk_mcu", "")
                 }}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">— Sélectionner une parcelle —</option>
                 {fields.map(f => (
@@ -191,12 +191,12 @@ function ActuatorModal({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">MCU</Label>
+              <Label className="text-[12px] text-muted-foreground">MCU</Label>
               <select
                 value={form.fk_mcu}
                 onChange={e => set("fk_mcu", e.target.value)}
                 disabled={!selectedFieldId || filteredMcus.length === 0}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D] disabled:opacity-50"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
               >
                 <option value="">— Sélectionner un MCU —</option>
                 {filteredMcus.map(m => (
@@ -212,39 +212,39 @@ function ActuatorModal({
           {/* GPS */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">Latitude</Label>
               <Input
                 placeholder="36.4703"
                 type="number"
                 value={form.latitude}
                 onChange={e => set("latitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] font-mono text-[12px]"
+                className="border-border focus-visible:ring-primary font-mono text-[12px]"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">Longitude</Label>
               <Input
                 placeholder="2.8277"
                 type="number"
                 value={form.longitude}
                 onChange={e => set("longitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] font-mono text-[12px]"
+                className="border-border focus-visible:ring-primary font-mono text-[12px]"
               />
             </div>
           </div>
 
           {/* Time limit */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Limite de temps (min)</Label>
+            <Label className="text-[12px] text-muted-foreground">Limite de temps (min)</Label>
             <Input
               placeholder="ex: 5"
               type="number"
               min={1}
               value={form.toggleTimeLimit}
               onChange={e => set("toggleTimeLimit", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
-            <p className="text-[10px] text-[#8FAF9A]">
+            <p className="text-[10px] text-muted-foreground">
               Fermeture auto après X min. Vide = aucune limite.
             </p>
           </div>
@@ -252,18 +252,18 @@ function ActuatorModal({
           {/* Initial state + isActive */}
           <div className="flex flex-col gap-3">
             
-            <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
               <div>
-                <p className="text-[13px] font-medium text-[#1A2E22]">Actionneur actif</p>
-                <p className="text-[11px] text-[#8FAF9A]">Désactiver pour ignorer cet actionneur</p>
+                <p className="text-[13px] font-medium text-foreground">Actionneur actif</p>
+                <p className="text-[11px] text-muted-foreground">Désactiver pour ignorer cet actionneur</p>
               </div>
               <button
                 onClick={() => set("isActive", !form.isActive)}
                 className={`w-10 h-6 rounded-full transition-colors relative ${
-                  form.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                  form.isActive ? "bg-primary" : "bg-border"
                 }`}
               >
-                <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+                <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                   form.isActive ? "translate-x-4" : "translate-x-0.5"
                 }`} />
               </button>
@@ -273,13 +273,13 @@ function ActuatorModal({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} className="border-[#D6E8DC] text-[#5A7A65]">
+          <Button variant="outline" onClick={onClose} className="border-border text-muted-foreground">
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : "Sauvegarder"}
           </Button>
@@ -370,18 +370,18 @@ export function ActuatorsTable({
   const editActuator = actuators?.find((a:any) => a.id === editTarget)
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Actuators
           </p>
           <select
             value={mcuFilter}
             onChange={e => setMcuFilter(e.target.value)}
-            className="h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[12px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+            className="h-7 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">Tous les MCUs</option>
             {mcus?.map((m:any) => (
@@ -391,7 +391,7 @@ export function ActuatorsTable({
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8 px-3 gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
           Ajouter actionneur
@@ -402,9 +402,9 @@ export function ActuatorsTable({
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
+            <tr className="border-b border-border bg-canvas">
               {["NOM", "TYPE", "MCU", "PARCELLE", "GPS", "MAC", "ÉTAT", "STATUT", "DERNIÈRE ACTION", "LIMITE", "ACTIONS"].map(h => (
-                <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]">
+                <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground">
                   {h}
                 </th>
               ))}
@@ -415,7 +415,7 @@ export function ActuatorsTable({
               <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
                 {[...Array(11)].map((_, j) => (
                   <td key={j} className="px-4 py-3.5">
-                    <div className="h-3 bg-[#E8F4ED] rounded w-16" />
+                    <div className="h-3 bg-green-soft rounded w-16" />
                   </td>
                 ))}
               </tr>
@@ -426,10 +426,10 @@ export function ActuatorsTable({
               const isOpen     = lastAction?.actionVal ?? actuator.targetState
 
               return (
-                <tr key={actuator.id} className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors">
+                <tr key={actuator.id} className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors">
 
                   {/* Name */}
-                  <td className="px-4 py-3.5 font-semibold text-[#1A2E22]">
+                  <td className="px-4 py-3.5 font-semibold text-foreground">
                     {actuator.name}
                   </td>
 
@@ -439,23 +439,23 @@ export function ActuatorsTable({
                   </td>
 
                   {/* MCU */}
-                  <td className="px-4 py-3.5 text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {actuator.mcuName}
                   </td>
 
                   {/* Field */}
-                  <td className="px-4 py-3.5 text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {actuator.fieldName}
                   </td>
 
                   {/* GPS */}
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-[#8FAF9A]">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
                     {actuator.latitude.toFixed(4)}°N<br />
                     {actuator.longitude.toFixed(4)}°E
                   </td>
 
                   {/* MAC */}
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-[#5A7A65]">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
                     {actuator.macAddress ?? "—"}
                   </td>
 
@@ -473,7 +473,7 @@ export function ActuatorsTable({
                   </td>
 
                   {/* Last action */}
-                  <td className="px-4 py-3.5 text-[12px] text-[#8FAF9A]">
+                  <td className="px-4 py-3.5 text-[12px] text-muted-foreground">
                     {lastAction
                       ? formatRelative(lastAction.createdAt)
                       : "—"
@@ -481,7 +481,7 @@ export function ActuatorsTable({
                   </td>
 
                   {/* Time limit */}
-                  <td className="px-4 py-3.5 text-[12px] text-[#5A7A65]">
+                  <td className="px-4 py-3.5 text-[12px] text-muted-foreground">
                     {actuator.toggleTimeLimit
                       ? <span className="font-mono">{actuator.toggleTimeLimit} min</span>
                       : "—"
@@ -493,13 +493,13 @@ export function ActuatorsTable({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setEditTarget(actuator.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(actuator.id)}
-                        className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -511,7 +511,7 @@ export function ActuatorsTable({
 
             {!isLoading && actuators?.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
+                <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
                   Aucun actionneur trouvé.
                 </td>
               </tr>
@@ -563,7 +563,7 @@ export function ActuatorsTable({
           <DialogHeader>
             <DialogTitle>Supprimer cet actionneur ?</DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Toutes les actions et schedules liés seront supprimés.
           </p>
           <DialogFooter className="gap-2">

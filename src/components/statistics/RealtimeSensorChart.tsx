@@ -26,8 +26,8 @@ type TooltipProps = {
 function CustomTooltip({ active, payload, label, unit, color }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-lg shadow-sm px-3 py-2">
-      <p className="text-[11px] text-[#8FAF9A] mb-1">
+    <div className="bg-card border border-border rounded-lg shadow-sm px-3 py-2">
+      <p className="text-[11px] text-muted-foreground mb-1">
         {new Date(Number(label)).toLocaleString("fr-DZ", {
           day: "2-digit",
           month: "2-digit",
@@ -97,14 +97,14 @@ export function RealtimeSensorChart({
   }));
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-5">
+    <div className="bg-card border border-border rounded-xl p-5">
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-4">
         <div>
-          <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
             Données temps réel — Capteur
           </p>
-          <p className="text-[12px] text-[#8FAF9A] mt-0.5">{periodLabel}</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">{periodLabel}</p>
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export function RealtimeSensorChart({
                 className={`px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
                   isActive
                     ? "text-white"
-                    : "bg-[#F7F9F5] text-[#8FAF9A] hover:text-[#1A2E22]"
+                    : "bg-canvas text-muted-foreground hover:text-foreground"
                 }`}
                 style={isActive ? { backgroundColor: c.color } : {}}
               >
@@ -134,9 +134,9 @@ export function RealtimeSensorChart({
 
       {/* ── Chart ── */}
       {isLoading ? (
-        <div className="h-[240px] bg-[#F7F9F5] rounded-lg animate-pulse" />
+        <div className="h-[240px] bg-canvas rounded-lg animate-pulse" />
       ) : !chartData || chartData.length === 0 ? (
-        <div className="h-[240px] flex items-center justify-center text-[13px] text-[#8FAF9A]">
+        <div className="h-[240px] flex items-center justify-center text-[13px] text-muted-foreground">
           Aucune donnée disponible
         </div>
       ) : (
@@ -215,11 +215,11 @@ export function RealtimeSensorChart({
               className="h-1.5 w-1.5 rounded-full animate-pulse"
               style={{ backgroundColor: colorInfo.color }}
             />
-            <span className="text-[11px] text-[#8FAF9A]">
+            <span className="text-[11px] text-muted-foreground">
               Mise à jour en temps réel
             </span>
           </div>
-          <span className="text-[11px] text-[#8FAF9A]">
+          <span className="text-[11px] text-muted-foreground">
             {chartData.length} lectures
           </span>
         </div>

@@ -17,21 +17,21 @@ import { Pencil, Trash2, MapPin, Plus } from "lucide-react"
 
 // ── Moisture bar ──────────────────────────────────────────────────
 function MoistureBar({ value }: { value: number | null }) {
-  if (value === null) return <span className="text-[12px] text-[#8FAF9A]">—</span>
+  if (value === null) return <span className="text-[12px] text-muted-foreground">—</span>
 
   const color =
     value < 30 ? "bg-[#D95F5F]" :
     value < 50 ? "bg-[#E89B2D]" :
-    "bg-[#4CAF7D]"
+    "bg-primary"
 
   const textColor =
     value < 30 ? "text-[#D95F5F]" :
     value < 50 ? "text-[#E89B2D]" :
-    "text-[#4CAF7D]"
+    "text-primary"
 
   return (
     <div className="flex items-center gap-2">
-      <div className="w-[80px] h-[6px] bg-[#E8F4ED] rounded-full overflow-hidden">
+      <div className="w-[80px] h-[6px] bg-green-soft rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full ${color} transition-all`}
           style={{ width: `${Math.min(value, 100)}%` }}
@@ -93,55 +93,55 @@ function FieldModal({
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Nom de la parcelle</Label>
+            <Label className="text-[12px] text-muted-foreground">Nom de la parcelle</Label>
             <Input
               placeholder="Parcelle E"
               value={form.name}
               onChange={e => set("name", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Culture</Label>
+            <Label className="text-[12px] text-muted-foreground">Culture</Label>
             <Input
               placeholder="Courgettes"
               value={form.crop}
               onChange={e => set("crop", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">Superficie (ha)</Label>
+            <Label className="text-[12px] text-muted-foreground">Superficie (ha)</Label>
             <Input
               placeholder="1.5"
               type="number"
               value={form.surface}
               onChange={e => set("surface", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">GPS — Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">GPS — Latitude</Label>
               <Input
                 placeholder="36.4720"
                 type="number"
                 value={form.latitude}
                 onChange={e => set("latitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">GPS — Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">GPS — Longitude</Label>
               <Input
                 placeholder="2.8277"
                 type="number"
                 value={form.longitude}
                 onChange={e => set("longitude", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
           </div>
@@ -151,14 +151,14 @@ function FieldModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : title.includes("Ajouter") ? "Ajouter" : "Enregistrer"}
           </Button>
@@ -225,16 +225,16 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
   const editField = fields?.find(f => f.id === editTarget)
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
 
       {/* ── Table header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
-        <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
           Irrigation Fields
         </p>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white text-[12px] h-8 px-3 gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
           Ajouter parcelle
@@ -245,9 +245,9 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
       <div className="overflow-x-auto">
         <table className="w-full text-[13px]">
           <thead>
-            <tr className="border-b border-[#D6E8DC] bg-[#F7F9F5]">
+            <tr className="border-b border-border bg-canvas">
               {["NOM", "CULTURE", "SUPERFICIE", "GPS", "MCUS", "HUMIDITÉ", "STATUT", "ACTIONS"].map(h => (
-                <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-[#8FAF9A]">
+                <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground">
                   {h}
                 </th>
               ))}
@@ -259,7 +259,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                 <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
                   {[...Array(8)].map((_, j) => (
                     <td key={j} className="px-4 py-3.5">
-                      <div className="h-3 bg-[#E8F4ED] rounded w-20" />
+                      <div className="h-3 bg-green-soft rounded w-20" />
                     </td>
                   ))}
                 </tr>
@@ -269,26 +269,26 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
             {!isLoading && fields?.map((field) => (
               <tr
                 key={field.id}
-                className="border-b border-[#F0F7F3] hover:bg-[#F7F9F5] transition-colors"
+                className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors"
               >
                 {/* Name */}
-                <td className="px-4 py-3.5 font-semibold text-[#1A2E22]">
+                <td className="px-4 py-3.5 font-semibold text-foreground">
                   {field.name ?? "—"}
                 </td>
 
                 {/* Crop */}
-                <td className="px-4 py-3.5 text-[#4CAF7D] font-medium">
+                <td className="px-4 py-3.5 text-primary font-medium">
                   {field.crop ?? "—"}
                 </td>
 
                 {/* surface */}
-                <td className="px-4 py-3.5 text-[#5A7A65]">
+                <td className="px-4 py-3.5 text-muted-foreground">
                   {field.surface ? `${field.surface} ha` : "—"}
                 </td>
 
                 {/* GPS */}
                 <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-1 text-[#8FAF9A]">
+                  <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
                     <span className="text-[11px] font-mono">
                       {field.latitude.toFixed(2)}°N<br />
@@ -298,7 +298,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                 </td>
 
                 {/* MCU count */}
-                <td className="px-4 py-3.5 font-semibold text-[#1A2E22]">
+                <td className="px-4 py-3.5 font-semibold text-foreground">
                   {field.mcuCount}
                 </td>
 
@@ -312,7 +312,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                   <Badge className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
                     field.isActive
                       ? "bg-[#E6F7ED] text-[#2D8653]"
-                      : "bg-[#F5F5F5] text-[#888]"
+                      : "bg-muted text-muted-foreground"
                   }`}>
                     {field.isActive ? "• Active" : "• Inactive"}
                   </Badge>
@@ -323,13 +323,13 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setEditTarget(field.id)}
-                      className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
                       onClick={() => setDeleteTarget(field.id)}
-                      className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -340,7 +340,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
 
             {!isLoading && fields?.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-[13px] text-[#8FAF9A]">
+                <td colSpan={8} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
                   Aucune parcelle. Cliquez sur &quot;Ajouter parcelle&quot; pour commencer.
                 </td>
               </tr>
@@ -382,14 +382,14 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
           <DialogHeader>
             <DialogTitle className="text-[16px]">Supprimer la parcelle ?</DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Cette action supprimera la parcelle et toutes ses données associées (MCUs, capteurs, historique).
           </p>
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteTarget(null)}
-              className="border-[#D6E8DC]"
+              className="border-border"
             >
               Annuler
             </Button>

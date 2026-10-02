@@ -19,12 +19,12 @@ export function PaginationControls({
 }: PaginationControlsProps) {
   if (totalPages <= 1) {
     return (
-      <div className="text-[11px] text-[#8FAF9A]">{total} entrée{total === 1 ? "" : "s"}</div>
+      <div className="text-[11px] text-muted-foreground">{total} entrée{total === 1 ? "" : "s"}</div>
     );
   }
 
   const btn =
-    "h-7 px-2.5 rounded-md border border-[#D6E8DC] text-[11px] font-medium text-[#5A7A65] hover:bg-[#F0F7F3] disabled:opacity-40 disabled:cursor-not-allowed transition-colors";
+    "h-7 px-2.5 rounded-md border border-border text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors";
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -36,7 +36,7 @@ export function PaginationControls({
       >
         <ChevronLeft className="h-3.5 w-3.5" />
       </button>
-      <span className="text-[11px] text-[#5A7A65]">
+      <span className="text-[11px] text-muted-foreground">
         Page {page} / {totalPages}
       </span>
       <button
@@ -47,7 +47,7 @@ export function PaginationControls({
       >
         <ChevronRight className="h-3.5 w-3.5" />
       </button>
-      <span className="text-[11px] text-[#8FAF9A]">· {total} entrée{total === 1 ? "" : "s"}</span>
+      <span className="text-[11px] text-muted-foreground">· {total} entrée{total === 1 ? "" : "s"}</span>
     </div>
   );
 }

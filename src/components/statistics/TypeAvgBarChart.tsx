@@ -32,18 +32,18 @@ export function TypeAvgBarChart({ data }: { data: Row[] }) {
   };
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-5">
+    <div className="bg-card border border-border rounded-xl p-5">
       <div>
-        <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
           Temps actif moyen par type d&apos;actionneur
         </p>
-        <p className="text-[12px] text-[#8FAF9A] mt-0.5">
+        <p className="text-[12px] text-muted-foreground mt-0.5">
           Moyenne du temps d&apos;ouverture par actionneur, par type.
         </p>
       </div>
 
       {chartData.length === 0 ? (
-        <div className="h-[240px] flex items-center justify-center text-[13px] text-[#8FAF9A]">
+        <div className="h-[240px] flex items-center justify-center text-[13px] text-muted-foreground">
           Aucune activation sur cette période.
         </div>
       ) : (

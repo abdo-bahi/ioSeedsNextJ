@@ -67,10 +67,10 @@ function KPICard({
 }) {
   return (
     <div
-      className={`flex-1 p-4 rounded-lg border-l-4 ${color} bg-white border border-[#D6E8DC]`}
+      className={`flex-1 p-4 rounded-lg border-l-4 ${color} bg-card border border-border`}
     >
-      <p className="text-[12px] text-[#8FAF9A] mb-1">{label}</p>
-      <p className="text-[28px] font-bold text-[#1A2E22] font-serif">{value}</p>
+      <p className="text-[12px] text-muted-foreground mb-1">{label}</p>
+      <p className="text-[28px] font-bold text-foreground font-serif">{value}</p>
     </div>
   );
 }
@@ -162,31 +162,31 @@ function ScheduleModal({
         <div className="flex flex-col gap-4 py-2">
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-[#5A7A65]">
+            <Label className="text-[12px] text-muted-foreground">
               Nom du programme
             </Label>
             <Input
               placeholder="Matin — Tomates"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
-              className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+              className="border-border focus-visible:ring-primary"
             />
           </div>
 
           {/* Actuator — select MCU first then actuator */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               Actionneur
             </p>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">MCU parent</Label>
+              <Label className="text-[12px] text-muted-foreground">MCU parent</Label>
               <select
                 value={selectedMcuId}
                 onChange={(e) => {
                   setSelectedMcuId(e.target.value);
                   set("fk_actuator", "");
                 }}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">— Tous les actionneurs —</option>
                 {mcus?.map((m: any) => (
@@ -197,11 +197,11 @@ function ScheduleModal({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Actionneur</Label>
+              <Label className="text-[12px] text-muted-foreground">Actionneur</Label>
               <select
                 value={form.fk_actuator}
                 onChange={(e) => set("fk_actuator", e.target.value)}
-                className="h-9 w-full rounded-md border border-[#D6E8DC] bg-white px-3 text-[13px] text-[#1A2E22] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+                className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">— Sélectionner —</option>
                 {actuators?.map((a: any) => (
@@ -220,31 +220,31 @@ function ScheduleModal({
           {/* Time + Duration */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">
+              <Label className="text-[12px] text-muted-foreground">
                 Heure de départ
               </Label>
               <Input
                 type="time"
                 value={form.startAt}
                 onChange={(e) => set("startAt", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Durée (min)</Label>
+              <Label className="text-[12px] text-muted-foreground">Durée (min)</Label>
               <Input
                 type="number"
                 placeholder="45"
                 value={form.duration}
                 onChange={(e) => set("duration", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
           </div>
 
           {/* Schedule type — weekdays or interval */}
-          <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
-            <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
+            <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
               Type de répétition
             </p>
             <div className="flex gap-4">
@@ -279,8 +279,8 @@ function ScheduleModal({
                     onClick={() => toggleDay(d.key)}
                     className={`w-8 h-8 rounded-full text-[12px] font-semibold transition-colors ${
                       form.weekDays.includes(d.key)
-                        ? "bg-[#1A3C2E] text-white"
-                        : "bg-[#E8F4ED] text-[#8FAF9A]"
+                        ? "bg-primary text-white"
+                        : "bg-green-soft text-muted-foreground"
                     }`}
                   >
                     {d.short}
@@ -292,15 +292,15 @@ function ScheduleModal({
             {/* Interval picker */}
             {form.scheduleType === "interval" && (
               <div className="flex items-center gap-3">
-                <span className="text-[13px] text-[#5A7A65]">Tous les</span>
+                <span className="text-[13px] text-muted-foreground">Tous les</span>
                 <Input
                   type="number"
                   min={1}
                   value={form.repeatEveryDays}
                   onChange={(e) => set("repeatEveryDays", e.target.value)}
-                  className="w-20 border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                  className="w-20 border-border focus-visible:ring-primary"
                 />
-                <span className="text-[13px] text-[#5A7A65]">jours</span>
+                <span className="text-[13px] text-muted-foreground">jours</span>
               </div>
             )}
           </div>
@@ -308,32 +308,32 @@ function ScheduleModal({
           {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Date début</Label>
+              <Label className="text-[12px] text-muted-foreground">Date début</Label>
               <Input
                 type="date"
                 value={form.startDate}
                 onChange={(e) => set("startDate", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-[#5A7A65]">Date fin</Label>
+              <Label className="text-[12px] text-muted-foreground">Date fin</Label>
               <Input
                 type="date"
                 value={form.endDate}
                 onChange={(e) => set("endDate", e.target.value)}
-                className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D]"
+                className="border-border focus-visible:ring-primary"
               />
             </div>
           </div>
 
           {/* toggleAtThresholds */}
-          <div className="flex items-center justify-between p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-[#1A2E22]">
+              <p className="text-[13px] font-medium text-foreground">
                 Arrêt par seuil
               </p>
-              <p className="text-[11px] text-[#8FAF9A]">
+              <p className="text-[11px] text-muted-foreground">
                 Stopper si l&apos;humidité est atteinte
               </p>
             </div>
@@ -342,11 +342,11 @@ function ScheduleModal({
                 set("toggleAtThresholds", !form.toggleAtThresholds)
               }
               className={`w-10 h-6 rounded-full transition-colors relative ${
-                form.toggleAtThresholds ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+                form.toggleAtThresholds ? "bg-primary" : "bg-border"
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                   form.toggleAtThresholds ? "translate-x-4" : "translate-x-0.5"
                 }`}
               />
@@ -358,14 +358,14 @@ function ScheduleModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-[#D6E8DC] text-[#5A7A65]"
+            className="border-border text-muted-foreground"
           >
             Annuler
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name || !form.fk_actuator}
-            className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : "Enregistrer"}
           </Button>
@@ -398,13 +398,13 @@ function ScheduleCard({
     : `tous les ${schedule.repeatEveryDays} jours`;
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-5 flex gap-5">
+    <div className="bg-card border border-border rounded-xl p-5 flex gap-5">
       {/* ── Time + duration ── */}
       <div className="min-w-[64px] flex flex-col items-start">
-        <p className="text-[26px] font-bold text-[#1A2E22] leading-none font-serif">
+        <p className="text-[26px] font-bold text-foreground leading-none font-serif">
           {formatTime(schedule.startAt)}
         </p>
-        <p className="text-[12px] text-[#8FAF9A] mt-1">
+        <p className="text-[12px] text-muted-foreground mt-1">
           {schedule.duration} min
         </p>
       </div>
@@ -413,14 +413,14 @@ function ScheduleCard({
       <div className="flex-1 min-w-0">
         {/* Name + badges */}
         <div className="flex items-center gap-2 flex-wrap mb-1">
-          <p className="text-[15px] font-semibold text-[#1A2E22]">
+          <p className="text-[15px] font-semibold text-foreground">
             {schedule.name}
           </p>
           <Badge
             className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
               schedule.isActive
                 ? "bg-[#E6F7ED] text-[#2D8653]"
-                : "bg-[#F5F5F5] text-[#888]"
+                : "bg-muted text-muted-foreground"
             }`}
           >
             {schedule.isActive ? "• Active" : "• Pause"}
@@ -428,7 +428,7 @@ function ScheduleCard({
           <Badge
             className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
               isWeekdays
-                ? "bg-[#E8F4ED] text-[#4CAF7D]"
+                ? "bg-green-soft text-primary"
                 : "bg-[#FEF3DC] text-[#B8780E]"
             }`}
           >
@@ -437,7 +437,7 @@ function ScheduleCard({
         </div>
 
         {/* Subtitle */}
-        <p className="text-[12px] text-[#5A7A65] mb-2">
+        <p className="text-[12px] text-muted-foreground mb-2">
           {schedule.actuator?.name}
           {triggerLabel && (
             <>
@@ -458,8 +458,8 @@ function ScheduleCard({
                 key={d.key}
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold ${
                   schedule.weekDays?.includes(d.key)
-                    ? "bg-[#1A3C2E] text-white"
-                    : "bg-[#F0F7F3] text-[#8FAF9A]"
+                    ? "bg-primary text-white"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
                 {d.short}
@@ -470,7 +470,7 @@ function ScheduleCard({
 
         {/* Interval display */}
         {!isWeekdays && schedule.repeatEveryDays > 0 && (
-          <p className="text-[12px] text-[#8FAF9A]">
+          <p className="text-[12px] text-muted-foreground">
             🔁 Répète tous les {schedule.repeatEveryDays} jours
           </p>
         )}
@@ -480,14 +480,14 @@ function ScheduleCard({
       <div className="flex flex-col items-end justify-between gap-3 min-w-[140px]">
         {/* Creator + last run */}
         <div className="text-right">
-          <div className="flex items-center justify-end gap-1 text-[12px] text-[#5A7A65]">
+          <div className="flex items-center justify-end gap-1 text-[12px] text-muted-foreground">
             <User className="h-3 w-3" />
             <span>Bahi Abderrahmane</span>
           </div>
-          <p className="text-[11px] text-[#8FAF9A]">
+          <p className="text-[11px] text-muted-foreground">
             {formatDate(schedule.createdAt)}
           </p>
-          <p className="text-[11px] text-[#8FAF9A]">
+          <p className="text-[11px] text-muted-foreground">
             {formatRelative(schedule.updatedAt)}
           </p>
         </div>
@@ -498,11 +498,11 @@ function ScheduleCard({
           <button
             onClick={() => onToggle(schedule.id, !schedule.isActive)}
             className={`w-10 h-6 rounded-full transition-colors relative ${
-              schedule.isActive ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+              schedule.isActive ? "bg-primary" : "bg-border"
             }`}
           >
             <span
-              className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+              className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
                 schedule.isActive ? "translate-x-4" : "translate-x-0.5"
               }`}
             />
@@ -510,14 +510,14 @@ function ScheduleCard({
 
           <button
             onClick={() => onEdit(schedule.id)}
-            className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#4CAF7D] hover:border-[#4CAF7D] transition-colors"
+            className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
 
           <button
             onClick={() => onDelete(schedule.id)}
-            className="h-7 w-7 rounded border border-[#D6E8DC] flex items-center justify-center text-[#8FAF9A] hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+            className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -622,13 +622,13 @@ export default function SchedulesPage() {
     <div className="space-y-6">
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-1 bg-white border border-[#D6E8DC] rounded-lg p-1">
+        <div className="flex gap-1 bg-card border border-border rounded-lg p-1">
           <button
             onClick={() => setShowAll(false)}
             className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               !showAll
-                ? "bg-[#1A3C2E] text-white"
-                : "text-[#5A7A65] hover:text-[#1A3C2E]"
+                ? "bg-primary text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Parcelle courante
@@ -637,8 +637,8 @@ export default function SchedulesPage() {
             onClick={() => setShowAll(true)}
             className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               showAll
-                ? "bg-[#1A3C2E] text-white"
-                : "text-[#5A7A65] hover:text-[#1A3C2E]"
+                ? "bg-primary text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Toutes les parcelles
@@ -646,7 +646,7 @@ export default function SchedulesPage() {
         </div>
         <Button
           onClick={() => setAddOpen(true)}
-          className="bg-[#1A3C2E] hover:bg-[#2D5C42] text-white gap-1.5"
+          className="bg-primary hover:bg-primary/90 text-white gap-1.5"
         >
           <Plus className="h-4 w-4" />
           Nouveau programme
@@ -655,8 +655,8 @@ export default function SchedulesPage() {
 
       {/* ── KPI summary ── */}
       {!isLoading && (
-        <div className="p-4 rounded-xl border border-[#D6E8DC] bg-white">
-          <p className="text-[11px] font-semibold tracking-widest text-[#8FAF9A] uppercase mb-3">
+        <div className="p-4 rounded-xl border border-border bg-card">
+          <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase mb-3">
             Configuration active —{" "}
             {showAll ? "Toutes les parcelles" : selectedField?.name ?? "—"}
           </p>
@@ -686,12 +686,12 @@ export default function SchedulesPage() {
           [...Array(2)].map((_, i) => (
             <div
               key={i}
-              className="h-[120px] bg-white border border-[#D6E8DC] rounded-xl animate-pulse"
+              className="h-[120px] bg-card border border-border rounded-xl animate-pulse"
             />
           ))}
 
         {!isLoading && schedules?.length === 0 && (
-          <div className="bg-white border border-[#D6E8DC] rounded-xl p-8 text-center text-[13px] text-[#8FAF9A]">
+          <div className="bg-card border border-border rounded-xl p-8 text-center text-[13px] text-muted-foreground">
             <CalendarClock className="h-8 w-8 mx-auto mb-3 text-[#D6E8DC]" />
             Aucun programme pour cette parcelle.
             <br />
@@ -758,7 +758,7 @@ export default function SchedulesPage() {
           <DialogHeader>
             <DialogTitle>Supprimer ce programme ?</DialogTitle>
           </DialogHeader>
-          <p className="text-[13px] text-[#5A7A65]">
+          <p className="text-[13px] text-muted-foreground">
             Le programme sera définitivement supprimé.
           </p>
           <DialogFooter className="gap-2">

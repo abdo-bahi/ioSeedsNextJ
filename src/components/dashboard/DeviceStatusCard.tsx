@@ -29,8 +29,8 @@ type McuRow = {
 }
 
 const statusStyle: Record<MCUStatus, { dot: string; chip: string; label: string }> = {
-  ONLINE:  { dot: "bg-[#4CAF7D]", chip: "bg-[#E6F7ED] text-[#2D8653]", label: "En ligne" },
-  OFFLINE: { dot: "bg-[#C4C7C5]", chip: "bg-[#F5F5F5] text-[#6B6F6D]", label: "Hors ligne" },
+  ONLINE:  { dot: "bg-primary", chip: "bg-[#E6F7ED] text-[#2D8653]", label: "En ligne" },
+  OFFLINE: { dot: "bg-[#C4C7C5]", chip: "bg-muted text-muted-foreground", label: "Hors ligne" },
   SLEEPING:{ dot: "bg-[#E89B2D]", chip: "bg-[#FEF3DC] text-[#B8780E]", label: "Veille" },
   ERROR:   { dot: "bg-[#D95F5F]", chip: "bg-[#FDEAEA] text-[#B84040]", label: "Erreur" },
 }
@@ -61,7 +61,7 @@ type LogRow = {
 };
 
 const eventDot: Record<string, string> = {
-  ON: "bg-[#4CAF7D]", OFF: "bg-[#C4C7C5]", SLEEPING: "bg-[#E89B2D]", ERROR: "bg-[#D95F5F]",
+  ON: "bg-primary", OFF: "bg-[#C4C7C5]", SLEEPING: "bg-[#E89B2D]", ERROR: "bg-[#D95F5F]",
 };
 
 function eventLabel(event: string): string {
@@ -157,11 +157,11 @@ export function DeviceStatusCard() {
   const onTo = (v: string) => { setTo(v); setLogPage(1); };
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#D6E8DC]">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <HardDrive className="h-4 w-4 text-[#8FAF9A]" />
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <HardDrive className="h-4 w-4 text-muted-foreground" />
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Devices connectés
           </p>
         </div>
@@ -173,7 +173,7 @@ export function DeviceStatusCard() {
           <span className="text-[11px] text-[#B8780E] bg-[#FEF3DC] rounded-full px-2 py-0.5 flex items-center gap-1">
             <Moon className="h-3 w-3" /> {sleeping} veille
           </span>
-          <span className="text-[11px] text-[#6B6F6D] bg-[#F5F5F5] rounded-full px-2 py-0.5 flex items-center gap-1">
+          <span className="text-[11px] text-muted-foreground bg-muted rounded-full px-2 py-0.5 flex items-center gap-1">
             <WifiOff className="h-3 w-3" /> {offline} hors ligne
           </span>
         </div>
@@ -184,8 +184,8 @@ export function DeviceStatusCard() {
         {isLoading &&
           [...Array(2)].map((_, i) => (
             <div key={i} className="px-5 py-3 animate-pulse">
-              <div className="h-3 w-32 bg-[#E8F4ED] rounded mb-2" />
-              <div className="h-2 w-24 bg-[#E8F4ED] rounded" />
+              <div className="h-3 w-32 bg-green-soft rounded mb-2" />
+              <div className="h-2 w-24 bg-green-soft rounded" />
             </div>
           ))}
 
@@ -196,10 +196,10 @@ export function DeviceStatusCard() {
               <div key={mcu.id} className="px-5 py-3 flex items-center gap-3">
                 <span className={`h-2.5 w-2.5 rounded-full ${s.dot} shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#1A2E22] truncate">
+                  <p className="text-[13px] font-semibold text-foreground truncate">
                     {mcu.name ?? "—"}
                   </p>
-                  <p className="text-[11px] text-[#8FAF9A]">
+                  <p className="text-[11px] text-muted-foreground">
                     {mcu._count.sensors} capteurs · {mcu._count.actuators} actionneurs
                     {mcu.lastSeenAt ? ` · vu ${formatRelative(mcu.lastSeenAt)}` : ""}
                   </p>
@@ -212,19 +212,19 @@ export function DeviceStatusCard() {
           })}
 
         {!isLoading && total === 0 && (
-          <div className="px-5 py-6 text-center text-[12px] text-[#8FAF9A]">
+          <div className="px-5 py-6 text-center text-[12px] text-muted-foreground">
             Aucun MCU dans cette parcelle.
           </div>
         )}
       </div>
 
       {/* Connection history — grouped per MCU, collapsible, paginated */}
-      <div className="border-t border-[#D6E8DC]">
+      <div className="border-t border-border">
         <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-1 flex-wrap">
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase flex items-center gap-1.5">
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
             <Clock className="h-3 w-3" /> Historique de connexion
           </p>
-          <div className="flex items-center gap-2 text-[#8FAF9A]">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Filter className="h-3 w-3" />
             <DateFilter from={from} to={to} onFrom={onFrom} onTo={onTo} />
           </div>
@@ -233,7 +233,7 @@ export function DeviceStatusCard() {
         {/* Groups */}
         <div className="px-5 py-2 space-y-1.5">
           {(log?.items ?? []).length === 0 && (
-            <p className="text-[12px] text-[#8FAF9A] text-center py-3">
+            <p className="text-[12px] text-muted-foreground text-center py-3">
               Aucun événement {from || to ? "sur cette période" : "pour le moment"}.
             </p>
           )}
@@ -242,23 +242,23 @@ export function DeviceStatusCard() {
             const open = expanded.has(key);
             const latest = rows[0];
             return (
-              <div key={key} className="border border-[#D6E8DC] rounded-lg">
+              <div key={key} className="border border-border rounded-lg">
                 {/* Header — click to collapse/expand */}
                 <button
                   type="button"
                   onClick={() => toggleHero(key)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-[#F7F9F5] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-canvas transition-colors"
                 >
                   <ChevronRight
-                    className={`h-3.5 w-3.5 text-[#8FAF9A] shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
+                    className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform ${open ? "rotate-90" : ""}`}
                   />
                   <span
                     className={`h-2 w-2 rounded-full shrink-0 ${eventDot[latest?.event ?? ""] ?? "bg-[#C4C7C5]"}`}
                   />
-                  <span className="text-[12px] font-semibold text-[#1A2E22] truncate flex-1">
+                  <span className="text-[12px] font-semibold text-foreground truncate flex-1">
                     {latest?.deviceName ?? rows[0]?.deviceName ?? key}
                   </span>
-                  <span className="text-[11px] text-[#8FAF9A] shrink-0">
+                  <span className="text-[11px] text-muted-foreground shrink-0">
                     {rows.length} événement{rows.length === 1 ? "" : "s"}
                   </span>
                 </button>
@@ -271,11 +271,11 @@ export function DeviceStatusCard() {
                         <span
                           className={`h-1.5 w-1.5 rounded-full shrink-0 ${eventDot[row.event] ?? "bg-[#C4C7C5]"}`}
                         />
-                        <span className="font-medium text-[#1A2E22]">{eventLabel(row.event)}</span>
-                        <span className="text-[#8FAF9A]">
+                        <span className="font-medium text-foreground">{eventLabel(row.event)}</span>
+                        <span className="text-muted-foreground">
                           · {sourceLabel[row.source] ?? row.source}
                         </span>
-                        <span className="ml-auto text-[#8FAF9A] shrink-0">
+                        <span className="ml-auto text-muted-foreground shrink-0">
                           {formatRelative(row.dateTime)}{" "}
                           <span className="text-[#C2D0C8]">({formatDateTime(row.dateTime)})</span>
                         </span>

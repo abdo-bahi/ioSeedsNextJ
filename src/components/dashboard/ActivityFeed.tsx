@@ -21,7 +21,7 @@ function formatRelative(date: string | Date): string {
 const PAGE_SIZE = 8;
 
 const selectCls =
-  "h-7 rounded-md border border-[#D6E8DC] bg-white px-2 text-[11px] text-[#5A7A65] focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]";
+  "h-7 rounded-md border border-border bg-card px-2 text-[11px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary";
 
 // Command tracking badges (dashboard → MCU commands)
 const cmdBadge: Record<string, { cls: string; label: string }> = {
@@ -99,17 +99,17 @@ export function ActivityFeed() {
   const hasFilters = !!(mcuId || actuatorId || from || to);
 
   return (
-    <div className="bg-white border border-[#D6E8DC] rounded-xl p-4 flex flex-col">
+    <div className="bg-card border border-border rounded-xl p-4 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
-        <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase flex items-center gap-1.5">
+        <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
           <Activity className="h-3 w-3" /> Activité Récente
         </p>
         {hasFilters && (
           <button
             type="button"
             onClick={resetFilters}
-            className="flex items-center gap-1 text-[11px] text-[#5A7A65] hover:text-[#D95F5F] transition-colors"
+            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-[#D95F5F] transition-colors"
           >
             <X className="h-3 w-3" /> Réinitialiser
           </button>
@@ -120,7 +120,7 @@ export function ActivityFeed() {
       <div className="flex items-end gap-2 flex-wrap mb-2">
         {/* MCU */}
         <div className="flex flex-col gap-1">
-          <Label className="text-[10px] text-[#8FAF9A]">MCU</Label>
+          <Label className="text-[10px] text-muted-foreground">MCU</Label>
           <select value={mcuId} onChange={(e) => onMcu(e.target.value)} className={selectCls}>
             <option value="">Tous les MCUs</option>
             {mcuOptions.map((m) => (
@@ -131,7 +131,7 @@ export function ActivityFeed() {
 
         {/* Actuator */}
         <div className="flex flex-col gap-1">
-          <Label className="text-[10px] text-[#8FAF9A]">Actionneur</Label>
+          <Label className="text-[10px] text-muted-foreground">Actionneur</Label>
           <select
             value={actuatorId}
             onChange={(e) => onActuator(e.target.value)}
@@ -155,10 +155,10 @@ export function ActivityFeed() {
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex gap-3 animate-pulse">
-                <div className="h-2 w-2 rounded-full bg-[#E8F4ED] mt-1.5 flex-shrink-0" />
+                <div className="h-2 w-2 rounded-full bg-green-soft mt-1.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <div className="h-3 w-48 bg-[#E8F4ED] rounded mb-1" />
-                  <div className="h-2 w-20 bg-[#E8F4ED] rounded" />
+                  <div className="h-3 w-48 bg-green-soft rounded mb-1" />
+                  <div className="h-2 w-20 bg-green-soft rounded" />
                 </div>
               </div>
             ))}
@@ -166,7 +166,7 @@ export function ActivityFeed() {
         )}
 
         {!isLoading && activities.length === 0 && (
-          <p className="text-[12px] text-[#8FAF9A] text-center py-4">
+          <p className="text-[12px] text-muted-foreground text-center py-4">
             Aucune activité {from || to || mcuId || actuatorId ? "avec ces filtres" : "récente"}
           </p>
         )}
@@ -181,36 +181,36 @@ export function ActivityFeed() {
             {/* Dot */}
             <div
               className={`h-2 w-2 rounded-full mt-1.5 flex-shrink-0 ${
-                activity.isOpen ? "bg-[#4CAF7D]" : "bg-[#8FAF9A]"
+                activity.isOpen ? "bg-primary" : "bg-[#8FAF9A]"
               }`}
             />
 
             {/* Text */}
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-[#1A2E22] leading-snug flex items-center gap-2 flex-wrap">
+              <p className="text-[13px] text-foreground leading-snug flex items-center gap-2 flex-wrap">
                 {activity.label}
                 {activity.sublabel && (
-                  <span className="text-[#8FAF9A]"> — {activity.sublabel}</span>
+                  <span className="text-muted-foreground"> — {activity.sublabel}</span>
                 )}
                 {activity.cmdStatus ? (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${cmdBadge[activity.cmdStatus]?.cls ?? "bg-[#F0F7F3] text-[#6B6F6D]"}`}>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${cmdBadge[activity.cmdStatus]?.cls ?? "bg-muted text-muted-foreground"}`}>
                     {cmdBadge[activity.cmdStatus]?.label ?? activity.cmdStatus}
                   </span>
                 ) : (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F0F7F3] text-[#6B6F6D] font-semibold">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-semibold">
                     Événement MCU
                   </span>
                 )}
               </p>
 
               {/* Who made the action + type */}
-              <p className="text-[11px] text-[#8FAF9A] mt-0.5">
+              <p className="text-[11px] text-muted-foreground mt-0.5">
                 {activity.isMcuAction
                   ? `${activity.mcu ?? "MCU"} (Auto)`
                   : `${activity.user ?? "Unknown"} (Manuel)`}
               </p>
 
-              <p className="text-[11px] text-[#8FAF9A] mt-0.5">
+              <p className="text-[11px] text-muted-foreground mt-0.5">
                 {formatRelative(activity.createdAt)}
               </p>
             </div>

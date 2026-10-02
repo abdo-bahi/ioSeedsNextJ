@@ -62,28 +62,28 @@ export function SensorCalibrationSection({
     : 50
 
   return (
-    <div className="flex flex-col gap-3 p-3 rounded-lg border border-[#D6E8DC] bg-[#F7F9F5]">
+    <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
 
       {/* ── Header + toggle ── */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-semibold tracking-widest text-[#8FAF9A] uppercase">
+          <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             ↓ Calibration analogique
           </p>
-          <p className="text-[11px] font-medium text-[#1A2E22] mt-0.5">
+          <p className="text-[11px] font-medium text-foreground mt-0.5">
             Conversion analogique
           </p>
-          <p className="text-[10px] text-[#4CAF7D] font-mono mt-0.5">
+          <p className="text-[10px] text-primary font-mono mt-0.5">
             converti = minTo + (raw − minAnalogue) × (maxTo − minTo) / (maxAnalogue − minAnalogue)
           </p>
         </div>
         <button
           onClick={() => onConversionToggle(!rowValueConversion)}
           className={`w-10 h-6 rounded-full transition-colors relative flex-shrink-0 ${
-            rowValueConversion ? "bg-[#4CAF7D]" : "bg-[#D6E8DC]"
+            rowValueConversion ? "bg-primary" : "bg-border"
           }`}
         >
-          <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform ${
+          <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
             rowValueConversion ? "translate-x-4" : "translate-x-0.5"
           }`} />
         </button>
@@ -91,19 +91,19 @@ export function SensorCalibrationSection({
 
       {/* ── Unit ── */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[12px] text-[#5A7A65]">Unité affichée</Label>
+        <Label className="text-[12px] text-muted-foreground">Unité affichée</Label>
         <Input
           placeholder="% , °C , L/min ..."
           value={unit}
           onChange={e => onUnitChange(e.target.value)}
-          className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+          className="border-border focus-visible:ring-primary h-9"
           disabled={!rowValueConversion}
         />
       </div>
 
       {/* ── Input range: minAnalogue / maxAnalogue ── */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[12px] text-[#8FAF9A]">
+        <Label className="text-[12px] text-muted-foreground">
           Intervalle analogique (brute du capteur)
         </Label>
       </div>
@@ -111,7 +111,7 @@ export function SensorCalibrationSection({
 
         {/* Min analogue */}
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">
+          <Label className="text-[12px] text-muted-foreground">
             Min analogique
           </Label>
           <Input
@@ -120,24 +120,24 @@ export function SensorCalibrationSection({
             value={minAnalogue}
             onChange={e => onMinChange(e.target.value)}
             disabled={!rowValueConversion}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+            className="border-border focus-visible:ring-primary h-9"
           />
           {/* Set as min button */}
           {sensorId && lastRaw !== null && (
             <button
               onClick={() => onMinChange(String(lastRaw))}
               disabled={!rowValueConversion}
-              className="flex items-center gap-1.5 text-[11px] text-[#4CAF7D] hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 text-[11px] text-primary hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowDownToLine className="h-3 w-3" />
               Définir comme min
-              <span className="text-[#8FAF9A]">
+              <span className="text-muted-foreground">
                 (dernière val: {lastRaw})
               </span>
             </button>
           )}
           {sensorId && lastRaw === null && (
-            <p className="text-[10px] text-[#8FAF9A]">
+            <p className="text-[10px] text-muted-foreground">
               Aucune donnée reçue
             </p>
           )}
@@ -145,7 +145,7 @@ export function SensorCalibrationSection({
 
         {/* Max analogue */}
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">
+          <Label className="text-[12px] text-muted-foreground">
             Max analogique
           </Label>
           <Input
@@ -154,18 +154,18 @@ export function SensorCalibrationSection({
             value={maxAnalogue}
             onChange={e => onMaxChange(e.target.value)}
             disabled={!rowValueConversion}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+            className="border-border focus-visible:ring-primary h-9"
           />
           {/* Set as max button */}
           {sensorId && lastRaw !== null && (
             <button
               onClick={() => onMaxChange(String(lastRaw))}
               disabled={!rowValueConversion}
-              className="flex items-center gap-1.5 text-[11px] text-[#4CAF7D] hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 text-[11px] text-primary hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowDownToLine className="h-3 w-3" />
               Définir comme max
-              <span className="text-[#8FAF9A]">
+              <span className="text-muted-foreground">
                 (dernière val: {lastRaw})
               </span>
             </button>
@@ -175,7 +175,7 @@ export function SensorCalibrationSection({
 
       {/* ── Output range: minToConvertValue / maxToConvertValue ── */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[12px] text-[#8FAF9A]">
+        <Label className="text-[12px] text-muted-foreground">
           Valeur convertie cible ({unit || "unité"})
         </Label>
       </div>
@@ -183,7 +183,7 @@ export function SensorCalibrationSection({
 
         {/* Min converted */}
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">
+          <Label className="text-[12px] text-muted-foreground">
             Min valeur convertie
           </Label>
           <Input
@@ -192,13 +192,13 @@ export function SensorCalibrationSection({
             value={minToConvertValue}
             onChange={e => onMinToChange(e.target.value)}
             disabled={!rowValueConversion}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+            className="border-border focus-visible:ring-primary h-9"
           />
         </div>
 
         {/* Max converted */}
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-[#5A7A65]">
+          <Label className="text-[12px] text-muted-foreground">
             Max valeur convertie
           </Label>
           <Input
@@ -207,20 +207,20 @@ export function SensorCalibrationSection({
             value={maxToConvertValue}
             onChange={e => onMaxToChange(e.target.value)}
             disabled={!rowValueConversion}
-            className="border-[#D6E8DC] focus-visible:ring-[#4CAF7D] h-9"
+            className="border-border focus-visible:ring-primary h-9"
           />
         </div>
       </div>
 
       {/* ── Calibrated range preview ── */}
       {rowValueConversion && (
-        <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-white border border-[#D6E8DC]">
-          <p className="text-[10px] font-semibold text-[#8FAF9A] uppercase tracking-wider">
+        <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-card border border-border">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             Aperçu plage calibrée
           </p>
 
           {/* Gradient bar */}
-          <div className="relative h-[8px] rounded-full overflow-hidden bg-[#E8F4ED]">
+          <div className="relative h-[8px] rounded-full overflow-hidden bg-green-soft">
             <div
               className="absolute inset-0 rounded-full"
               style={{
@@ -230,30 +230,30 @@ export function SensorCalibrationSection({
             {/* Current value indicator */}
             {lastRaw !== null && (
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-[#1A3C2E] rounded-full shadow"
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-card border-2 border-[#1A3C2E] rounded-full shadow"
                 style={{ left: `calc(${fillPct}% - 6px)` }}
               />
             )}
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-[11px] text-[#8FAF9A]">
+            <span className="text-[11px] text-muted-foreground">
               {minTo}{unit}
             </span>
             {/* Current converted value */}
             {previewValue !== null && (
-              <span className="text-[12px] font-semibold text-[#1A2E22]">
+              <span className="text-[12px] font-semibold text-foreground">
                 — {previewValue.toFixed(1)}{unit}
               </span>
             )}
-            <span className="text-[11px] text-[#8FAF9A]">
+            <span className="text-[11px] text-muted-foreground">
               {maxTo}{unit}
             </span>
           </div>
 
           {/* Raw value info */}
           {lastRaw !== null && (
-            <p className="text-[10px] text-[#8FAF9A] text-center">
+            <p className="text-[10px] text-muted-foreground text-center">
               Dernière valeur brute: <strong>{lastRaw}</strong>
               {previewValue !== null && (
                 <> → converti: <strong>{previewValue.toFixed(1)}{unit}</strong></>

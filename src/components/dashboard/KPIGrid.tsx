@@ -33,10 +33,10 @@ function formatRelative(date: Date | string | null): string {
 
 function KPICardSkeleton() {
   return (
-    <div className="border-t-4 border-t-[#D6E8DC] rounded-xl p-5 bg-white animate-pulse">
-      <div className="h-3 w-24 bg-[#E8F4ED] rounded mb-4" />
-      <div className="h-8 w-16 bg-[#E8F4ED] rounded mb-2" />
-      <div className="h-3 w-32 bg-[#E8F4ED] rounded" />
+    <div className="border-t-4 border-t-[#D6E8DC] rounded-xl p-5 bg-card animate-pulse">
+      <div className="h-3 w-24 bg-green-soft rounded mb-4" />
+      <div className="h-8 w-16 bg-green-soft rounded mb-2" />
+      <div className="h-3 w-32 bg-green-soft rounded" />
     </div>
   );
 }
@@ -111,7 +111,7 @@ export function KPIGrid() {
     <div>
       {/* ── Header ── */}
       <div className="flex items-center gap-3 mb-4">
-        <h2 className="text-[18px] font-bold text-[#1A2E22]">
+        <h2 className="text-[18px] font-bold text-foreground">
           {selectedField?.name ?? "—"}
         </h2>
       </div>

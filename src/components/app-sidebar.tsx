@@ -88,19 +88,19 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
   }
 
   return (
-    <Sidebar className="border-r border-[#D6E8DC] bg-white">
+    <Sidebar className="border-r border-border bg-card">
       {/* ── Header ── */}
       <SidebarHeader className="px-4 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#4CAF7D]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             {/* leaf icon */}
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
               <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2-8 2 1-2 4-4 4-4S10 2 7 7c-2 3-1 6 0 8 3-5 10-7 10-7Z" />
             </svg>
           </div>
           <div>
-            <p className="text-[15px] font-semibold text-[#1A2E22]">IOSeeds</p>
-            <p className="text-[10px] font-medium tracking-widest text-[#4CAF7D] uppercase">
+            <p className="text-[15px] font-semibold text-foreground">IOSeeds</p>
+            <p className="text-[10px] font-medium tracking-widest text-primary uppercase">
               {isLoading ? "***" : farm?.name ?? "—"}
             </p>
           </div>
@@ -121,29 +121,29 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
                         isActive={pathname === item.href}
                         className={`
                       h-auto px-3 py-2.5 rounded-lg
-                      hover:bg-[#E8F4ED] hover:text-[#1A3C2E]
-                      data-[active=true]:bg-[#E8F4ED] data-[active=true]:text-[#1A3C2E]
+                      hover:bg-green-soft hover:text-foreground
+                      data-[active=true]:bg-green-soft data-[active=true]:text-foreground
                     `}
                       >
                         <a href={item.href} className="flex items-center gap-3">
                           <item.icon
                             className={`h-[18px] w-[18px] shrink-0 ${
                               pathname === item.href
-                                ? "text-[#4CAF7D]"
-                                : "text-[#8FAF9A]"
+                                ? "text-primary"
+                                : "text-muted-foreground"
                             }`}
                           />
                           <div className="flex flex-col leading-tight">
                             <span
                               className={`text-[13.5px] font-medium ${
                                 pathname === item.href
-                                  ? "text-[#1A3C2E]"
+                                  ? "text-foreground"
                                   : "text-[#3A5A44]"
                               }`}
                             >
                               {item.label}
                             </span>
-                            <span className="text-[11px] text-[#8FAF9A] font-normal">
+                            <span className="text-[11px] text-muted-foreground font-normal">
                               {item.subtitle}
                             </span>
                           </div>
@@ -158,19 +158,19 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
       </SidebarContent>
 
       {/* ── Footer ── */}
-      <SidebarFooter className="px-4 py-4 border-t border-[#D6E8DC]">
+      <SidebarFooter className="px-4 py-4 border-t border-border">
         <div className="flex items-center gap-3">
           <div className="flex flex-row items-center gap-2 leading-tight min-w-0">
-            <div className="h-7 w-7 rounded-full bg-[#4CAF7D] flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
+            <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0">
               {user.name?.[0]?.toUpperCase() ?? "?"}
               {user.name?.[1]?.toUpperCase() ?? "?"}
             </div>
 
             <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-semibold text-gray-900 truncate">
+              <span className="text-[11px] font-semibold text-foreground truncate">
                 {session?.user?.name ?? user?.name ?? "—"}
               </span>
-              <span className="text-[11px] text-[#8FAF9A]">
+              <span className="text-[11px] text-muted-foreground">
                 {session?.user?.role ?? "—"}
               </span>
             </div>
@@ -178,7 +178,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
         </div>
         <button
           onClick={handleLogout}
-          className="absolute right-2 text-[#8FAF9A]  hover:text-[#D95F5F] transition-colors p-1 rounded"
+          className="absolute right-2 text-muted-foreground  hover:text-[#D95F5F] transition-colors p-1 rounded"
           title="Se déconnecter"
         >
           <LogOut className="h-4 w-4" />
