@@ -132,7 +132,7 @@ export function KPIGrid() {
         ) : (
           <KPICard
             title="MCUs Actifs"
-            value={`${nbActiveMcu} / ${nbMcu}`} // ✅ slash not backslash
+            value={`${nbActiveMcu} / ${nbMcu}`} 
             subtitle="dans cette parcelle"
             icon={Wifi}
             color={

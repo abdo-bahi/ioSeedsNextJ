@@ -93,6 +93,20 @@ const emptyForm: SensorForm = {
   fk_sensorType: "",
 };
 
+// ── MAC address format check ─────────────────────────────────────
+const MAC_REGEX = /^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/;
+
+function validateMac(value: string): string | undefined {
+  if (!value.trim()) return undefined;
+  return MAC_REGEX.test(value.trim())
+    ? undefined
+    : "Format invalide — ex : AA:BB:CC:DD:EE:FF";
+}
+
+function normalizeMac(value: string): string {
+  return value.trim().toUpperCase().replace(/-/g, ":");
+}
+
 // ── Sensor Modal ──────────────────────────────────────────────────
 function SensorModal({
   open,
@@ -118,6 +132,7 @@ function SensorModal({
   sensorTypes: { name: string }[];
 }) {
   const [form, setForm] = useState<SensorForm>(initial ?? emptyForm);
+  const [macError, setMacError] = useState<string | undefined>();
   const [selectedFieldId, setSelectedFieldId] = useState(
     // Pre-select field based on initial MCU
     mcus.find((m) => m.id === initial?.fk_mcu)?.fk_irrigationField ??
@@ -127,6 +142,17 @@ function SensorModal({
 
   function set<K extends keyof SensorForm>(key: K, val: SensorForm[K]) {
     setForm((p) => ({ ...p, [key]: val }));
+  }
+
+  function handleSubmit() {
+    if (validateMac(form.macAddress)) {
+      setMacError(validateMac(form.macAddress));
+      return;
+    }
+    onSubmit({
+      ...form,
+      macAddress: form.macAddress.trim() ? normalizeMac(form.macAddress) : "",
+    });
   }
 
   // Filter MCUs by selected field
@@ -162,9 +188,19 @@ function SensorModal({
               <Input
                 placeholder="AA:BB:CC:DD:EE:FF"
                 value={form.macAddress}
-                onChange={(e) => set("macAddress", e.target.value)}
-                className="border-border font-mono text-[12px] focus-visible:ring-primary"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  set("macAddress", value);
+                  if (macError) setMacError(validateMac(value));
+                }}
+                aria-invalid={!!macError}
+                className={`border-border focus-visible:ring-primary font-mono text-[12px] uppercase ${
+                  macError ? "border-[#D95F5F] focus-visible:ring-[#D95F5F]" : ""
+                }`}
               />
+              {macError && (
+                <p className="text-[11px] text-[#D95F5F]">{macError}</p>
+              )}
             </div>
           </div>
 
@@ -310,8 +346,8 @@ function SensorModal({
             Annuler
           </Button>
           <Button
-            onClick={() => onSubmit(form)}
-            disabled={isLoading || !form.name}
+            onClick={handleSubmit}
+            disabled={isLoading || !form.name || !!macError}
             className="bg-primary hover:bg-primary/90 text-white"
           >
             {isLoading ? "..." : "Sauvegarder"}

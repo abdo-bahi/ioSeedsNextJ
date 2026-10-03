@@ -4,6 +4,17 @@ import { prisma } from "../../../prisma/lib/prisma";
 import { syncSensorsToMCU } from "./device-sync";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
 
+// Optional MAC address: validates format, normalizes to uppercase "AA:BB:CC:DD:EE:FF"
+export const macAddressZ = z
+  .string()
+  .trim()
+  .regex(
+    /^$|^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/,
+    "Format d'adresse MAC invalide. Exemple : AA:BB:CC:DD:EE:FF"
+  )
+  .optional()
+  .transform((v) => (v ? v.toUpperCase().replace(/-/g, ":") : undefined));
+
 export const sensorRouter = router({
   getLatestPerField: publicProc
     .input(z.object({ irrigationFieldId: z.string() }))
@@ -179,7 +190,7 @@ export const sensorRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         latitude: z.number(),
         longitude: z.number(),
         minAnalogue: z.number(),
@@ -317,7 +328,7 @@ export const sensorRouter = router({
       z.object({
         id: z.string(),
         name: z.string().min(1).optional(),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         minAnalogue: z.number().optional(),

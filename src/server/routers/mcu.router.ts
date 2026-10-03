@@ -8,6 +8,17 @@ import { TRPCError } from "@trpc/server";
 
 const MCUStatusZ = z.enum(["ONLINE", "OFFLINE", "SLEEPING", "ERROR"]);
 
+// Optional MAC address: validates format, normalizes to uppercase "AA:BB:CC:DD:EE:FF"
+const macAddressZ = z
+  .string()
+  .trim()
+  .regex(
+    /^$|^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/,
+    "Format d'adresse MAC invalide. Exemple : AA:BB:CC:DD:EE:FF"
+  )
+  .optional()
+  .transform((v) => (v ? v.toUpperCase().replace(/-/g, ":") : undefined));
+
 export const mcuRouter = router({
   // ── Get all MCUs for a field ────────────────────────────────────
   getAllMcus: publicProc
@@ -46,7 +57,7 @@ export const mcuRouter = router({
         fk_irrigationField: z.string(),
         name: z.string().min(1),
         sleepingTime: z.number().min(5),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         autoControlledIrrigation: z.boolean().default(true),
         isActive: z.boolean().default(true),
       })
@@ -78,7 +89,7 @@ export const mcuRouter = router({
         id: z.string(),
         name: z.string().min(1).optional(),
         sleepingTime: z.number().min(5).optional(),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         autoControlledIrrigation: z.boolean().optional(),
         isActive: z.boolean().optional(),
         status: MCUStatusZ.optional(),

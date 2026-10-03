@@ -5,6 +5,7 @@ import { publishToMCU } from "@/lib/mqtt-publish";
 import { notify } from "@/lib/notifications";
 import { TRPCError } from "@trpc/server";
 import { syncActuatorsToMCU } from "./device-sync";
+import { macAddressZ } from "./sensor.router";
 
 export const actuatorRouter = router({
   // ── Get all for a field (dashboard quick actions) ─────────────
@@ -188,7 +189,7 @@ export const actuatorRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         latitude: z.number(),
         longitude: z.number(),
         targetState: z.boolean().default(false),
@@ -213,7 +214,7 @@ export const actuatorRouter = router({
       z.object({
         id: z.string(),
         name: z.string().min(1).optional(),
-        macAddress: z.string().optional(),
+        macAddress: macAddressZ,
         latitude: z.number().optional(),
         longitude: z.number().optional(),
         targetState: z.boolean().optional(),
