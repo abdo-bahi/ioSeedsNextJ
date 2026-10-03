@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   UserX,
   UserCheck,
+  History,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { useFieldStore } from "@/store/field-store";
@@ -335,6 +336,167 @@ function RoleModal({
   );
 }
 
+// ── Connection logs dialog ────────────────────────────────────────
+function ConnectionLogsDialog({
+  open,
+  onClose,
+  userId,
+  userName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userId: string;
+  userName: string;
+}) {
+  const [page, setPage] = useState(1);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const pageSize = 8;
+
+  const { data, isLoading } = trpc.user.getConnectionLogs.useQuery(
+    {
+      userId,
+      page,
+      pageSize,
+      from: from || undefined,
+      to: to || undefined,
+    },
+    {
+      enabled: open,
+      placeholderData: (prev) => prev,
+    }
+  );
+
+  const logs = data?.logs;
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  function applyRange(nextFrom: string, nextTo: string, resetPage: boolean) {
+    setFrom(nextFrom);
+    setTo(nextTo);
+    if (resetPage) setPage(1);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-[16px] font-semibold">
+            Journal de connexions — {userName}
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Date filter */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[12px] text-muted-foreground">Du</Label>
+            <Input
+              type="date"
+              value={from}
+              max={to || undefined}
+              onChange={(e) => applyRange(e.target.value, to, true)}
+              className="border-border focus-visible:ring-primary"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[12px] text-muted-foreground">Au</Label>
+            <Input
+              type="date"
+              value={to}
+              min={from || undefined}
+              onChange={(e) => applyRange(from, e.target.value, true)}
+              className="border-border focus-visible:ring-primary"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {isLoading && !logs && (
+            <p className="text-[13px] text-muted-foreground py-6 text-center">
+              Chargement…
+            </p>
+          )}
+
+          {!isLoading && (!logs || logs.length === 0) && (
+            <p className="text-[13px] text-muted-foreground py-6 text-center">
+              Aucune connexion enregistrée.
+            </p>
+          )}
+
+          {logs?.map((log) => (
+            <div
+              key={log.id}
+              className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-canvas border border-border"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span
+                  className={`h-2 w-2 rounded-full flex-shrink-0 ${
+                    log.success ? "bg-[#2D8653]" : "bg-[#D95F5F]"
+                  }`}
+                />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[13px] font-medium text-foreground">
+                    {new Date(log.dateTime).toLocaleString("fr-DZ")}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground font-mono truncate">
+                    {log.ipAddress}
+                    {log.location ? ` · ${log.location}` : ""}
+                  </span>
+                </div>
+              </div>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 font-medium ${
+                  log.success
+                    ? "bg-[#E6F7ED] text-[#2D8653]"
+                    : "bg-[#FDEAEA] text-[#B84040]"
+                }`}
+              >
+                {log.success ? "Succès" : "Échec"}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-[11px] text-muted-foreground">
+            {total} connexion{total > 1 ? "s" : ""}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Précédent
+            </Button>
+            <span className="text-[12px] text-muted-foreground">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Suivant
+            </Button>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} className="border-border">
+            Fermer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────
 export default function UsersPage() {
   const utils = trpc.useUtils();
@@ -355,6 +517,7 @@ export default function UsersPage() {
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [roleTarget, setRoleTarget] = useState<string | null>(null);
+  const [logsTarget, setLogsTarget] = useState<string | null>(null);
 
   // ── Queries ───────────────────────────────────────────────────
   const { data: users, isLoading } = trpc.user.getAll.useQuery();
@@ -429,6 +592,7 @@ export default function UsersPage() {
 
   const editUser = users?.find((u: any) => u.id === editTarget);
   const roleUser = users?.find((u: any) => u.id === roleTarget);
+  const logsUser = users?.find((u: any) => u.id === logsTarget);
 
   return (
     <div className="space-y-6">
@@ -579,6 +743,13 @@ export default function UsersPage() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
+                        <button
+                          onClick={() => setLogsTarget(user.id)}
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                          title="Journal de connexions"
+                        >
+                          <History className="h-3.5 w-3.5" />
+                        </button>
                         {/* <button
                           onClick={() => setDeleteTarget(user.id)}
                           className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
@@ -636,6 +807,16 @@ export default function UsersPage() {
             fk_wilaya: editUser.fk_wilaya ?? "",
             fk_farm: FARM_ID,
           }}
+        />
+      )}
+
+      {/* ── Connection logs modal ── */}
+      {logsUser && (
+        <ConnectionLogsDialog
+          open={!!logsTarget}
+          onClose={() => setLogsTarget(null)}
+          userId={logsUser.id}
+          userName={logsUser.name ?? logsUser.email}
         />
       )}
 

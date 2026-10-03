@@ -121,6 +121,7 @@ model ConnectionLog {
   id        String   @id @default(cuid())
   dateTime  DateTime @default(now())
   ipAddress String
+  location  String?
   fk_user   String?
   user      User?    @relation(fields: [fk_user], references: [id], onDelete: Restrict)
   success   Boolean  @default(true) // ← add this, useful for detecting brute force

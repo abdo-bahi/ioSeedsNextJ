@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../../prisma/lib/prisma";
 import { admin } from "better-auth/plugins";
 import { createAuthMiddleware } from "better-auth/api";
+import { extractClientIp, logConnection } from "./connection-log";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -43,21 +44,45 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== "/sign-in/email") {
-        return;
-      }
-        const body = ctx.body as { email?: string };
+      if (ctx.path !== "/sign-in/email") return;
 
-        if (body?.email) {
-          const user = await prisma.user.findUnique({
-            where: { email: body.email },
-            select: { isActive: true },
-          });
-          if (user && user.isActive === false) { 
-            throw new Error("This account has been deactivated.");
-          }
-        }
-      
+      const email = typeof ctx.body?.email === "string" ? ctx.body.email : null;
+      if (!email) return;
+
+      const ip = extractClientIp(ctx.headers);
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, isActive: true },
+      });
+
+      if (user && user.isActive === false) {
+        await logConnection({ fk_user: user.id, ip, success: false });
+        throw new Error("This account has been deactivated.");
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email") return;
+
+      const email = typeof ctx.body?.email === "string" ? ctx.body.email : null;
+      if (!email) return;
+
+      const returned = ctx.context?.returned as { token?: unknown; user?: unknown } | undefined;
+      const success =
+        typeof returned?.token === "string" &&
+        typeof returned?.user === "object";
+
+      let userId: string | null = null;
+      try {
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true },
+        });
+        userId = user?.id ?? null;
+      } catch {
+        userId = null;
+      }
+
+      await logConnection({ fk_user: userId, ip: extractClientIp(ctx.headers), success });
     }),
   },
 });

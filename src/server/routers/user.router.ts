@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../../prisma/lib/prisma";
+import type { Prisma } from "../../../generated/prisma/client";
 import { protectedProc, publicProc, router } from "../trpc";
 import { auth } from "../../lib/auth";
 import { headers } from "next/headers";
@@ -32,6 +33,44 @@ export const userRouter = router({
       },
     });
   }),
+
+  // ── Connection logs for a user (paginated, date-filterable, newest first) ──
+  getConnectionLogs: protectedProc
+    .input(
+      z.object({
+        userId: z.string(),
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(8),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const where: Prisma.ConnectionLogWhereInput = { fk_user: input.userId };
+      const dateFilter: Prisma.DateTimeFilter = {};
+      if (input.from) dateFilter.gte = new Date(`${input.from}T00:00:00.000`);
+      if (input.to) dateFilter.lte = new Date(`${input.to}T23:59:59.999`);
+      if (input.from || input.to) where.dateTime = dateFilter;
+
+      const [logs, total] = await Promise.all([
+        prisma.connectionLog.findMany({
+          where,
+          orderBy: { dateTime: "desc" },
+          skip: (input.page - 1) * input.pageSize,
+          take: input.pageSize,
+          select: {
+            id: true,
+            dateTime: true,
+            ipAddress: true,
+            location: true,
+            success: true,
+          },
+        }),
+        prisma.connectionLog.count({ where }),
+      ]);
+
+      return { logs, total };
+    }),
 
   // ── Create user via Better Auth ───────────────────────────────
   create: protectedProc
