@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc/client"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowDownToLine } from "lucide-react"
+import { t } from "@/i18n"
 
 type CalibrationProps = {
   sensorId?:            string         // undefined on create
@@ -68,13 +69,13 @@ export function SensorCalibrationSection({
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-            ↓ Calibration analogique
+            {t("data.calibration.title")}
           </p>
           <p className="text-[11px] font-medium text-foreground mt-0.5">
-            Conversion analogique
+            {t("data.calibration.subtitle")}
           </p>
           <p className="text-[10px] text-primary font-mono mt-0.5">
-            converti = minTo + (raw − minAnalogue) × (maxTo − minTo) / (maxAnalogue − minAnalogue)
+            {t("data.calibration.formula")}
           </p>
         </div>
         <button
@@ -91,9 +92,9 @@ export function SensorCalibrationSection({
 
       {/* ── Unit ── */}
       <div className="flex flex-col gap-1.5">
-        <Label className="text-[12px] text-muted-foreground">Unité affichée</Label>
+        <Label className="text-[12px] text-muted-foreground">{t("data.calibration.unit")}</Label>
         <Input
-          placeholder="% , °C , L/min ..."
+          placeholder={t("data.calibration.unitPlaceholder")}
           value={unit}
           onChange={e => onUnitChange(e.target.value)}
           className="border-border focus-visible:ring-primary h-9"
@@ -104,7 +105,7 @@ export function SensorCalibrationSection({
       {/* ── Input range: minAnalogue / maxAnalogue ── */}
       <div className="flex flex-col gap-1.5">
         <Label className="text-[12px] text-muted-foreground">
-          Intervalle analogique (brute du capteur)
+          {t("data.calibration.range")}
         </Label>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -112,7 +113,7 @@ export function SensorCalibrationSection({
         {/* Min analogue */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-muted-foreground">
-            Min analogique
+            {t("data.calibration.min")}
           </Label>
           <Input
             placeholder="0"
@@ -130,15 +131,15 @@ export function SensorCalibrationSection({
               className="flex items-center gap-1.5 text-[11px] text-primary hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowDownToLine className="h-3 w-3" />
-              Définir comme min
+              {t("data.calibration.setMin")}
               <span className="text-muted-foreground">
-                (dernière val: {lastRaw})
+                {t("data.calibration.lastValue", { n: lastRaw })}
               </span>
             </button>
           )}
           {sensorId && lastRaw === null && (
             <p className="text-[10px] text-muted-foreground">
-              Aucune donnée reçue
+              {t("data.calibration.noData")}
             </p>
           )}
         </div>
@@ -146,7 +147,7 @@ export function SensorCalibrationSection({
         {/* Max analogue */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-muted-foreground">
-            Max analogique
+            {t("data.calibration.max")}
           </Label>
           <Input
             placeholder="1023"
@@ -164,9 +165,9 @@ export function SensorCalibrationSection({
               className="flex items-center gap-1.5 text-[11px] text-primary hover:text-[#2D8653] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowDownToLine className="h-3 w-3" />
-              Définir comme max
+              {t("data.calibration.setMax")}
               <span className="text-muted-foreground">
-                (dernière val: {lastRaw})
+                {t("data.calibration.lastValue", { n: lastRaw })}
               </span>
             </button>
           )}
@@ -176,7 +177,7 @@ export function SensorCalibrationSection({
       {/* ── Output range: minToConvertValue / maxToConvertValue ── */}
       <div className="flex flex-col gap-1.5">
         <Label className="text-[12px] text-muted-foreground">
-          Valeur convertie cible ({unit || "unité"})
+          {t("data.calibration.targetUnit", { unit: unit || t("data.calibration.targetFallback") })}
         </Label>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -184,7 +185,7 @@ export function SensorCalibrationSection({
         {/* Min converted */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-muted-foreground">
-            Min valeur convertie
+            {t("data.calibration.minTo")}
           </Label>
           <Input
             placeholder="0"
@@ -199,7 +200,7 @@ export function SensorCalibrationSection({
         {/* Max converted */}
         <div className="flex flex-col gap-1.5">
           <Label className="text-[12px] text-muted-foreground">
-            Max valeur convertie
+            {t("data.calibration.maxTo")}
           </Label>
           <Input
             placeholder="100"
@@ -216,7 +217,7 @@ export function SensorCalibrationSection({
       {rowValueConversion && (
         <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-card border border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Aperçu plage calibrée
+            {t("data.calibration.preview")}
           </p>
 
           {/* Gradient bar */}
@@ -254,9 +255,9 @@ export function SensorCalibrationSection({
           {/* Raw value info */}
           {lastRaw !== null && (
             <p className="text-[10px] text-muted-foreground text-center">
-              Dernière valeur brute: <strong>{lastRaw}</strong>
+              {t("data.calibration.raw", { n: lastRaw })}
               {previewValue !== null && (
-                <> → converti: <strong>{previewValue.toFixed(1)}{unit}</strong></>
+                <> {t("data.calibration.converted", { n: previewValue.toFixed(1), unit })}</>
               )}
             </p>
           )}

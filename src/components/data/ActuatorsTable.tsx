@@ -11,18 +11,9 @@ import { Input }  from "@/components/ui/input"
 import { Label }  from "@/components/ui/label"
 import { Badge }  from "@/components/ui/badge"
 import { Pencil, Trash2, Plus } from "lucide-react"
+import { t, formatRelative, type I18nKey } from "@/i18n"
 
 // ── Helpers ───────────────────────────────────────────────────────
-function formatRelative(date: Date | string | null): string {
-  if (!date) return "—"
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-  if (diff < 60)    return `${diff}s ago`
-  if (diff < 3600)  return `il y a ${Math.floor(diff / 60)}min`
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`
-  return `il y a ${Math.floor(diff / 86400)}j`
-}
-
-// ── Type tag colors ───────────────────────────────────────────────
 const typeColors: Record<string, string> = {
   drip_valve: "bg-[#E6F7ED] text-[#2D8653]",
   sprinkler:  "bg-[#EEF2FF] text-[#4F6EF7]",
@@ -46,7 +37,7 @@ function StateBadge({ isOpen }: { isOpen: boolean }) {
         ? "bg-[#E6F7ED] text-[#2D8653]"
         : "bg-muted text-muted-foreground"
     }`}>
-      • {isOpen ? "Open" : "Closed"}
+      • {isOpen ? t("data.actuators.state.open") : t("data.actuators.state.closed")}
     </Badge>
   )
 }
@@ -55,19 +46,19 @@ function StateBadge({ isOpen }: { isOpen: boolean }) {
 function StatusBadge({ status, isActive }: { status: string; isActive: boolean }) {
   if (!isActive) return (
     <Badge className="text-[11px] px-2 py-0.5 border-0 rounded-full bg-muted text-muted-foreground">
-      • Inactif
+      • {t("data.actuators.status.inactive")}
     </Badge>
   )
-  const map: Record<string, { bg: string; text: string; label: string }> = {
-    ONLINE:   { bg: "bg-[#E6F7ED]", text: "text-[#2D8653]", label: "Online" },
-    OFFLINE:  { bg: "bg-muted", text: "text-muted-foreground",    label: "Offline" },
-    SLEEPING: { bg: "bg-[#FEF3DC]", text: "text-[#B8780E]", label: "Warning" },
-    ERROR:    { bg: "bg-[#FDEAEA]", text: "text-[#B84040]", label: "Error" },
+  const map: Record<string, { bg: string; text: string; labelKey: I18nKey }> = {
+    ONLINE:   { bg: "bg-[#E6F7ED]", text: "text-[#2D8653]", labelKey: "data.actuators.status.online" },
+    OFFLINE:  { bg: "bg-muted", text: "text-muted-foreground",    labelKey: "data.actuators.status.offline" },
+    SLEEPING: { bg: "bg-[#FEF3DC]", text: "text-[#B8780E]", labelKey: "data.actuators.status.warning" },
+    ERROR:    { bg: "bg-[#FDEAEA]", text: "text-[#B84040]", labelKey: "data.actuators.status.error" },
   }
   const s = map[status] ?? map.OFFLINE
   return (
     <Badge className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${s.bg} ${s.text}`}>
-      • {s.label}
+      • {t(s.labelKey)}
     </Badge>
   )
 }
@@ -104,7 +95,7 @@ function validateMac(value: string): string | undefined {
   if (!value.trim()) return undefined
   return MAC_REGEX.test(value.trim())
     ? undefined
-    : "Format invalide — ex : AA:BB:CC:DD:EE:FF"
+    : t("errors.format.mac")
 }
 
 function normalizeMac(value: string): string {
@@ -161,18 +152,18 @@ function ActuatorModal({
           {/* Name + MAC */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Nom de l&apos;actionneur</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.name")}</Label>
               <Input
-                placeholder="Vanne-A1"
+                placeholder={t("data.actuators.form.namePlaceholder")}
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
                 className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Adresse MAC</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.mac")}</Label>
               <Input
-                placeholder="AA:BB:CC:DD:EE:FF"
+                placeholder={t("data.actuators.form.macPlaceholder")}
                 value={form.macAddress}
                 onChange={e => {
                   const value = e.target.value
@@ -192,13 +183,13 @@ function ActuatorModal({
 
           {/* Type */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Type d&apos;actionneur</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.type")}</Label>
             <select
               value={form.fk_actuatorType}
               onChange={e => set("fk_actuatorType", e.target.value)}
               className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              <option value="">— Sélectionner un type —</option>
+              <option value="">{t("common.selectType")}</option>
               {actuatorTypes.map(t => (
                 <option key={t.name} value={t.name}>{t.name}</option>
               ))}
@@ -208,10 +199,10 @@ function ActuatorModal({
           {/* Field → MCU selector */}
           <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              MCU parent
+              {t("data.actuators.form.mcuParent")}
             </p>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.field")}</Label>
               <select
                 value={selectedFieldId}
                 onChange={e => {
@@ -220,27 +211,27 @@ function ActuatorModal({
                 }}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Sélectionner une parcelle —</option>
+                <option value="">{t("common.selectField")}</option>
                 {fields.map(f => (
                   <option key={f.id} value={f.id}>{f.name ?? f.id}</option>
                 ))}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">MCU</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.mcu")}</Label>
               <select
                 value={form.fk_mcu}
                 onChange={e => set("fk_mcu", e.target.value)}
                 disabled={!selectedFieldId || filteredMcus.length === 0}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
               >
-                <option value="">— Sélectionner un MCU —</option>
+                <option value="">{t("common.selectMcu")}</option>
                 {filteredMcus.map(m => (
                   <option key={m.id} value={m.id}>{m.name ?? m.id}</option>
                 ))}
               </select>
               {selectedFieldId && filteredMcus.length === 0 && (
-                <p className="text-[11px] text-[#E89B2D]">Aucun MCU dans cette parcelle.</p>
+                <p className="text-[11px] text-[#E89B2D]">{t("data.actuators.form.noMcuInField")}</p>
               )}
             </div>
           </div>
@@ -248,9 +239,9 @@ function ActuatorModal({
           {/* GPS */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.lat")}</Label>
               <Input
-                placeholder="36.4703"
+                placeholder={t("data.actuators.form.latPlaceholder")}
                 type="number"
                 value={form.latitude}
                 onChange={e => set("latitude", e.target.value)}
@@ -258,9 +249,9 @@ function ActuatorModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.lon")}</Label>
               <Input
-                placeholder="2.8277"
+                placeholder={t("data.actuators.form.lonPlaceholder")}
                 type="number"
                 value={form.longitude}
                 onChange={e => set("longitude", e.target.value)}
@@ -271,9 +262,9 @@ function ActuatorModal({
 
           {/* Time limit */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Limite de temps (min)</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.actuators.form.timeLimit")}</Label>
             <Input
-              placeholder="ex: 5"
+              placeholder={t("data.actuators.form.timeLimitPlaceholder")}
               type="number"
               min={1}
               value={form.toggleTimeLimit}
@@ -281,7 +272,7 @@ function ActuatorModal({
               className="border-border focus-visible:ring-primary"
             />
             <p className="text-[10px] text-muted-foreground">
-              Fermeture auto après X min. Vide = aucune limite.
+              {t("data.actuators.form.timeLimitHint")}
             </p>
           </div>
 
@@ -290,8 +281,8 @@ function ActuatorModal({
             
             <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
               <div>
-                <p className="text-[13px] font-medium text-foreground">Actionneur actif</p>
-                <p className="text-[11px] text-muted-foreground">Désactiver pour ignorer cet actionneur</p>
+                <p className="text-[13px] font-medium text-foreground">{t("data.actuators.form.isActive")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("data.actuators.form.isActiveHint")}</p>
               </div>
               <button
                 onClick={() => set("isActive", !form.isActive)}
@@ -310,14 +301,14 @@ function ActuatorModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="border-border text-muted-foreground">
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isLoading || !form.name || !!macError}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : "Sauvegarder"}
+            {isLoading ? "..." : t("common.saveSettings")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -412,14 +403,14 @@ export function ActuatorsTable({
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-3">
           <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Actuators
+            {t("data.actuators.title")}
           </p>
           <select
             value={mcuFilter}
             onChange={e => setMcuFilter(e.target.value)}
             className="h-7 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">Tous les MCUs</option>
+            <option value="">{t("common.allMcus")}</option>
             {mcus?.map((m:any) => (
               <option key={m.id} value={m.id}>{m.name ?? m.id}</option>
             ))}
@@ -430,7 +421,7 @@ export function ActuatorsTable({
           className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter actionneur
+          {t("data.actuators.add")}
         </Button>
       </div>
 
@@ -439,9 +430,21 @@ export function ActuatorsTable({
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border bg-canvas">
-              {["NOM", "TYPE", "MCU", "PARCELLE", "GPS", "MAC", "ÉTAT", "STATUT", "DERNIÈRE ACTION", "LIMITE", "ACTIONS"].map(h => (
+              {[
+                "data.actuators.columns.name",
+                "data.actuators.columns.type",
+                "data.actuators.columns.mcu",
+                "data.actuators.columns.field",
+                "data.actuators.columns.gps",
+                "data.actuators.columns.mac",
+                "data.actuators.columns.state",
+                "data.actuators.columns.status",
+                "data.actuators.columns.lastAction",
+                "data.actuators.columns.timeLimit",
+                "data.actuators.columns.actions",
+              ].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground">
-                  {h}
+                  {t(h as I18nKey)}
                 </th>
               ))}
             </tr>
@@ -486,8 +489,8 @@ export function ActuatorsTable({
 
                   {/* GPS */}
                   <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
-                    {actuator.latitude.toFixed(4)}°N<br />
-                    {actuator.longitude.toFixed(4)}°E
+                    {t("common.latitude", { n: actuator.latitude.toFixed(4) })}<br />
+                    {t("common.longitude", { n: actuator.longitude.toFixed(4) })}
                   </td>
 
                   {/* MAC */}
@@ -519,7 +522,7 @@ export function ActuatorsTable({
                   {/* Time limit */}
                   <td className="px-4 py-3.5 text-[12px] text-muted-foreground">
                     {actuator.toggleTimeLimit
-                      ? <span className="font-mono">{actuator.toggleTimeLimit} min</span>
+                      ? <span className="font-mono">{t("data.actuators.timeLimit", { n: actuator.toggleTimeLimit })}</span>
                       : "—"
                     }
                   </td>
@@ -548,7 +551,7 @@ export function ActuatorsTable({
             {!isLoading && actuators?.length === 0 && (
               <tr>
                 <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-                  Aucun actionneur trouvé.
+                  {t("data.actuators.empty")}
                 </td>
               </tr>
             )}
@@ -562,7 +565,7 @@ export function ActuatorsTable({
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Ajouter un actionneur"
+        title={t("data.actuators.form.titleAdd")}
         fields={fieldOptions}
         mcus={allMcus}
         actuatorTypes={actuatorTypes ?? []}
@@ -575,7 +578,7 @@ export function ActuatorsTable({
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title={`Modifier — ${editActuator.name}`}
+          title={t("data.actuators.form.titleEdit", { name: editActuator.name })}
           fields={fieldOptions}
           mcus={allMcus}
           actuatorTypes={actuatorTypes ?? []}
@@ -597,22 +600,22 @@ export function ActuatorsTable({
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Supprimer cet actionneur ?</DialogTitle>
+            <DialogTitle>{t("data.actuators.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Toutes les actions et schedules liés seront supprimés.
+            {t("data.actuators.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
-              onClick={() => {console.log('deleteting');
+              onClick={() => {
                deleteTarget && remove.mutate({ id: deleteTarget })}}
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

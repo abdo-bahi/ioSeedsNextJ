@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "i18n:gen": "node scripts/generate-i18n.mjs",
     "setup": "bash scripts/setup.sh"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "concurrently": "^9.2.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "js-yaml": "^4.3.0",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"

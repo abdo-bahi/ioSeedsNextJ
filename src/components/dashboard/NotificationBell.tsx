@@ -10,13 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-
-function formatRelative(date: Date | string) {
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
-  if (diff < 60)   return `${diff}s`
-  if (diff < 3600) return `${Math.floor(diff / 60)}min`
-  return `${Math.floor(diff / 3600)}h`
-}
+import { t, formatRelative } from "@/i18n"
 
 export function NotificationBell() {
   const utils = trpc.useUtils()
@@ -65,7 +59,7 @@ export function NotificationBell() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <p className="text-[14px] font-semibold text-foreground">
-            Notifications
+            {t("notifications.bell.title")}
             {count > 0 && (
               <span className="ml-2 text-[11px] bg-[#D95F5F] text-white px-1.5 py-0.5 rounded-full">
                 {count}
@@ -78,7 +72,7 @@ export function NotificationBell() {
               className="text-[11px] text-primary hover:text-[#2D8653] flex items-center gap-1"
             >
               <CheckCheck className="h-3 w-3" />
-              Tout lire
+              {t("notifications.bell.markAll")}
             </button>
           )}
         </div>
@@ -87,7 +81,7 @@ export function NotificationBell() {
         <div className="max-h-[320px] overflow-y-auto">
           {(notifications?.length === 0 || !notifications) && (
             <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-              Aucune notification
+              {t("notifications.bell.empty")}
             </div>
           )}
 
@@ -112,7 +106,7 @@ export function NotificationBell() {
                   {n.message}
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  {formatRelative(n.createdAt)} ago
+                  {formatRelative(n.createdAt)}
                 </p>
               </div>
               <Check className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 mt-1" />

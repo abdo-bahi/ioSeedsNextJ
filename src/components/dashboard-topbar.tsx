@@ -14,6 +14,7 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useFieldStore } from "@/store/field-store"
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/theme-provider";
+import { t } from "@/i18n";
 
 // to change selected field later from db + and fetch for actuel data ***********************
 
@@ -33,7 +34,7 @@ export function DashboardTopbar() {
         {/* to change later ***************************** */}
 
         <span className="text-[14px] font-medium text-muted-foreground">
-          {pathname === '/' ? 'Dashboard': pathname.replace(/^\/(.)/, (_, char) => char.toUpperCase())}
+          {pathname === '/' ? t('nav.dashboard') : pathname.replace(/^\/(.)/, (_, char) => char.toUpperCase())}
         </span>
 
         {/* ── Field selector pill ── */}
@@ -79,7 +80,7 @@ export function DashboardTopbar() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          aria-label="Basculer le thème"
+          aria-label={t("nav.themeToggle")}
           className="h-[36px] w-[36px] text-muted-foreground hover:text-primary hover:bg-green-soft"
         >
           {theme === "dark" ? (

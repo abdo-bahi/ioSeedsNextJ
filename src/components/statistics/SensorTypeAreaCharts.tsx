@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { t } from "@/i18n";
 
 type Series = { time: string; value: number };
 
@@ -52,10 +53,10 @@ export function SensorTypeAreaCharts({
     return (
       <div className="bg-card border border-border rounded-xl p-5">
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-          Moyennes par type de capteur
+          {t("statistics.charts.sensorTypes.title")}
         </p>
         <p className="text-[13px] text-muted-foreground mt-4">
-          Aucune donnée de capteur sur cette période.
+          {t("statistics.charts.sensorTypes.noData")}
         </p>
       </div>
     );
@@ -65,10 +66,10 @@ export function SensorTypeAreaCharts({
     <div className="bg-card border border-border rounded-xl p-5 space-y-5">
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-          Moyennes par type de capteur
+          {t("statistics.charts.sensorTypes.title")}
         </p>
         <p className="text-[12px] text-muted-foreground mt-0.5">
-          Valeur moyenne des lectures par période, séparée par type.
+          {t("statistics.charts.sensorTypes.subtitle")}
         </p>
       </div>
 
@@ -95,7 +96,7 @@ export function SensorTypeAreaCharts({
 
               {item.series.length === 0 ? (
                 <div className="h-[180px] flex items-center justify-center text-[12px] text-muted-foreground">
-                  Aucune donnée
+                  {t("statistics.charts.sensorTypes.empty")}
                 </div>
               ) : (
                 <ChartContainer config={config} className="h-[180px] w-full">

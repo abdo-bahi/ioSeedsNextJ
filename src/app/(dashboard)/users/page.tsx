@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { useFieldStore } from "@/store/field-store";
+import { t, type I18nKey } from "@/i18n";
 
 let FARM_ID: string;
 
@@ -42,7 +43,7 @@ function RoleBadge({ role }: { role: string }) {
         roleColors[role] ?? "bg-muted text-muted-foreground"
       }`}
     >
-      {role}
+      {t(`users.roles.${role}` as I18nKey)}
     </span>
   );
 }
@@ -99,19 +100,19 @@ function UserModal({
           {/* Name + Email */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Nom complet</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("users.form.name")}</Label>
               <Input
-                placeholder="Bahi Abderrahmane"
+                placeholder={t("users.form.namePlaceholder")}
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Email</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("users.form.email")}</Label>
               <Input
                 type="email"
-                placeholder="abderrahmane@ferme.dz"
+                placeholder={t("users.form.emailPlaceholder")}
                 value={form.email}
                 onChange={(e) => set("email", e.target.value)}
                 className="border-border focus-visible:ring-primary"
@@ -123,12 +124,11 @@ function UserModal({
           <div className="flex flex-col gap-1.5">
             <Label className="text-[12px] text-muted-foreground">
               {isEdit
-                ? "Nouveau mot de passe (laisser vide = inchangé)"
-                : "Mot de passe"}
+                ? t("users.form.password") : t("users.form.passwordCreate")}
             </Label>
             <Input
               type="password"
-              placeholder={isEdit ? "••••••••" : "Min. 8 caractères"}
+              placeholder={isEdit ? "••••••••" : t("users.form.passwordHint")}
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -137,9 +137,9 @@ function UserModal({
 
           {/* Address */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Adresse</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("users.form.address")}</Label>
             <Input
-              placeholder="Route nationale, Blida"
+              placeholder={t("users.form.addressPlaceholder")}
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -148,13 +148,13 @@ function UserModal({
 
           {/* Wilaya */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Wilaya</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("users.form.wilaya")}</Label>
             <select
               value={form.fk_wilaya}
               onChange={(e) => set("fk_wilaya", e.target.value)}
               className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              <option value="">— Sélectionner —</option>
+              <option value="">{t("common.select")}</option>
               {wilayas.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name} ({w.code})
@@ -167,10 +167,10 @@ function UserModal({
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
               <p className="text-[13px] font-medium text-foreground">
-                Compte actif
+                {t("users.form.isActive")}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Désactiver pour bloquer la connexion
+                {t("users.form.isActiveHint")}
               </p>
             </div>
             <button
@@ -194,14 +194,14 @@ function UserModal({
             onClick={onClose}
             className="border-border text-muted-foreground"
           >
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name || !form.email}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : "Enregistrer"}
+            {isLoading ? "..." : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -237,7 +237,7 @@ function RoleModal({
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
           <DialogTitle className="text-[16px] font-semibold">
-            Gérer les rôles
+            {t("users.rolesModal.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -246,7 +246,7 @@ function RoleModal({
           {existingRoles.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Rôles actuels
+                {t("users.rolesModal.current")}
               </p>
               {existingRoles.map((rm) => (
                 <div
@@ -257,7 +257,7 @@ function RoleModal({
                     <RoleBadge role={rm.fk_role} />
                     {rm.fieldName && (
                       <span className="text-[11px] text-muted-foreground">
-                        sur {rm.fieldName}
+                        {t("users.rolesModal.onField", { field: rm.fieldName })}
                       </span>
                     )}
                   </div>
@@ -275,11 +275,11 @@ function RoleModal({
           {/* Add new role */}
           <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Ajouter un rôle
+              {t("users.rolesModal.add")}
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Rôle</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("users.rolesModal.role")}</Label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
@@ -287,7 +287,7 @@ function RoleModal({
               >
                 {["ADMIN", "FARMER", "OPERATOR", "VIEWER"].map((r) => (
                   <option key={r} value={r}>
-                    {r}
+                    {t(`users.roles.${r}` as I18nKey)}
                   </option>
                 ))}
               </select>
@@ -295,14 +295,14 @@ function RoleModal({
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-muted-foreground">
-                Parcelle (optionnel)
+                {t("users.rolesModal.field")}
               </Label>
               <select
                 value={fieldId}
                 onChange={(e) => setFieldId(e.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Toutes les parcelles —</option>
+                <option value="">{t("common.allFields")}</option>
                 {fields.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -317,7 +317,7 @@ function RoleModal({
               className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8"
             >
               <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-              Assigner
+              {t("users.rolesModal.assign")}
             </Button>
           </div>
         </div>
@@ -328,15 +328,13 @@ function RoleModal({
             onClick={onClose}
             className="border-border"
           >
-            Fermer
+            {t("common.close")}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
-// ── Connection logs dialog ────────────────────────────────────────
 function ConnectionLogsDialog({
   open,
   onClose,
@@ -382,14 +380,14 @@ function ConnectionLogsDialog({
       <DialogContent className="sm:max-w-[560px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[16px] font-semibold">
-            Journal de connexions — {userName}
+            {t("users.connections.title", { name: userName })}
           </DialogTitle>
         </DialogHeader>
 
         {/* Date filter */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Du</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("common.from")}</Label>
             <Input
               type="date"
               value={from}
@@ -399,7 +397,7 @@ function ConnectionLogsDialog({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Au</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("common.to")}</Label>
             <Input
               type="date"
               value={to}
@@ -413,13 +411,13 @@ function ConnectionLogsDialog({
         <div className="flex flex-col gap-2">
           {isLoading && !logs && (
             <p className="text-[13px] text-muted-foreground py-6 text-center">
-              Chargement…
+              {t("common.loading")}
             </p>
           )}
 
           {!isLoading && (!logs || logs.length === 0) && (
             <p className="text-[13px] text-muted-foreground py-6 text-center">
-              Aucune connexion enregistrée.
+              {t("users.connections.empty")}
             </p>
           )}
 
@@ -451,7 +449,7 @@ function ConnectionLogsDialog({
                     : "bg-[#FDEAEA] text-[#B84040]"
                 }`}
               >
-                {log.success ? "Succès" : "Échec"}
+                {log.success ? t("users.connections.success") : t("users.connections.failure")}
               </span>
             </div>
           ))}
@@ -460,7 +458,7 @@ function ConnectionLogsDialog({
         {/* Pagination */}
         <div className="flex items-center justify-between pt-1">
           <span className="text-[11px] text-muted-foreground">
-            {total} connexion{total > 1 ? "s" : ""}
+            {t("users.connections.count", { n: total })}
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -470,7 +468,7 @@ function ConnectionLogsDialog({
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
-              Précédent
+              {t("common.prev")}
             </Button>
             <span className="text-[12px] text-muted-foreground">
               {page} / {totalPages}
@@ -482,14 +480,14 @@ function ConnectionLogsDialog({
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
-              Suivant
+              {t("common.next")}
             </Button>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} className="border-border">
-            Fermer
+            {t("common.close")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -599,9 +597,9 @@ export default function UsersPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-bold text-foreground">Utilisateurs</h1>
+          <h1 className="text-[18px] font-bold text-foreground">{t("users.title")}</h1>
           <p className="text-[12px] text-muted-foreground">
-            {users?.length ?? 0} utilisateur(s) enregistré(s)
+            {t("users.count", { n: users?.length ?? 0 })}
           </p>
         </div>
         <Button
@@ -609,7 +607,7 @@ export default function UsersPage() {
           className="bg-primary hover:bg-primary/90 text-white gap-1.5"
         >
           <Plus className="h-4 w-4" />
-          Ajouter utilisateur
+          {t("users.add")}
         </Button>
       </div>
 
@@ -620,19 +618,19 @@ export default function UsersPage() {
             <thead>
               <tr className="border-b border-border bg-canvas">
                 {[
-                  "NOM",
-                  "EMAIL",
-                  "WILAYA",
-                  "RÔLES",
-                  "STATUT",
-                  "CRÉÉ LE",
-                  "ACTIONS",
+                  "users.columns.name",
+                  "users.columns.email",
+                  "users.columns.wilaya",
+                  "users.columns.roles",
+                  "users.columns.status",
+                  "users.columns.createdAt",
+                  "users.columns.actions",
                 ].map((h) => (
                   <th
                     key={h}
                     className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
                   >
-                    {h}
+                    {t(h as I18nKey)}
                   </th>
                 ))}
               </tr>
@@ -681,16 +679,15 @@ export default function UsersPage() {
                     {/* Roles */}
                     <td className="px-4 py-3.5">
                       <div className="flex gap-1 flex-wrap">
-                        {user.role}
-                        {/* {user.roleMembers.length > 0 ? (
-                          user.roleMembers.map((rm: any, i: number) => (
-                            <RoleBadge key={i} role={rm.fk_role} />
-                          ))
+                        {user.role ? (
+                          <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-muted text-muted-foreground">
+                            {t(`users.roles.${user.role}` as I18nKey)}
+                          </span>
                         ) : (
                           <span className="text-muted-foreground text-[11px]">
-                            Aucun rôle
+                            {t("users.noRole")}
                           </span>
-                        )} */}
+                        )}
                       </div>
                     </td>
 
@@ -710,11 +707,11 @@ export default function UsersPage() {
                         }`}
                         title={
                           user.isActive
-                            ? "Cliquer pour désactiver"
-                            : "Cliquer pour activer"
+                            ? t("users.clickToDeactivate")
+                            : t("users.clickToActivate")
                         }
                       >
-                        {user.isActive ? "• Actif" : "• Inactif"}
+                        {user.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
                       </button>
                     </td>
 
@@ -739,14 +736,14 @@ export default function UsersPage() {
                         <button
                           onClick={() => setEditTarget(user.id)}
                           className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                          title="Modifier"
+                          title={t("common.edit")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => setLogsTarget(user.id)}
                           className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                          title="Journal de connexions"
+                          title={t("users.logs")}
                         >
                           <History className="h-3.5 w-3.5" />
                         </button>
@@ -768,8 +765,7 @@ export default function UsersPage() {
                     colSpan={7}
                     className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                   >
-                    Aucun utilisateur. Cliquez sur &quot;Ajouter
-                    utilisateur&quot; pour commencer.
+                    {t("users.empty")}
                   </td>
                 </tr>
               )}
@@ -784,7 +780,7 @@ export default function UsersPage() {
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Ajouter un utilisateur"
+        title={t("users.form.titleAdd")}
         wilayas={wilayas ?? []}
       />
 
@@ -795,7 +791,7 @@ export default function UsersPage() {
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title={`Modifier — ${editUser.name}`}
+          title={t("users.form.titleEdit", { name: editUser.name })}
           wilayas={wilayas ?? []}
           isEdit
           initial={{
@@ -848,15 +844,14 @@ export default function UsersPage() {
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Supprimer cet utilisateur ?</DialogTitle>
+            <DialogTitle>{t("users.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Cette action est irréversible. Toutes les données associées seront
-            supprimées.
+            {t("users.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -865,7 +860,7 @@ export default function UsersPage() {
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

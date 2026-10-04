@@ -2,6 +2,7 @@
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { t } from "@/i18n";
 
 type DateFilterProps = {
   from: string;
@@ -14,7 +15,7 @@ export function DateFilter({ from, to, onFrom, onTo }: DateFilterProps) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <div className="flex flex-col gap-1">
-        <Label className="text-[10px] text-muted-foreground">Du</Label>
+        <Label className="text-[10px] text-muted-foreground">{t("common.from")}</Label>
         <Input
           type="date"
           value={from}
@@ -23,7 +24,7 @@ export function DateFilter({ from, to, onFrom, onTo }: DateFilterProps) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-[10px] text-muted-foreground">Au</Label>
+        <Label className="text-[10px] text-muted-foreground">{t("common.to")}</Label>
         <Input
           type="date"
           value={to}

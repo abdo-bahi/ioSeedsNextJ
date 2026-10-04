@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { t } from "@/i18n";
 
 type PaginationControlsProps = {
   page: number;
@@ -19,7 +20,7 @@ export function PaginationControls({
 }: PaginationControlsProps) {
   if (totalPages <= 1) {
     return (
-      <div className="text-[11px] text-muted-foreground">{total} entrée{total === 1 ? "" : "s"}</div>
+      <div className="text-[11px] text-muted-foreground">{t("common.entries", { n: total })}</div>
     );
   }
 
@@ -37,7 +38,7 @@ export function PaginationControls({
         <ChevronLeft className="h-3.5 w-3.5" />
       </button>
       <span className="text-[11px] text-muted-foreground">
-        Page {page} / {totalPages}
+        {t("common.pageOf", { page, total: totalPages })}
       </span>
       <button
         type="button"
@@ -47,7 +48,7 @@ export function PaginationControls({
       >
         <ChevronRight className="h-3.5 w-3.5" />
       </button>
-      <span className="text-[11px] text-muted-foreground">· {total} entrée{total === 1 ? "" : "s"}</span>
+      <span className="text-[11px] text-muted-foreground">· {t("common.entries", { n: total })}</span>
     </div>
   );
 }

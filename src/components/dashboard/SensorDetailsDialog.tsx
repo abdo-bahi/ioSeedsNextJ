@@ -11,15 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Radio, Wifi, WifiOff } from "lucide-react";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
-
-function formatRelative(date: Date | string | null): string {
-  if (!date) return "—";
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 60) return `il y a ${diff}s`;
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
-  return `il y a ${Math.floor(diff / 86400)}j`;
-}
+import { t, formatRelative } from "@/i18n";
 
 function displayValue(v: number | null): string {
   if (v === null) return "—";
@@ -88,7 +80,7 @@ export function SensorDetailsDialog({
 
           {!isLoading && sensors.length === 0 && (
             <p className="text-[12px] text-muted-foreground text-center py-6">
-              Aucune donnée pour ce type de capteur
+              {t("dashboard.sensorDetails.empty")}
             </p>
           )}
 
@@ -126,7 +118,7 @@ export function SensorDetailsDialog({
                   </p>
                   {s.rowValueConversion && s.lastReading?.rawValue != null && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      brut {Math.round(s.lastReading.rawValue)}
+                      {t("dashboard.sensorDetails.raw", { n: Math.round(s.lastReading.rawValue) })}
                     </p>
                   )}
                   <p className="text-[10px] text-muted-foreground mt-0.5">

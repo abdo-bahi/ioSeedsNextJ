@@ -7,6 +7,7 @@ import { useFieldStore } from "@/store/field-store"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSSE } from "@/lib/use-sse"
+import { t } from "@/i18n"
 
 function ActuatorSkeleton() {
   return (
@@ -63,7 +64,7 @@ export function ActuatorPanel() {
 
       {/* Header */}
       <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase mb-3">
-        Actions Rapides
+        {t("dashboard.actuators.quickActions")}
       </p>
 
       {/* List */}
@@ -77,7 +78,7 @@ export function ActuatorPanel() {
 
         {!isLoading && (!actuators || actuators.length === 0) && (
           <p className="text-[12px] text-muted-foreground text-center py-4">
-            Aucun actionneur trouvé
+            {t("dashboard.actuators.empty")}
           </p>
         )}
 
@@ -118,7 +119,7 @@ export function ActuatorPanel() {
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {isOpen ? "Open" : "Closed"}
+                {isOpen ? t("dashboard.actuators.state.open") : t("dashboard.actuators.state.closed")}
               </Badge>
 
               {/* Toggle button */}
@@ -136,7 +137,7 @@ export function ActuatorPanel() {
                     : "border-primary text-primary hover:bg-[#E6F7ED]"
                 }`}
               >
-                {isOpen ? "Fermer" : "Ouvrir"}
+                {isOpen ? t("dashboard.actuators.close") : t("dashboard.actuators.open")}
               </Button>
             </div>
           )

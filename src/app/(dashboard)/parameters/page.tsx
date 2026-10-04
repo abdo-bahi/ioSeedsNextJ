@@ -15,6 +15,7 @@ import {
   Pencil, Leaf, CheckCircle, XCircle,
 } from "lucide-react"
 import { useFieldStore } from "@/store/field-store"
+import { t, type I18nKey } from "@/i18n"
 
 // ── Info tile ─────────────────────────────────────────────────────
 function InfoTile({
@@ -71,7 +72,7 @@ function EditFarmModal({
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[16px] font-semibold">
-            Modifier FarmingUnite
+            {t("parameters.farm.form.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -79,9 +80,9 @@ function EditFarmModal({
 
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Nom de la ferme</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("parameters.farm.name")}</Label>
             <Input
-              placeholder="Ferme El Baraka"
+              placeholder={t("parameters.farm.namePlaceholder")}
               value={form.name}
               onChange={e => set("name", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -90,13 +91,13 @@ function EditFarmModal({
 
           {/* Wilaya */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Wilaya</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("parameters.farm.wilaya")}</Label>
             <select
               value={form.fk_wilaya}
               onChange={e => set("fk_wilaya", e.target.value)}
               className="h-10 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              <option value="">— Sélectionner une wilaya —</option>
+              <option value="">{t("common.selectWilaya")}</option>
               {wilayas.map(w => (
                 <option key={w.id} value={w.id}>
                   {w.name} ({w.code})
@@ -107,9 +108,9 @@ function EditFarmModal({
 
           {/* Address */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Adresse</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("parameters.farm.address")}</Label>
             <Input
-              placeholder="Route nationale 29, Beni Mered, Blida"
+              placeholder={t("parameters.farm.addressPlaceholder")}
               value={form.address}
               onChange={e => set("address", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -118,9 +119,9 @@ function EditFarmModal({
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Description</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("parameters.farm.description")}</Label>
             <textarea
-              placeholder="Exploitation maraîchère — tomates, pommes de terre, légumes..."
+              placeholder={t("parameters.farm.descriptionPlaceholder")}
               value={form.description}
               onChange={e => set("description", e.target.value)}
               rows={3}
@@ -131,8 +132,8 @@ function EditFarmModal({
           {/* isActive */}
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
-              <p className="text-[13px] font-medium text-foreground">Ferme active</p>
-              <p className="text-[11px] text-muted-foreground">Désactiver pour masquer cette ferme</p>
+              <p className="text-[13px] font-medium text-foreground">{t("parameters.farm.isActive")}</p>
+              <p className="text-[11px] text-muted-foreground">{t("parameters.farm.isActiveHint")}</p>
             </div>
             <button
               onClick={() => set("isActive", !form.isActive)}
@@ -154,7 +155,7 @@ function EditFarmModal({
             onClick={onClose}
             className="border-border text-muted-foreground"
           >
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSubmit(form)}
@@ -164,7 +165,7 @@ function EditFarmModal({
             {isLoading ? "..." : (
               <>
                 <Pencil className="h-3.5 w-3.5" />
-                Sauvegarder
+                {t("common.saveSettings")}
               </>
             )}
           </Button>
@@ -195,20 +196,13 @@ function NotificationPreferences() {
 
   const channels: NotifChannel[] = ["INAPP", "EMAIL", "BOTH", "NONE"]
 
-  const channelLabel: Record<NotifChannel, string> = {
-    INAPP: "📱 In-app",
-    EMAIL: "📧 Email",
-    BOTH:  "📱+📧 Les deux",
-    NONE:  "🔕 Aucune",
-  }
-
   const events: { key: keyof NotifPrefs; label: string }[] = [
-    { key: "minThreshold",   label: "Seuil min atteint" },
-    { key: "maxThreshold",   label: "Seuil max atteint" },
-    { key: "actuatorManual", label: "Action manuelle actionneur" },
-    { key: "actuatorAuto",   label: "Action automatique actionneur" },
-    { key: "mcuInactive",    label: "MCU inactif après sommeil" },
-    { key: "deviceInactive", label: "Capteur/actionneur inactif" },
+    { key: "minThreshold",   label: t("parameters.notifications.events.MIN_THRESHOLD") },
+    { key: "maxThreshold",   label: t("parameters.notifications.events.MAX_THRESHOLD") },
+    { key: "actuatorManual", label: t("parameters.notifications.events.ACTUATOR_MANUAL") },
+    { key: "actuatorAuto",   label: t("parameters.notifications.events.ACTUATOR_AUTO") },
+    { key: "mcuInactive",    label: t("parameters.notifications.events.MCU_INACTIVE") },
+    { key: "deviceInactive", label: t("parameters.notifications.events.DEVICE_INACTIVE") },
   ]
 
   const value: NotifPrefs = (prefs ?? {
@@ -224,10 +218,10 @@ function NotificationPreferences() {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-border">
         <p className="text-[14px] font-semibold text-foreground">
-          Préférences de notification
+          {t("parameters.notifications.title")}
         </p>
         <p className="text-[12px] text-muted-foreground mt-0.5">
-          Choisissez comment recevoir chaque type d&apos;alerte
+          {t("parameters.notifications.subtitle")}
         </p>
       </div>
 
@@ -246,7 +240,7 @@ function NotificationPreferences() {
               className="h-8 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {channels.map(c => (
-                <option key={c} value={c}>{channelLabel[c]}</option>
+                <option key={c} value={c}>{t(`parameters.notifications.channels.${c}` as I18nKey)}</option>
               ))}
             </select>
           </div>
@@ -300,7 +294,7 @@ export default function ParametersPage() {
 
   if (!farm) return (
     <div className="text-center text-muted-foreground py-12">
-      Ferme introuvable.
+      {t("parameters.farm.noFarm")}
     </div>
   )
 
@@ -321,7 +315,7 @@ export default function ParametersPage() {
                 {farm.name ?? "—"}
               </h1>
               <p className="text-[13px] text-[#A8D5B5]">
-                FarmingUnite · {farm.wilaya?.name ?? "—"}
+                {t("parameters.farm.title", { wilaya: farm.wilaya?.name ?? "—" })}
               </p>
             </div>
           </div>
@@ -331,7 +325,7 @@ export default function ParametersPage() {
             className="border-white/30 text-white bg-card/10 hover:bg-card/20 gap-2 text-[13px]"
           >
             <Pencil className="h-3.5 w-3.5" />
-            Modifier
+            {t("parameters.farm.edit")}
           </Button>
         </div>
 
@@ -339,25 +333,25 @@ export default function ParametersPage() {
         <div className="bg-card p-5 grid grid-cols-2 gap-3">
           <InfoTile
             icon={User}
-            label="Propriétaire"
+            label={t("parameters.farm.owner")}
             value={farm.owner?.name ?? farm.owner?.email}
           />
           <InfoTile
             icon={MapPin}
-            label="Adresse"
+            label={t("parameters.farm.address")}
             value={farm.address}
           />
           <InfoTile
             icon={Calendar}
-            label="Créé le"
+            label={t("parameters.farm.createdAt")}
             value={new Date(farm.createdAt).toLocaleDateString("fr-DZ", {
               year: "numeric", month: "2-digit", day: "2-digit"
             })}
           />
           <InfoTile
             icon={farm.isActive ? CheckCircle : XCircle}
-            label="Statut"
-            value={farm.isActive ? "Active" : "Inactive"}
+            label={t("parameters.farm.status")}
+            value={farm.isActive ? t("parameters.farm.active") : t("parameters.farm.inactive")}
           />
         </div>
 
@@ -365,7 +359,7 @@ export default function ParametersPage() {
         {farm.description && (
           <div className="bg-card border-t border-border px-5 py-4 pb-5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Description
+              {t("parameters.farm.description")}
             </p>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
               {farm.description}
@@ -377,9 +371,9 @@ export default function ParametersPage() {
       {/* ── Stats row ── */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Parcelles",    value: farm._count.irrigationFields, color: "border-l-[#4CAF7D]" },
-          { label: "Wilaya",       value: farm.wilaya?.name ?? "—",     color: "border-l-[#6BA3D6]" },
-          { label: "Code wilaya",  value: farm.wilaya?.code ?? "—",     color: "border-l-[#E89B2D]" },
+          { label: t("parameters.farm.fields"), value: farm._count.irrigationFields, color: "border-l-[#4CAF7D]" },
+          { label: t("parameters.farm.wilaya"), value: farm.wilaya?.name ?? "—",     color: "border-l-[#6BA3D6]" },
+          { label: t("parameters.farm.wilayaCode"), value: farm.wilaya?.code ?? "—", color: "border-l-[#E89B2D]" },
         ].map(s => (
           <div
             key={s.label}

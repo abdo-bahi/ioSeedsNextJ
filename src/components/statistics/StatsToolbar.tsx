@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
+import { t } from "@/i18n";
 
 type FieldOption = { id: string; name: string };
 
@@ -36,11 +37,10 @@ export function StatsToolbar({
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Statistiques
+            {t("statistics.toolbar.title")}
           </p>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            Filtrez la période et la parcelle pour recalculer les indicateurs
-            et graphiques.
+            {t("statistics.toolbar.subtitle")}
           </p>
         </div>
 
@@ -54,14 +54,14 @@ export function StatsToolbar({
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          Exporter Excel
+          {t("statistics.toolbar.export")}
         </Button>
       </div>
 
       {/* ── Filters ── */}
       <div className="flex items-end gap-4 flex-wrap">
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-muted-foreground">Date début</Label>
+          <Label className="text-[12px] text-muted-foreground">{t("statistics.toolbar.startDate")}</Label>
           <Input
             type="date"
             value={startDate}
@@ -71,7 +71,7 @@ export function StatsToolbar({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-muted-foreground">Date fin</Label>
+          <Label className="text-[12px] text-muted-foreground">{t("statistics.toolbar.endDate")}</Label>
           <Input
             type="date"
             value={endDate}
@@ -81,14 +81,14 @@ export function StatsToolbar({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
+          <Label className="text-[12px] text-muted-foreground">{t("statistics.toolbar.field")}</Label>
           <select
             value={fieldId}
             onChange={(e) => onFieldChange(e.target.value)}
             className="h-8 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">
-              Tous les champs ({fieldOptions.length})
+              {t("statistics.toolbar.allFields", { n: fieldOptions.length })}
             </option>
             {fieldOptions.map((f) => (
               <option key={f.id} value={f.id}>

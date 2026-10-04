@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Pencil, Trash2 } from "lucide-react"
+import { t, type I18nKey } from "@/i18n"
 
 function ActionBadge({ action }: { action: boolean | null }) {
   if (action === null || action === undefined) return <span className="text-muted-foreground">—</span>
@@ -20,7 +21,7 @@ function ActionBadge({ action }: { action: boolean | null }) {
         ? "bg-[#E6F7ED] text-[#2D8653]"   // open = green
         : "bg-[#FDEAEA] text-[#B84040]"   // close = red
     }`}>
-      {action ? "↑ Ouvrir" : "↓ Fermer"}
+      {action ? t("data.thresholds.action.open") : t("data.thresholds.action.close")}
     </span>
   )
 }
@@ -81,16 +82,16 @@ function ThresholdModal({
           {/* Name + Priority */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Nom</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.name")}</Label>
               <Input
-                placeholder="Gel protection"
+                placeholder={t("data.thresholds.form.namePlaceholder")}
                 value={form.name}
                 onChange={e => set("name", e.target.value)}
                 className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Priorité</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.priority")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -99,7 +100,7 @@ function ThresholdModal({
                 className="border-border focus-visible:ring-primary"
               />
               <p className="text-[10px] text-muted-foreground">
-                1 = Le dernier qui sera verifier
+                {t("data.thresholds.form.priorityHint")}
               </p>
             </div>
           </div>
@@ -107,13 +108,13 @@ function ThresholdModal({
           {/* Sensor + Actuator */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Capteur surveillé</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.sensor")}</Label>
               <select
                 value={form.fk_sensor}
                 onChange={e => set("fk_sensor", e.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Sélectionner —</option>
+                <option value="">{t("common.select")}</option>
                 {sensors.map(s => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.fk_sensorType ?? "?"})
@@ -122,13 +123,13 @@ function ThresholdModal({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Actionneur contrôlé</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.actuator")}</Label>
               <select
                 value={form.fk_actuator}
                 onChange={e => set("fk_actuator", e.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Sélectionner —</option>
+                <option value="">{t("common.select")}</option>
                 {actuators.map(a => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
@@ -139,74 +140,74 @@ function ThresholdModal({
           {/* Min condition */}
           <div className="flex flex-col gap-2 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Condition MIN — si valeur &lt; seuil
+              {t("data.thresholds.form.conditionMin")}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-muted-foreground">Seuil min</Label>
+                <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.minValue")}</Label>
                 <Input
                   type="number"
-                  placeholder="ex: 30"
+                  placeholder={t("data.thresholds.form.minPlaceholder")}
                   value={form.minValue}
                   onChange={e => set("minValue", e.target.value)}
                   className="border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-muted-foreground">Action</Label>
+                <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.action")}</Label>
                 <select
                   value={form.minValueAction}
                   onChange={e => set("minValueAction", e.target.value as ThresholdForm["minValueAction"])}
                   className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value="">— Aucune action —</option>
-                  <option value="true">↑ Ouvrir</option>
-                  <option value="false">↓ Fermer</option>
+                  <option value="">{t("data.thresholds.form.actionNone")}</option>
+                  <option value="true">{t("data.thresholds.action.open")}</option>
+                  <option value="false">{t("data.thresholds.action.close")}</option>
                 </select>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Ex: humidité &lt; 30% → ouvrir la vanne
+              {t("data.thresholds.form.minHint")}
             </p>
           </div>
 
           {/* Max condition */}
           <div className="flex flex-col gap-2 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Condition MAX — si valeur &gt; seuil
+              {t("data.thresholds.form.conditionMax")}
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-muted-foreground">Seuil max</Label>
+                <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.maxValue")}</Label>
                 <Input
                   type="number"
-                  placeholder="ex: 80"
+                  placeholder={t("data.thresholds.form.maxPlaceholder")}
                   value={form.maxValue}
                   onChange={e => set("maxValue", e.target.value)}
                   className="border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-[12px] text-muted-foreground">Action</Label>
+                <Label className="text-[12px] text-muted-foreground">{t("data.thresholds.form.action")}</Label>
                 <select
                   value={form.maxValueAction}
                   onChange={e => set("maxValueAction", e.target.value as ThresholdForm["maxValueAction"])}
                   className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value="">— Aucune action —</option>
-                  <option value="true">↑ Ouvrir</option>
-                  <option value="false">↓ Fermer</option>
+                  <option value="">{t("data.thresholds.form.actionNone")}</option>
+                  <option value="true">{t("data.thresholds.action.open")}</option>
+                  <option value="false">{t("data.thresholds.action.close")}</option>
                 </select>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Ex: température &lt; 0°C → fermer la vanne (antigel)
+              {t("data.thresholds.form.maxHint")}
             </p>
           </div>
 
           {/* isActive */}
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
-            <p className="text-[13px] font-medium text-foreground">Seuil actif</p>
+            <p className="text-[13px] font-medium text-foreground">{t("data.thresholds.form.isActive")}</p>
             <button
               onClick={() => set("isActive", !form.isActive)}
               className={`w-10 h-6 rounded-full transition-colors relative ${
@@ -223,14 +224,14 @@ function ThresholdModal({
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose} className="border-border">
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.fk_sensor || !form.fk_actuator}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : "Enregistrer"}
+            {isLoading ? "..." : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -348,10 +349,10 @@ export function ThresholdsTable({
         <div className="flex items-center gap-3">
           <div>
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Seuils automatiques
+              {t("data.thresholds.title")}
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Appliqués par ordre de priorité
+              {t("data.thresholds.subtitle")}
             </p>
           </div>
 
@@ -361,7 +362,7 @@ export function ThresholdsTable({
             onChange={e => setActuatorFilter(e.target.value)}
             className="h-7 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">Tous les actionneurs</option>
+            <option value="">{t("common.allActuators")}</option>
             {actuators?.map((a:any) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -374,14 +375,14 @@ export function ThresholdsTable({
           className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter seuil
+          {t("data.thresholds.add")}
         </Button>
       </div>
 
       {/* No field selected */}
       {!irrigationFieldId && (
         <div className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-          Sélectionnez une parcelle dans la barre du haut pour voir les seuils.
+          {t("data.thresholds.noField")}
         </div>
       )}
 
@@ -391,9 +392,18 @@ export function ThresholdsTable({
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border bg-canvas">
-              {["PRIO", "NOM", "CAPTEUR", "ACTIONNEUR", "SI < MIN", "SI > MAX", "STATUT", "ACTIONS"].map(h => (
+              {[
+                "data.thresholds.columns.priority",
+                "data.thresholds.columns.name",
+                "data.thresholds.columns.sensor",
+                "data.thresholds.columns.actuator",
+                "data.thresholds.columns.min",
+                "data.thresholds.columns.max",
+                "data.thresholds.columns.status",
+                "data.thresholds.columns.actions",
+              ].map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground">
-                  {h}
+                  {t(h as I18nKey)}
                 </th>
               ))}
             </tr>
@@ -445,7 +455,7 @@ export function ThresholdsTable({
                   {t.minValue !== null && t.minValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-foreground">
-                        &lt; {t.minValue}
+                        {t("data.thresholds.minValue", { n: t.minValue })}
                       </span>
                       <ActionBadge action={t.minValueAction} />
                     </div>
@@ -459,7 +469,7 @@ export function ThresholdsTable({
                   {t.maxValue !== null && t.maxValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-foreground">
-                        &gt; {t.maxValue}
+                        {t("data.thresholds.maxValue", { n: t.maxValue })}
                       </span>
                       <ActionBadge action={t.maxValueAction} />
                     </div>
@@ -481,7 +491,7 @@ export function ThresholdsTable({
                         : "bg-muted text-muted-foreground hover:bg-[#E6F7ED] hover:text-[#2D8653]"
                     }`}
                   >
-                    {t.isActive ? "• Actif" : "• Inactif"}
+                    {t.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
                   </button>
                 </td>
 
@@ -509,8 +519,7 @@ export function ThresholdsTable({
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
                   {actuatorFilter
-                    ? "Aucun seuil pour cet actionneur."
-                    : "Aucun seuil configuré. Cliquez sur Ajouter seuil pour commencer."
+                    ? t("data.thresholds.empty.filtered") : t("data.thresholds.empty.all")
                   }
                 </td>
               </tr>
@@ -526,7 +535,7 @@ export function ThresholdsTable({
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Ajouter un seuil"
+        title={t("data.thresholds.form.titleAdd")}
         sensors={sensorOptions}
         actuators={actuatorOptions}
       />
@@ -538,7 +547,7 @@ export function ThresholdsTable({
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title={`Modifier — ${editThreshold.name ?? "Seuil"}`}
+          title={t("data.thresholds.form.titleEdit", { name: editThreshold.name ?? "Seuil" })}
           sensors={sensorOptions}
           actuators={actuatorOptions}
           initial={{
@@ -559,21 +568,21 @@ export function ThresholdsTable({
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Supprimer ce seuil ?</DialogTitle>
+            <DialogTitle>{t("data.thresholds.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Le seuil sera supprimé et le MCU mis à jour immédiatement.
+            {t("data.thresholds.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => deleteTarget && remove.mutate({ id: deleteTarget })}
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

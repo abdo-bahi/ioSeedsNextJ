@@ -14,6 +14,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2, MapPin, Plus } from "lucide-react"
+import { t, type I18nKey } from "@/i18n"
+
+const COLUMN_HEADERS: I18nKey[] = [
+  "data.fields.columns.name",
+  "data.fields.columns.crop",
+  "data.fields.columns.surface",
+  "data.fields.columns.gps",
+  "data.fields.columns.mcus",
+  "data.fields.columns.moisture",
+  "data.fields.columns.status",
+  "data.fields.columns.actions",
+]
 
 // ── Moisture bar ──────────────────────────────────────────────────
 function MoistureBar({ value }: { value: number | null }) {
@@ -93,9 +105,9 @@ function FieldModal({
 
         <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Nom de la parcelle</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.fields.form.name")}</Label>
             <Input
-              placeholder="Parcelle E"
+              placeholder={t("data.fields.form.namePlaceholder")}
               value={form.name}
               onChange={e => set("name", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -103,9 +115,9 @@ function FieldModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Culture</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.fields.form.crop")}</Label>
             <Input
-              placeholder="Courgettes"
+              placeholder={t("data.fields.form.cropPlaceholder")}
               value={form.crop}
               onChange={e => set("crop", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -113,9 +125,9 @@ function FieldModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Superficie (ha)</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.fields.form.surface")}</Label>
             <Input
-              placeholder="1.5"
+              placeholder={t("data.fields.form.surfacePlaceholder")}
               type="number"
               value={form.surface}
               onChange={e => set("surface", e.target.value)}
@@ -125,9 +137,9 @@ function FieldModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">GPS — Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.fields.form.lat")}</Label>
               <Input
-                placeholder="36.4720"
+                placeholder={t("data.fields.form.latPlaceholder")}
                 type="number"
                 value={form.latitude}
                 onChange={e => set("latitude", e.target.value)}
@@ -135,9 +147,9 @@ function FieldModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">GPS — Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.fields.form.lon")}</Label>
               <Input
-                placeholder="2.8277"
+                placeholder={t("data.fields.form.lonPlaceholder")}
                 type="number"
                 value={form.longitude}
                 onChange={e => set("longitude", e.target.value)}
@@ -153,14 +165,14 @@ function FieldModal({
             onClick={onClose}
             className="border-border text-muted-foreground"
           >
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : title.includes("Ajouter") ? "Ajouter" : "Enregistrer"}
+            {isLoading ? "..." : title.includes("Ajouter") ? t("common.add") : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -230,14 +242,14 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
       {/* ── Table header ── */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-          Irrigation Fields
+          {t("data.fields.title")}
         </p>
         <Button
           onClick={() => setAddOpen(true)}
           className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter parcelle
+          {t("data.fields.add")}
         </Button>
       </div>
 
@@ -246,9 +258,9 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border bg-canvas">
-              {["NOM", "CULTURE", "SUPERFICIE", "GPS", "MCUS", "HUMIDITÉ", "STATUT", "ACTIONS"].map(h => (
+              {COLUMN_HEADERS.map(h => (
                 <th key={h} className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground">
-                  {h}
+                  {t(h)}
                 </th>
               ))}
             </tr>
@@ -283,7 +295,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
 
                 {/* surface */}
                 <td className="px-4 py-3.5 text-muted-foreground">
-                  {field.surface ? `${field.surface} ha` : "—"}
+                  {field.surface ? t("data.fields.surface", { n: field.surface }) : "—"}
                 </td>
 
                 {/* GPS */}
@@ -291,8 +303,8 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                   <div className="flex items-center gap-1 text-muted-foreground">
                     <MapPin className="h-3 w-3 flex-shrink-0" />
                     <span className="text-[11px] font-mono">
-                      {field.latitude.toFixed(2)}°N<br />
-                      {field.longitude.toFixed(2)}°E
+                      {t("common.latitude", { n: field.latitude.toFixed(2) })}<br />
+                      {t("common.longitude", { n: field.longitude.toFixed(2) })}
                     </span>
                   </div>
                 </td>
@@ -314,7 +326,9 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                       ? "bg-[#E6F7ED] text-[#2D8653]"
                       : "bg-muted text-muted-foreground"
                   }`}>
-                    {field.isActive ? "• Active" : "• Inactive"}
+                    {field.isActive
+                      ? `• ${t("data.fields.status.active")}`
+                      : `• ${t("data.fields.status.inactive")}`}
                   </Badge>
                 </td>
 
@@ -341,7 +355,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
             {!isLoading && fields?.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
-                  Aucune parcelle. Cliquez sur &quot;Ajouter parcelle&quot; pour commencer.
+                  {t("data.fields.empty")}
                 </td>
               </tr>
             )}
@@ -355,7 +369,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Ajouter IrrigationField"
+        title={t("data.fields.form.titleAdd")}
       />
 
       {/* ── Edit modal ── */}
@@ -365,7 +379,7 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title="Modifier la parcelle"
+          title={t("data.fields.form.titleEdit")}
           initial={{
             name:      editField.name      ?? "",
             crop:  editField.crop  ?? "",
@@ -380,10 +394,10 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle className="text-[16px]">Supprimer la parcelle ?</DialogTitle>
+            <DialogTitle className="text-[16px]">{t("data.fields.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Cette action supprimera la parcelle et toutes ses données associées (MCUs, capteurs, historique).
+            {t("data.fields.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button
@@ -391,14 +405,14 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
               onClick={() => setDeleteTarget(null)}
               className="border-border"
             >
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => deleteTarget && remove.mutate({ id: deleteTarget })}
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

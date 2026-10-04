@@ -19,6 +19,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { t, type I18nKey } from "@/i18n";
 
 // ── Time formatter ────────────────────────────────────────────────
 function formatTime(iso: string) {
@@ -27,10 +28,10 @@ function formatTime(iso: string) {
     minute: "2-digit",
   });
 }
-const TIME_RANGES = [
-  { label: "Aujourd'hui", value: 60 * 24 },
-  { label: "7 jours", value: 60 * 24 * 7 },
-  { label: "30 jours", value: 60 * 24 * 30 },
+const TIME_RANGES: { labelKey: I18nKey; value: number }[] = [
+  { labelKey: "dashboard.chart.ranges.today", value: 60 * 24 },
+  { labelKey: "dashboard.chart.ranges.week", value: 60 * 24 * 7 },
+  { labelKey: "dashboard.chart.ranges.month", value: 60 * 24 * 30 },
 ];
 
 // ── Custom tooltip ────────────────────────────────────────────────
@@ -102,10 +103,10 @@ export function SensorChart() {
       <div className="flex items-start justify-between mb-4">
         <div>
           <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Données temps réel — Capteur
+            {t("dashboard.chart.title")}
           </p>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            {TIME_RANGES.find((r) => r.value === fromMinutes)?.label}
+            {t(TIME_RANGES.find((r) => r.value === fromMinutes)?.labelKey ?? TIME_RANGES[0].labelKey)}
           </p>
         </div>
 
@@ -121,7 +122,7 @@ export function SensorChart() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {range.label}
+              {t(range.labelKey)}
             </button>
           ))}
         </div>
@@ -156,7 +157,7 @@ export function SensorChart() {
         <div className="h-[200px] bg-canvas rounded-lg animate-pulse" />
       ) : !chartData || chartData.length === 0 ? (
         <div className="h-[200px] flex items-center justify-center text-[13px] text-muted-foreground">
-          Aucune donnée disponible
+          {t("dashboard.chart.noData")}
         </div>
       ) : (
         <ChartContainer config={chartConfig} className="h-[200px] w-full">
@@ -248,11 +249,11 @@ export function SensorChart() {
               style={{ backgroundColor: colorInfo.color }}
             />
             <span className="text-[11px] text-muted-foreground">
-              Mise à jour en temps réel
+              {t("dashboard.chart.liveLabel")}
             </span>
           </div>
           <span className="text-[11px] text-muted-foreground">
-            {chartData.length} lectures
+            {t("dashboard.chart.readings", { n: chartData.length })}
           </span>
         </div>
       )}

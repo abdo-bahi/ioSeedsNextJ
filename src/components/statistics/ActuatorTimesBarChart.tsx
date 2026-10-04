@@ -15,6 +15,7 @@ import {
   ChartLegendContent,
 } from "@/components/ui/chart";
 import { fmtMinutes1 } from "./format";
+import { t } from "@/i18n";
 
 type Row = {
   actuatorName: string;
@@ -32,24 +33,24 @@ export function ActuatorTimesBarChart({ data }: { data: Row[] }) {
   }));
 
   const config = {
-    manuel: { label: "Manuel", color: "#4CAF7D" },
-    auto: { label: "Auto", color: "#6BA3D6" },
+    manuel: { label: t("statistics.charts.actuatorTimes.manual"), color: "#4CAF7D" },
+    auto: { label: t("statistics.charts.actuatorTimes.auto"), color: "#6BA3D6" },
   };
 
   return (
     <div className="bg-card border border-border rounded-xl p-5">
       <div>
         <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-          Temps d&apos;activation par actionneur
+          {t("statistics.charts.actuatorTimes.title")}
         </p>
         <p className="text-[12px] text-muted-foreground mt-0.5">
-          Temps d&apos;ouverture manuel vs automatique (en minutes).
+          {t("statistics.charts.actuatorTimes.subtitle")}
         </p>
       </div>
 
       {chartData.length === 0 ? (
         <div className="h-[260px] flex items-center justify-center text-[13px] text-muted-foreground">
-          Aucune activation sur cette période.
+          {t("statistics.charts.actuatorTimes.noData")}
         </div>
       ) : (
         <ChartContainer config={config} className="h-[300px] w-full mt-4">
@@ -72,7 +73,7 @@ export function ActuatorTimesBarChart({ data }: { data: Row[] }) {
               tick={{ fontSize: 10, fill: "#8FAF9A" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v: number) => `${v}min`}
+              tickFormatter={(v: number) => `${v}${t("statistics.charts.actuatorTimes.unit")}`}
               width={52}
               domain={[0, (dataMax: number) => Math.max(1, Math.ceil(dataMax))]}
             />

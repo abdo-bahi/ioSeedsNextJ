@@ -12,6 +12,7 @@ import { SensorTypeAreaCharts } from "@/components/statistics/SensorTypeAreaChar
 import { ActuatorTimesBarChart } from "@/components/statistics/ActuatorTimesBarChart";
 import { TypeAvgBarChart } from "@/components/statistics/TypeAvgBarChart";
 import { fmtDuration, fmtMinutes } from "@/components/statistics/format";
+import { t } from "@/i18n";
 
 function isoDay(d: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -83,75 +84,75 @@ export default function Statistics() {
         wb,
         XLSX.utils.json_to_sheet([
           {
-            Indicateur: "Durée d'irrigation totale",
-            Valeur: fmtDuration(overview.totalIrrigationMs),
-            Détail: `${overview.irrigationSessions} sessions`,
+            [t("statistics.overview.indicator")]: t("statistics.overview.totalDuration"),
+            [t("statistics.overview.value")]: fmtDuration(overview.totalIrrigationMs),
+            [t("statistics.overview.detail")]: t("statistics.overview.sessions", { n: overview.irrigationSessions }),
           },
           {
-            Indicateur: "Durée moyenne par session",
-            Valeur: fmtDuration(overview.avgSessionMs),
-            Détail: `${overview.irrigationSessions} sessions`,
+            [t("statistics.overview.indicator")]: t("statistics.overview.avgDuration"),
+            [t("statistics.overview.value")]: fmtDuration(overview.avgSessionMs),
+            [t("statistics.overview.detail")]: t("statistics.overview.sessions", { n: overview.irrigationSessions }),
           },
           {
-            Indicateur: "Humidité du sol moyenne",
-            Valeur: overview.avgSoilMoisture ?? "—",
-            Détail: overview.soilMoistureUnit,
+            [t("statistics.overview.indicator")]: t("statistics.overview.avgSoilMoisture"),
+            [t("statistics.overview.value")]: overview.avgSoilMoisture ?? "—",
+            [t("statistics.overview.detail")]: overview.soilMoistureUnit,
           },
           {
-            Indicateur: "Irrigation manuelle",
-            Valeur: fmtDuration(overview.manualMs),
-            Détail: `${overview.manualPct}%`,
+            [t("statistics.overview.indicator")]: t("statistics.overview.manual"),
+            [t("statistics.overview.value")]: fmtDuration(overview.manualMs),
+            [t("statistics.overview.detail")]: `${overview.manualPct}%`,
           },
           {
-            Indicateur: "Irrigation automatique",
-            Valeur: fmtDuration(overview.autoMs),
-            Détail: `${overview.autoPct}%`,
+            [t("statistics.overview.indicator")]: t("statistics.overview.auto"),
+            [t("statistics.overview.value")]: fmtDuration(overview.autoMs),
+            [t("statistics.overview.detail")]: `${overview.autoPct}%`,
           },
         ]),
-        "Synthèse"
+        t("statistics.actuatorTable.title")
       );
 
       XLSX.utils.book_append_sheet(
         wb,
         XLSX.utils.json_to_sheet(
           (actionTimes ?? []).map((a) => ({
-            Actionneur: a.actuatorName,
-            MCU: a.mcuName,
-            Type: a.actuatorType ?? "—",
-            "Manuel (min)": fmtMinutes(a.manualMs),
-            "Auto (min)": fmtMinutes(a.autoMs),
-            "Total (min)": fmtMinutes(a.manualMs + a.autoMs),
+            [t("statistics.actuatorTable.actuator")]: a.actuatorName,
+            [t("statistics.actuatorTable.mcu")]: a.mcuName,
+            [t("statistics.actuatorTable.type")]: a.actuatorType ?? "—",
+            [t("statistics.actuatorTable.manual")]: fmtMinutes(a.manualMs),
+            [t("statistics.actuatorTable.auto")]: fmtMinutes(a.autoMs),
+            [t("statistics.actuatorTable.total")]: fmtMinutes(a.manualMs + a.autoMs),
           }))
         ),
-        "Actionneurs"
+        t("statistics.export.actuatorsSheet")
       );
 
       XLSX.utils.book_append_sheet(
         wb,
         XLSX.utils.json_to_sheet(
-          (typeAvg ?? []).map((t) => ({
-            Type: t.type,
-            "Moyenne active (min)": fmtMinutes(t.avgActiveMs),
-            "Nombre d'actionneurs": t.actuatorCount,
-            Sessions: t.totalSessions,
+          (typeAvg ?? []).map((t2) => ({
+            [t("statistics.actuatorTable.type")]: t2.type,
+            [t("statistics.export.avgActive")]: fmtMinutes(t2.avgActiveMs),
+            [t("statistics.export.actuatorCount")]: t2.actuatorCount,
+            [t("statistics.export.sessions")]: t2.totalSessions,
           }))
         ),
-        "Moyennes par type"
+        t("statistics.averages.title")
       );
 
-      const cap = [] as { Capteur: string; Période: string; Moyenne: number; Unité: string }[];
+      const cap = [] as Record<string, string | number>[];
       for (const s of sensorTypes ?? []) {
         for (const p of s.series) {
           cap.push({
-            Capteur: s.sensorType,
-            Période: p.time,
-            Moyenne: p.value,
-            Unité: s.unit ?? "",
+            [t("statistics.averages.sensor")]: s.sensorType,
+            [t("statistics.averages.period")]: p.time,
+            [t("statistics.averages.average")]: p.value,
+            [t("statistics.averages.unit")]: s.unit ?? "",
           });
         }
       }
       if (cap.length) {
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cap), "Capteurs");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cap), t("statistics.export.sensorsSheet"));
       }
 
       XLSX.writeFile(wb, `statistiques_ioseeds_${startDate}_${endDate}.xlsx`);
@@ -163,14 +164,14 @@ export default function Statistics() {
   if (!FARM_ID) {
     return (
       <div className="text-[13px] text-muted-foreground">
-        Sélectionnez d&apos;abord un champ pour afficher les statistiques.
+        {t("statistics.overview.noField")}
       </div>
     );
   }
 
   const ratioSubtitle = overview
-    ? `${overview.irrigationSessions} sessions d'irrigation`
-    : "En cours de chargement...";
+    ? t("statistics.overview.sessionsIrrigation", { n: overview.irrigationSessions })
+    : t("statistics.overview.loading");
 
   return (
     <div className="space-y-6">
@@ -190,32 +191,32 @@ export default function Statistics() {
       {/* ── KPI grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Durée d'irrigation totale"
+          title={t("statistics.overview.totalDuration")}
           value={overview ? fmtDuration(overview.totalIrrigationMs) : "—"}
-          subtitle={`${overview?.irrigationSessions ?? 0} sessions sur la période`}
+          subtitle={t("statistics.overview.sessionsOnPeriod", { n: overview?.irrigationSessions ?? 0 })}
           icon={Timer}
           color="green"
         />
         <KPICard
-          title="Durée moyenne / session"
+          title={t("statistics.overview.avgDurationCard")}
           value={overview ? fmtDuration(overview.avgSessionMs) : "—"}
-          subtitle="Temps d'ouverture moyen d'une session d'irrigation"
+          subtitle={t("statistics.overview.avgOpenTime")}
           icon={Clock}
           color="blue"
         />
         <KPICard
-          title="Humidité sol moyenne"
+          title={t("statistics.overview.avgSoilMoistureCard")}
           value={
             overview?.avgSoilMoisture != null
               ? `${overview.avgSoilMoisture}${overview.soilMoistureUnit}`
               : "—"
           }
-          subtitle="Moyenne des lectures d'humidité du sol"
+          subtitle={t("statistics.overview.avgMoistureReadings")}
           icon={Droplets}
           color="green"
         />
         <KPICard
-          title="Manuel / Auto"
+          title={t("statistics.overview.manualAuto")}
           value={
             overview
               ? `${overview.manualPct}% / ${overview.autoPct}%`
@@ -235,7 +236,7 @@ export default function Statistics() {
         hourly={chartHourly}
         startMs={periodStartMs}
         endMs={periodEndMs}
-        periodLabel={`${startDate} → ${endDate}`}
+        periodLabel={t("statistics.overview.periodRange", { start: startDate, end: endDate })}
       />
 
       {/* ── Sensor type averages ── */}

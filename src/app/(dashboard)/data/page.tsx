@@ -7,13 +7,14 @@ import { MCUsTable } from "@/components/data/McuTable"
 import { SensorsTable } from "@/components/data/SensorsTable"
 import { ActuatorsTable } from "@/components/data/ActuatorsTable"
 import { ThresholdsTable } from "@/components/data/ThresholdsTable"
+import { t, type I18nKey } from "@/i18n"
 
-const tabs = [
-  { value: "fields",    label: "Irrigation Fields" },
-  { value: "mcus",      label: "MCUs" },
-  { value: "sensors",   label: "Sensors" },
-  { value: "actuators", label: "Actuators" },
-  { value: "thresholds", label: "Seuils" },
+const tabs: { value: string; labelKey: I18nKey }[] = [
+  { value: "fields",     labelKey: "data.tabs.fields" },
+  { value: "mcus",       labelKey: "data.tabs.mcus" },
+  { value: "sensors",    labelKey: "data.tabs.sensors" },
+  { value: "actuators",  labelKey: "data.tabs.actuators" },
+  { value: "thresholds", labelKey: "data.tabs.thresholds" },
 ]
 
 export default function DataPage() {
@@ -40,7 +41,7 @@ export default function DataPage() {
               }
             `}
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

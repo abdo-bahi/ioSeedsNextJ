@@ -16,17 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { SensorCalibrationSection } from "./SensorCalibrationSection";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
+import { t, formatRelative, type I18nKey } from "@/i18n";
 
 // ── Helpers ───────────────────────────────────────────────────────
-function formatRelative(date: Date | string | null): string {
-  if (!date) return "—";
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 60) return `${diff}s ago`;
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
-  return `il y a ${Math.floor(diff / 86400)}j`;
-}
-
 function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <Badge
@@ -34,7 +26,7 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
         isActive ? "bg-[#E6F7ED] text-[#2D8653]" : "bg-muted text-muted-foreground"
       }`}
     >
-      {isActive ? "• Online" : "• Inactif"}
+      {isActive ? `• ${t("data.sensors.status.online")}` : `• ${t("data.sensors.status.inactive")}`}
     </Badge>
   );
 }
@@ -100,7 +92,7 @@ function validateMac(value: string): string | undefined {
   if (!value.trim()) return undefined;
   return MAC_REGEX.test(value.trim())
     ? undefined
-    : "Format invalide — ex : AA:BB:CC:DD:EE:FF";
+    : t("errors.format.mac");
 }
 
 function normalizeMac(value: string): string {
@@ -174,19 +166,19 @@ function SensorModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-muted-foreground">
-                Nom du capteur
+                {t("data.sensors.form.name")}
               </Label>
               <Input
-                placeholder="Sol-A1"
+                placeholder={t("data.sensors.form.namePlaceholder")}
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 className="border-border focus-visible:ring-primary"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Adresse MAC</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.mac")}</Label>
               <Input
-                placeholder="AA:BB:CC:DD:EE:FF"
+                placeholder={t("data.sensors.form.macPlaceholder")}
                 value={form.macAddress}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -206,13 +198,13 @@ function SensorModal({
 
           {/* Type */}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[12px] text-muted-foreground">Type</Label>
+            <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.type")}</Label>
             <select
               value={form.fk_sensorType}
               onChange={(e) => set("fk_sensorType", e.target.value)}
               className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              <option value="">— Sélectionner un type —</option>
+              <option value="">{t("common.selectType")}</option>
               {sensorTypes.map((t) => (
                 <option key={t.name} value={t.name}>
                   {t.name}
@@ -224,12 +216,12 @@ function SensorModal({
           {/* Field → MCU selector */}
           <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              MCU parent
+              {t("data.sensors.form.mcuParent")}
             </p>
 
             {/* Step 1 — select field */}
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Parcelle</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.field")}</Label>
               <select
                 value={selectedFieldId}
                 onChange={(e) => {
@@ -238,7 +230,7 @@ function SensorModal({
                 }}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Sélectionner une parcelle —</option>
+                <option value="">{t("common.selectField")}</option>
                 {fields.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name ?? f.id}
@@ -249,14 +241,14 @@ function SensorModal({
 
             {/* Step 2 — select MCU from that field */}
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">MCU</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.mcu")}</Label>
               <select
                 value={form.fk_mcu}
                 onChange={(e) => set("fk_mcu", e.target.value)}
                 disabled={!selectedFieldId || filteredMcus.length === 0}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
               >
-                <option value="">— Sélectionner un MCU —</option>
+                <option value="">{t("common.selectMcu")}</option>
                 {filteredMcus.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name ?? m.id}
@@ -265,7 +257,7 @@ function SensorModal({
               </select>
               {selectedFieldId && filteredMcus.length === 0 && (
                 <p className="text-[11px] text-[#E89B2D]">
-                  Aucun MCU dans cette parcelle.
+                  {t("data.sensors.form.noMcuInField")}
                 </p>
               )}
             </div>
@@ -291,9 +283,9 @@ function SensorModal({
           {/* GPS */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Latitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.lat")}</Label>
               <Input
-                placeholder="36.4703"
+                placeholder={t("data.sensors.form.latPlaceholder")}
                 type="number"
                 value={form.latitude}
                 onChange={(e) => set("latitude", e.target.value)}
@@ -301,9 +293,9 @@ function SensorModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Longitude</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("data.sensors.form.lon")}</Label>
               <Input
-                placeholder="2.8277"
+                placeholder={t("data.sensors.form.lonPlaceholder")}
                 type="number"
                 value={form.longitude}
                 onChange={(e) => set("longitude", e.target.value)}
@@ -316,10 +308,10 @@ function SensorModal({
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
               <p className="text-[13px] font-medium text-foreground">
-                Capteur actif
+                {t("data.sensors.form.isActive")}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Désactiver pour ignorer ce capteur
+                {t("data.sensors.form.isActiveHint")}
               </p>
             </div>
             <button
@@ -343,14 +335,14 @@ function SensorModal({
             onClick={onClose}
             className="border-border text-muted-foreground"
           >
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isLoading || !form.name || !!macError}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : "Sauvegarder"}
+            {isLoading ? "..." : t("common.saveSettings")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -465,7 +457,7 @@ export function SensorsTable({
       <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-3">
           <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Sensors
+            {t("data.sensors.title")}
           </p>
           {/* MCU filter */}
           <select
@@ -473,7 +465,7 @@ export function SensorsTable({
             onChange={(e) => setMcuFilter(e.target.value)}
             className="h-7 rounded-md border border-border bg-card px-2 text-[12px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">Tous les MCUs</option>
+            <option value="">{t("common.allMcus")}</option>
             {mcus?.map((m: any) => (
               <option key={m.id} value={m.id}>
                 {m.name ?? m.id}
@@ -486,7 +478,7 @@ export function SensorsTable({
           className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter capteur
+          {t("data.sensors.add")}
         </Button>
       </div>
 
@@ -496,22 +488,22 @@ export function SensorsTable({
           <thead>
             <tr className="border-b border-border bg-canvas">
               {[
-                "NOM",
-                "TYPE",
-                "GPS",
-                "MAC",
-                "MCU",
-                "PARCELLE",
-                "DERNIÈRE VALEUR",
-                "CALIBRATION",
-                "STATUT",
-                "ACTIONS",
+                "data.sensors.columns.name",
+                "data.sensors.columns.type",
+                "data.sensors.columns.gps",
+                "data.sensors.columns.mac",
+                "data.sensors.columns.mcu",
+                "data.sensors.columns.field",
+                "data.sensors.columns.lastValue",
+                "data.sensors.columns.calibration",
+                "data.sensors.columns.status",
+                "data.sensors.columns.actions",
               ].map((h) => (
                 <th
                   key={h}
                   className="text-left px-4 py-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground"
                 >
-                  {h}
+                  {t(h as I18nKey)}
                 </th>
               ))}
             </tr>
@@ -546,9 +538,9 @@ export function SensorsTable({
 
                   {/* GPS */}
                   <td className="px-4 py-3.5 font-mono text-[11px] text-muted-foreground">
-                    {sensor.latitude.toFixed(4)}°N
+                    {t("common.latitude", { n: sensor.latitude.toFixed(4) })}
                     <br />
-                    {sensor.longitude.toFixed(4)}°E
+                    {t("common.longitude", { n: sensor.longitude.toFixed(4) })}
                   </td>
 
                   {/* MAC */}
@@ -642,7 +634,7 @@ export function SensorsTable({
                   colSpan={10}
                   className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                 >
-                  Aucun capteur trouvé.
+                  {t("data.sensors.empty")}
                 </td>
               </tr>
             )}
@@ -656,7 +648,7 @@ export function SensorsTable({
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Ajouter un capteur"
+        title={t("data.sensors.form.titleAdd")}
         fields={fieldOptions}
         mcus={allMcus}
         sensorTypes={sensorTypes ?? []}
@@ -669,7 +661,7 @@ export function SensorsTable({
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title="Modifier capteur"
+          title={t("data.sensors.form.titleEdit")}
           fields={fieldOptions}
           mcus={allMcus}
           sensorTypes={sensorTypes ?? []}
@@ -696,14 +688,14 @@ export function SensorsTable({
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Supprimer ce capteur ?</DialogTitle>
+            <DialogTitle>{t("data.sensors.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Toutes les données de ce capteur seront supprimées.
+            {t("data.sensors.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -712,7 +704,7 @@ export function SensorsTable({
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { t } from "@/i18n";
 
 type Sensor = { id: string; name: string; fk_sensorType: string | null; unit: string | null };
 
@@ -102,7 +103,7 @@ export function RealtimeSensorChart({
       <div className="flex items-start justify-between mb-4">
         <div>
           <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Données temps réel — Capteur
+            {t("statistics.charts.realtime.title")}
           </p>
           <p className="text-[12px] text-muted-foreground mt-0.5">{periodLabel}</p>
         </div>
@@ -137,7 +138,7 @@ export function RealtimeSensorChart({
         <div className="h-[240px] bg-canvas rounded-lg animate-pulse" />
       ) : !chartData || chartData.length === 0 ? (
         <div className="h-[240px] flex items-center justify-center text-[13px] text-muted-foreground">
-          Aucune donnée disponible
+          {t("statistics.charts.realtime.noData")}
         </div>
       ) : (
         <ChartContainer config={chartConfig} className="h-[240px] w-full">
@@ -216,11 +217,11 @@ export function RealtimeSensorChart({
               style={{ backgroundColor: colorInfo.color }}
             />
             <span className="text-[11px] text-muted-foreground">
-              Mise à jour en temps réel
+              {t("statistics.charts.realtime.live")}
             </span>
           </div>
           <span className="text-[11px] text-muted-foreground">
-            {chartData.length} lectures
+            {t("statistics.charts.realtime.readings", { n: chartData.length })}
           </span>
         </div>
       )}

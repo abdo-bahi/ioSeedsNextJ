@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { DateFilter } from "@/components/dashboard/DateFilter"
 import { PaginationControls } from "@/components/dashboard/PaginationControls"
+import { t, formatRelative, type I18nKey } from "@/i18n"
 
 type MCUStatus = "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR"
 
@@ -28,20 +29,11 @@ type McuRow = {
   _count: { sensors: number; actuators: number }
 }
 
-const statusStyle: Record<MCUStatus, { dot: string; chip: string; label: string }> = {
-  ONLINE:  { dot: "bg-primary", chip: "bg-[#E6F7ED] text-[#2D8653]", label: "En ligne" },
-  OFFLINE: { dot: "bg-[#C4C7C5]", chip: "bg-muted text-muted-foreground", label: "Hors ligne" },
-  SLEEPING:{ dot: "bg-[#E89B2D]", chip: "bg-[#FEF3DC] text-[#B8780E]", label: "Veille" },
-  ERROR:   { dot: "bg-[#D95F5F]", chip: "bg-[#FDEAEA] text-[#B84040]", label: "Erreur" },
-}
-
-function formatRelative(date: string | Date | null): string {
-  if (!date) return "—";
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 60) return `il y a ${diff}s`;
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
-  return `il y a ${Math.floor(diff / 86400)}j`;
+const statusStyle: Record<MCUStatus, { dot: string; chip: string; labelKey: I18nKey }> = {
+  ONLINE:  { dot: "bg-primary", chip: "bg-[#E6F7ED] text-[#2D8653]", labelKey: "dashboard.devices.status.ONLINE" },
+  OFFLINE: { dot: "bg-[#C4C7C5]", chip: "bg-muted text-muted-foreground", labelKey: "dashboard.devices.status.OFFLINE" },
+  SLEEPING:{ dot: "bg-[#E89B2D]", chip: "bg-[#FEF3DC] text-[#B8780E]", labelKey: "dashboard.devices.status.SLEEPING" },
+  ERROR:   { dot: "bg-[#D95F5F]", chip: "bg-[#FDEAEA] text-[#B84040]", labelKey: "dashboard.devices.status.ERROR" },
 }
 
 function formatDateTime(date: string | Date): string {
@@ -66,21 +58,21 @@ const eventDot: Record<string, string> = {
 
 function eventLabel(event: string): string {
   switch (event) {
-    case "ON": return "en ligne";
-    case "OFF": return "hors ligne";
-    case "SLEEPING": return "veille";
-    case "ERROR": return "erreur";
+    case "ON": return t("dashboard.devices.event.ON");
+    case "OFF": return t("dashboard.devices.event.OFF");
+    case "SLEEPING": return t("dashboard.devices.event.SLEEPING");
+    case "ERROR": return t("dashboard.devices.event.ERROR");
     default: return event;
   }
 }
 
-const sourceLabel: Record<string, string> = {
-  connect: "connexion",
-  disconnect: "déconnexion",
-  will: "LWT",
-  status: "statut",
-  watchdog: "détection",
-  message: "message",
+const sourceLabel: Record<string, I18nKey> = {
+  connect: "dashboard.devices.source.connect",
+  disconnect: "dashboard.devices.source.disconnect",
+  will: "dashboard.devices.source.will",
+  status: "dashboard.devices.source.status",
+  watchdog: "dashboard.devices.source.watchdog",
+  message: "dashboard.devices.source.message",
 };
 
 const HISTORY_PAGE_SIZE = 20;
@@ -162,19 +154,19 @@ export function DeviceStatusCard() {
         <div className="flex items-center gap-2">
           <HardDrive className="h-4 w-4 text-muted-foreground" />
           <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-            Devices connectés
+            {t("dashboard.devices.title")}
           </p>
         </div>
         {/* Summary chips */}
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-[#2D8653] bg-[#E6F7ED] rounded-full px-2 py-0.5 flex items-center gap-1">
-            <Wifi className="h-3 w-3" /> {online} en ligne
+            <Wifi className="h-3 w-3" /> {t("dashboard.devices.onlineChip", { n: online })}
           </span>
           <span className="text-[11px] text-[#B8780E] bg-[#FEF3DC] rounded-full px-2 py-0.5 flex items-center gap-1">
-            <Moon className="h-3 w-3" /> {sleeping} veille
+            <Moon className="h-3 w-3" /> {t("dashboard.devices.sleepingChip", { n: sleeping })}
           </span>
           <span className="text-[11px] text-muted-foreground bg-muted rounded-full px-2 py-0.5 flex items-center gap-1">
-            <WifiOff className="h-3 w-3" /> {offline} hors ligne
+            <WifiOff className="h-3 w-3" /> {t("dashboard.devices.offlineChip", { n: offline })}
           </span>
         </div>
       </div>
@@ -200,12 +192,15 @@ export function DeviceStatusCard() {
                     {mcu.name ?? "—"}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {mcu._count.sensors} capteurs · {mcu._count.actuators} actionneurs
-                    {mcu.lastSeenAt ? ` · vu ${formatRelative(mcu.lastSeenAt)}` : ""}
+                    {t("dashboard.devices.counts", {
+                      sensors: mcu._count.sensors,
+                      actuators: mcu._count.actuators,
+                      seen: mcu.lastSeenAt ? t("dashboard.devices.seen", { time: formatRelative(mcu.lastSeenAt) }) : "",
+                    })}
                   </p>
                 </div>
                 <span className={`text-[11px] px-2 py-0.5 rounded-full ${s.chip}`}>
-                  {s.label}
+                  {t(s.labelKey)}
                 </span>
               </div>
             );
@@ -213,7 +208,7 @@ export function DeviceStatusCard() {
 
         {!isLoading && total === 0 && (
           <div className="px-5 py-6 text-center text-[12px] text-muted-foreground">
-            Aucun MCU dans cette parcelle.
+            {t("dashboard.devices.emptyField")}
           </div>
         )}
       </div>
@@ -222,7 +217,7 @@ export function DeviceStatusCard() {
       <div className="border-t border-border">
         <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-1 flex-wrap">
           <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-            <Clock className="h-3 w-3" /> Historique de connexion
+            <Clock className="h-3 w-3" /> {t("dashboard.devices.history")}
           </p>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Filter className="h-3 w-3" />
@@ -234,7 +229,7 @@ export function DeviceStatusCard() {
         <div className="px-5 py-2 space-y-1.5">
           {(log?.items ?? []).length === 0 && (
             <p className="text-[12px] text-muted-foreground text-center py-3">
-              Aucun événement {from || to ? "sur cette période" : "pour le moment"}.
+              {t(from || to ? "dashboard.devices.noEventsFiltered" : "dashboard.devices.noEvents")}
             </p>
           )}
 
@@ -259,7 +254,7 @@ export function DeviceStatusCard() {
                     {latest?.deviceName ?? rows[0]?.deviceName ?? key}
                   </span>
                   <span className="text-[11px] text-muted-foreground shrink-0">
-                    {rows.length} événement{rows.length === 1 ? "" : "s"}
+                    {t("dashboard.devices.eventCount", { n: rows.length })}
                   </span>
                 </button>
 
@@ -273,7 +268,7 @@ export function DeviceStatusCard() {
                         />
                         <span className="font-medium text-foreground">{eventLabel(row.event)}</span>
                         <span className="text-muted-foreground">
-                          · {sourceLabel[row.source] ?? row.source}
+                          · {sourceLabel[row.source] ? t(sourceLabel[row.source]) : row.source}
                         </span>
                         <span className="ml-auto text-muted-foreground shrink-0">
                           {formatRelative(row.dateTime)}{" "}

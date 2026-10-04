@@ -25,46 +25,47 @@ import {
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
 import { trpc } from "@/lib/trpc/client";
+import { t } from "@/i18n";
 
 let FARM_ID: string;
 
 const navItems = [
   {
-    label: "Tableau de bord",
-    subtitle: "Lectures en direct et actions",
+    labelKey: "nav.dashboard",
+    subtitleKey: "nav.subtitle.dashboard",
     icon: LayoutDashboard,
     href: "/",
-    active: true,
   },
   {
-    label: "Statistiques",
-    subtitle: "Graphiques et historique",
+    labelKey: "nav.statistics",
+    subtitleKey: "nav.subtitle.statistics",
     icon: BarChart2,
     href: "/statistics",
   },
   {
-    label: "Données",
-    subtitle: "Champs, microcontrôleurs, capteurs...",
+    labelKey: "nav.data",
+    subtitleKey: "nav.subtitle.data",
     icon: Database,
     href: "/data",
   },
   {
-    label: "Programmes",
-    subtitle: "Règles et configurations d'irrigation",
+    labelKey: "nav.schedules",
+    subtitleKey: "nav.subtitle.schedules",
     icon: CalendarClock,
     href: "/schedules",
   },
   {
-    label: "Paramètres",
-    subtitle: "Paramètres de la ferme et du système",
+    labelKey: "nav.parameters",
+    subtitleKey: "nav.subtitle.parameters",
     icon: SlidersHorizontal,
     href: "/parameters",
   },
   {
-    label: "Utilisateurs",
-    subtitle: "Gestion des utilisateurs du système",
+    labelKey: "nav.users",
+    subtitleKey: "nav.subtitle.users",
     icon: Users,
     href: "/users",
+    adminOnly: true,
   },
 ];
 
@@ -114,9 +115,8 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
             <SidebarMenu>
               {navItems.map(
                 (item) =>
-                  (item.label !== "Utilisateurs" ||
-                    session?.user?.role === "admin") && (
-                    <SidebarMenuItem key={item.label}>
+                  (!item.adminOnly || session?.user?.role === "admin") && (
+                    <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         isActive={pathname === item.href}
                         className={`
@@ -141,10 +141,10 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
                                   : "text-[#3A5A44]"
                               }`}
                             >
-                              {item.label}
+                              {t(item.labelKey)}
                             </span>
                             <span className="text-[11px] text-muted-foreground font-normal">
-                              {item.subtitle}
+                              {t(item.subtitleKey)}
                             </span>
                           </div>
                         </a>
@@ -179,7 +179,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
         <button
           onClick={handleLogout}
           className="absolute right-2 text-muted-foreground  hover:text-[#D95F5F] transition-colors p-1 rounded"
-          title="Se déconnecter"
+          title={t("nav.logout")}
         >
           <LogOut className="h-4 w-4" />
         </button>

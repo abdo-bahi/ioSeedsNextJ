@@ -6,6 +6,7 @@ import { signIn } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input }  from "@/components/ui/input"
 import { Label }  from "@/components/ui/label"
+import { t } from "@/i18n"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,15 +19,14 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    console.log('email : ' , email, '\npassword : ' , password);
-    
+
     const result = await signIn.email({
       email,
       password,
       callbackURL: "/",
       fetchOptions: {
         onError: (ctx) => {
-          setError(ctx.error.message ?? "Email ou mot de passe incorrect.")
+          setError(ctx.error.message ?? t("auth.login.error.invalid"))
           setLoading(false)
         },
         onSuccess: () => {
@@ -57,7 +57,7 @@ export default function LoginPage() {
           <div className="text-center">
             <h1 className="text-[22px] font-bold text-foreground">IOSeeds</h1>
             <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground uppercase">
-              Smart Irrigation
+              {t("auth.login.tagline")}
             </p>
           </div>
         </div>
@@ -65,17 +65,17 @@ export default function LoginPage() {
         {/* Card */}
         <div className="w-full bg-card rounded-2xl border border-border shadow-sm p-6">
           <h2 className="text-[16px] font-semibold text-foreground mb-5">
-            Connexion
+            {t("auth.login.title")}
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-muted-foreground">
-                Adresse e-mail
+                {t("auth.login.email")}
               </Label>
               <Input
                 type="email"
-                placeholder="abderrahmane@ioseeds.dz"
+                placeholder={t("auth.login.emailPlaceholder")}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-muted-foreground">
-                Mot de passe
+                {t("auth.login.password")}
               </Label>
               <Input
                 type="password"
@@ -108,7 +108,7 @@ export default function LoginPage() {
               disabled={loading}
               className="bg-primary hover:bg-primary/90 text-white h-11 text-[14px] font-medium mt-1 rounded-xl"
             >
-              {loading ? "Connexion..." : "Se connecter"}
+              {loading ? t("auth.login.loading") : t("auth.login.submit")}
             </Button>
           </form>
         </div>

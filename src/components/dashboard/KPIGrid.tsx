@@ -14,6 +14,7 @@ import { useFieldStore } from "@/store/field-store";
 import { trpc } from "@/lib/trpc/client";
 import { useSSE } from "@/lib/use-sse";
 import { useState } from "react";
+import { t, formatRelative } from "@/i18n";
 
 // ── Icon + color maps ─────────────────────────────────────────────
 const sensorIconMap: Record<string, LucideIcon> = {
@@ -22,14 +23,6 @@ const sensorIconMap: Record<string, LucideIcon> = {
   humidity: Waves,
   flow_rate: TriangleAlert,
 };
-
-function formatRelative(date: Date | string | null): string {
-  if (!date) return "Aucune donnée";
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 60) return `il y a ${diff}s`;
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
-  return `il y a ${Math.floor(diff / 3600)}h`;
-}
 
 function KPICardSkeleton() {
   return (
@@ -123,17 +116,17 @@ export function KPIGrid() {
           <KPICardSkeleton />
         ) : mcusError ? (
           <KPICard
-            title="MCUs Actifs"
+            title={t("dashboard.kpi.activeMcus")}
             value="—"
-            subtitle="Erreur de chargement"
+            subtitle={t("dashboard.kpi.loadError")}
             icon={Wifi}
             color="red"
           />
         ) : (
           <KPICard
-            title="MCUs Actifs"
+            title={t("dashboard.kpi.activeMcus")}
             value={`${nbActiveMcu} / ${nbMcu}`} 
-            subtitle="dans cette parcelle"
+            subtitle={t("dashboard.kpi.inField")}
             icon={Wifi}
             color={
               nbActiveMcu === 0 ? "red" : nbActiveMcu < nbMcu ? "amber" : "blue"
@@ -153,7 +146,7 @@ export function KPIGrid() {
         {sensorsError && (
           <div className="col-span-3 text-sm text-[#D95F5F] flex items-center gap-2">
             <TriangleAlert className="h-4 w-4" />
-            Erreur lors du chargement des capteurs.
+            {t("dashboard.kpi.sensorsError")}
           </div>
         )}
 

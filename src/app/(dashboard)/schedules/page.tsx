@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, User, CalendarClock } from "lucide-react";
+import { t } from "@/i18n";
 
 let FARM_ID:string;
 
@@ -50,8 +51,8 @@ function formatDate(date: Date | string | null): string {
 function formatRelative(date: Date | string | null): string {
   if (!date) return "—";
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
-  if (diff < 3600) return `Dernier: ${formatTime(date)}`;
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
+  if (diff < 3600) return t("schedules.lastRun", { time: formatTime(date) });
+  if (diff < 86400) return t("common.ago.hours", { n: Math.floor(diff / 3600) });
   return formatDate(date);
 }
 
@@ -163,10 +164,10 @@ function ScheduleModal({
           {/* Name */}
           <div className="flex flex-col gap-1.5">
             <Label className="text-[12px] text-muted-foreground">
-              Nom du programme
+              {t("schedules.form.name")}
             </Label>
             <Input
-              placeholder="Matin — Tomates"
+              placeholder={t("schedules.form.namePlaceholder")}
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               className="border-border focus-visible:ring-primary"
@@ -176,10 +177,10 @@ function ScheduleModal({
           {/* Actuator — select MCU first then actuator */}
           <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Actionneur
+              {t("schedules.form.actuator")}
             </p>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">MCU parent</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("schedules.form.mcu")}</Label>
               <select
                 value={selectedMcuId}
                 onChange={(e) => {
@@ -188,7 +189,7 @@ function ScheduleModal({
                 }}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Tous les actionneurs —</option>
+                <option value="">{t("schedules.form.allActuators")}</option>
                 {mcus?.map((m: any) => (
                   <option key={m.id} value={m.id}>
                     {m.name ?? m.id}
@@ -197,13 +198,13 @@ function ScheduleModal({
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Actionneur</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("schedules.form.actuator")}</Label>
               <select
                 value={form.fk_actuator}
                 onChange={(e) => set("fk_actuator", e.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">— Sélectionner —</option>
+                <option value="">{t("common.select")}</option>
                 {actuators?.map((a: any) => (
                   (! selectedMcuId || (selectedMcuId && a.fk_mcu === selectedMcuId)) ?
                     <option key={a.id} value={a.id}>
@@ -221,7 +222,7 @@ function ScheduleModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label className="text-[12px] text-muted-foreground">
-                Heure de départ
+                {t("schedules.form.startTime")}
               </Label>
               <Input
                 type="time"
@@ -231,7 +232,7 @@ function ScheduleModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Durée (min)</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("schedules.form.duration")}</Label>
               <Input
                 type="number"
                 placeholder="45"
@@ -245,7 +246,7 @@ function ScheduleModal({
           {/* Schedule type — weekdays or interval */}
           <div className="flex flex-col gap-3 p-3 rounded-lg border border-border bg-canvas">
             <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-              Type de répétition
+              {t("schedules.form.repeatType")}
             </p>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -256,7 +257,7 @@ function ScheduleModal({
                   onChange={() => set("scheduleType", "weekdays")}
                   className="accent-[#4CAF7D]"
                 />
-                <span className="text-[13px]">Jours de la semaine</span>
+                <span className="text-[13px]">{t("schedules.form.weekly")}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -266,7 +267,7 @@ function ScheduleModal({
                   onChange={() => set("scheduleType", "interval")}
                   className="accent-[#4CAF7D]"
                 />
-                <span className="text-[13px]">Tous les N jours</span>
+                <span className="text-[13px]">{t("schedules.form.everyNDays")}</span>
               </label>
             </div>
 
@@ -292,7 +293,7 @@ function ScheduleModal({
             {/* Interval picker */}
             {form.scheduleType === "interval" && (
               <div className="flex items-center gap-3">
-                <span className="text-[13px] text-muted-foreground">Tous les</span>
+                <span className="text-[13px] text-muted-foreground">{t("schedules.form.everyNDaysEvery")}</span>
                 <Input
                   type="number"
                   min={1}
@@ -300,7 +301,7 @@ function ScheduleModal({
                   onChange={(e) => set("repeatEveryDays", e.target.value)}
                   className="w-20 border-border focus-visible:ring-primary"
                 />
-                <span className="text-[13px] text-muted-foreground">jours</span>
+                <span className="text-[13px] text-muted-foreground">{t("schedules.form.days")}</span>
               </div>
             )}
           </div>
@@ -308,7 +309,7 @@ function ScheduleModal({
           {/* Date range */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Date début</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("schedules.form.startDate")}</Label>
               <Input
                 type="date"
                 value={form.startDate}
@@ -317,7 +318,7 @@ function ScheduleModal({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[12px] text-muted-foreground">Date fin</Label>
+              <Label className="text-[12px] text-muted-foreground">{t("schedules.form.endDate")}</Label>
               <Input
                 type="date"
                 value={form.endDate}
@@ -331,10 +332,10 @@ function ScheduleModal({
           <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-canvas">
             <div>
               <p className="text-[13px] font-medium text-foreground">
-                Arrêt par seuil
+                {t("schedules.form.stopByThreshold")}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Stopper si l&apos;humidité est atteinte
+                {t("schedules.form.stopByThresholdHint")}
               </p>
             </div>
             <button
@@ -360,14 +361,14 @@ function ScheduleModal({
             onClick={onClose}
             className="border-border text-muted-foreground"
           >
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={() => onSubmit(form)}
             disabled={isLoading || !form.name || !form.fk_actuator}
             className="bg-primary hover:bg-primary/90 text-white"
           >
-            {isLoading ? "..." : "Enregistrer"}
+            {isLoading ? "..." : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -390,12 +391,12 @@ function ScheduleCard({
   const isWeekdays = schedule.weekDays?.length > 0;
 
   const triggerLabel = schedule.toggleAtThresholds
-    ? "seuil d'humidité"
+    ? t("schedules.threshold")
     : null;
 
   const repeatLabel = isWeekdays
     ? null
-    : `tous les ${schedule.repeatEveryDays} jours`;
+    : t("schedules.daysLabel", { n: schedule.repeatEveryDays });
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 flex gap-5">
@@ -405,7 +406,7 @@ function ScheduleCard({
           {formatTime(schedule.startAt)}
         </p>
         <p className="text-[12px] text-muted-foreground mt-1">
-          {schedule.duration} min
+          {t("schedules.duration", { n: schedule.duration })}
         </p>
       </div>
 
@@ -423,7 +424,7 @@ function ScheduleCard({
                 : "bg-muted text-muted-foreground"
             }`}
           >
-            {schedule.isActive ? "• Active" : "• Pause"}
+            {schedule.isActive ? `• ${t("schedules.status.active")}` : `• ${t("schedules.status.paused")}`}
           </Badge>
           <Badge
             className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
@@ -432,7 +433,7 @@ function ScheduleCard({
                 : "bg-[#FEF3DC] text-[#B8780E]"
             }`}
           >
-            ⚡ {isWeekdays ? "Schedule" : "Manuel"}
+            ⚡ {isWeekdays ? t("schedules.badge") : t("schedules.manual")}
           </Badge>
         </div>
 
@@ -442,7 +443,7 @@ function ScheduleCard({
           {triggerLabel && (
             <>
               {" "}
-              · <span className="text-[#E89B2D]">▲ {triggerLabel}</span>
+              · <span className="text-[#E89B2D]">{t("schedules.trigger", { label: triggerLabel })}</span>
             </>
           )}
           {repeatLabel && <> · {repeatLabel}</>}
@@ -471,7 +472,7 @@ function ScheduleCard({
         {/* Interval display */}
         {!isWeekdays && schedule.repeatEveryDays > 0 && (
           <p className="text-[12px] text-muted-foreground">
-            🔁 Répète tous les {schedule.repeatEveryDays} jours
+            {t("schedules.repeatEvery", { n: schedule.repeatEveryDays })}
           </p>
         )}
       </div>
@@ -631,7 +632,7 @@ export default function SchedulesPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Parcelle courante
+            {t("schedules.currentField")}
           </button>
           <button
             onClick={() => setShowAll(true)}
@@ -641,7 +642,7 @@ export default function SchedulesPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Toutes les parcelles
+            {t("schedules.allFields")}
           </button>
         </div>
         <Button
@@ -649,7 +650,7 @@ export default function SchedulesPage() {
           className="bg-primary hover:bg-primary/90 text-white gap-1.5"
         >
           <Plus className="h-4 w-4" />
-          Nouveau programme
+          {t("schedules.add")}
         </Button>
       </div>
 
@@ -657,22 +658,23 @@ export default function SchedulesPage() {
       {!isLoading && (
         <div className="p-4 rounded-xl border border-border bg-card">
           <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase mb-3">
-            Configuration active —{" "}
-            {showAll ? "Toutes les parcelles" : selectedField?.name ?? "—"}
+            {t("schedules.config", {
+              field: showAll ? t("schedules.allFields") : selectedField?.name ?? "—",
+            })}
           </p>
           <div className="flex gap-4">
             <KPICard
-              label="Programmes actifs"
+              label={t("schedules.stats.active")}
               value={activeCount}
               color="border-l-[#4CAF7D]"
             />
             <KPICard
-              label="Programmes en pause"
+              label={t("schedules.stats.paused")}
               value={pausedCount}
               color="border-l-[#E89B2D]"
             />
             <KPICard
-              label="Actionneurs couverts"
+              label={t("schedules.stats.covered")}
               value={actuatorCount}
               color="border-l-[#6BA3D6]"
             />
@@ -693,9 +695,9 @@ export default function SchedulesPage() {
         {!isLoading && schedules?.length === 0 && (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-[13px] text-muted-foreground">
             <CalendarClock className="h-8 w-8 mx-auto mb-3 text-[#D6E8DC]" />
-            Aucun programme pour cette parcelle.
+            {t("schedules.empty")}
             <br />
-            Cliquez sur &quot;+ Nouveau programme&quot; pour commencer.
+            {t("schedules.emptyHint")}
           </div>
         )}
 
@@ -716,7 +718,7 @@ export default function SchedulesPage() {
         onClose={() => setAddOpen(false)}
         onSubmit={handleCreate}
         isLoading={create.isPending}
-        title="Nouveau programme"
+        title={t("schedules.form.titleAdd")}
         irrigationFieldId={selectedField?.id ?? ""}
         farmId={FARM_ID}
       />
@@ -728,7 +730,7 @@ export default function SchedulesPage() {
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
           isLoading={update.isPending}
-          title={`Modifier — ${editSchedule.name}`}
+          title={t("schedules.form.titleEdit", { name: editSchedule.name })}
           irrigationFieldId={selectedField?.id ?? ""}
           farmId={FARM_ID}
           initial={{
@@ -756,14 +758,14 @@ export default function SchedulesPage() {
       <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Supprimer ce programme ?</DialogTitle>
+            <DialogTitle>{t("schedules.delete.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-[13px] text-muted-foreground">
-            Le programme sera définitivement supprimé.
+            {t("schedules.delete.message")}
           </p>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() =>
@@ -772,7 +774,7 @@ export default function SchedulesPage() {
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >
-              {remove.isPending ? "..." : "Supprimer"}
+              {remove.isPending ? "..." : t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

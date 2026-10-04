@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ListChecks, LucideIcon } from "lucide-react"
+import { t } from "@/i18n"
 
 type KPICardProps = {
   title:    string
@@ -69,7 +70,7 @@ export function KPICard({ title, value, subtitle, icon: Icon, color, onDetails }
               className="h-6 px-2 text-[10px] font-semibold text-primary hover:text-[#2D8653] hover:bg-[#E6F7ED] rounded-md"
             >
               <ListChecks className="h-3 w-3 mr-1" />
-              Détails
+              {t("common.details")}
             </Button>
           )}
         </div>
