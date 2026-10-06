@@ -128,14 +128,7 @@ export function DeviceStatusCard() {
     return [...map.entries()];
   }, [log]);
 
-  // Open the most recent group by default (once)
-  const firstKey = groups[0]?.[0];
-  useEffect(() => {
-    if (!initialized.current && firstKey) {
-      initialized.current = true;
-      setExpanded(new Set([firstKey]));
-    }
-  }, [firstKey]);
+
 
   const toggleHero = (key: string) =>
     setExpanded((prev) => {
