@@ -6,6 +6,7 @@ import { notify } from "@/lib/notifications";
 import { TRPCError } from "@trpc/server";
 import { syncActuatorsToMCU } from "./device-sync";
 import { macAddressZ } from "./sensor.router";
+import { audit } from "../../lib/audit";
 
 export const actuatorRouter = router({
   // ── Get all for a field (dashboard quick actions) ─────────────
@@ -199,8 +200,22 @@ export const actuatorRouter = router({
         fk_actuatorType: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const created = await prisma.actuator.create({ data: input });
+
+      await audit({
+        tableName: "Actuator",
+        rowId: created.id,
+        action: "INSERT",
+        newValue: {
+          name: created.name,
+          isActive: created.isActive,
+          fk_mcu: created.fk_mcu ?? null,
+          actuatorType: created.fk_actuatorType ?? null,
+          targetState: created.targetState,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       // Publish the refreshed actuator list to the MCU (retained)
       if (created.fk_mcu) await syncActuatorsToMCU(created.fk_mcu);
@@ -224,15 +239,44 @@ export const actuatorRouter = router({
         fk_actuatorType: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
 
       const prev = await prisma.actuator.findUnique({
         where: { id },
-        select: { fk_mcu: true },
+        select: {
+          fk_mcu: true,
+          name: true,
+          macAddress: true,
+          latitude: true,
+          longitude: true,
+          isActive: true,
+          targetState: true,
+          toggleTimeLimit: true,
+          fk_actuatorType: true,
+        },
       });
 
       const updated = await prisma.actuator.update({ where: { id }, data });
+
+      await audit({
+        tableName: "Actuator",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: prev ?? null,
+        newValue: {
+          name: updated.name,
+          macAddress: updated.macAddress ?? null,
+          latitude: updated.latitude ?? null,
+          longitude: updated.longitude ?? null,
+          isActive: updated.isActive,
+          targetState: updated.targetState,
+          toggleTimeLimit: updated.toggleTimeLimit ?? null,
+          fk_mcu: updated.fk_mcu ?? null,
+          actuatorType: updated.fk_actuatorType ?? null,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       // Refresh both the old MCU (device moved away) and the new one
       const mcus = new Set<string>();
@@ -246,13 +290,28 @@ export const actuatorRouter = router({
   // ── Delete ────────────────────────────────────────────────────
   delete: publicProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const prev = await prisma.actuator.findUnique({
         where: { id: input.id },
-        select: { fk_mcu: true },
+        select: {
+          fk_mcu: true,
+          name: true,
+          macAddress: true,
+          isActive: true,
+          targetState: true,
+          fk_actuatorType: true,
+        },
       });
 
       await prisma.actuator.delete({ where: { id: input.id } });
+
+      await audit({
+        tableName: "Actuator",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: prev ?? null,
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       if (prev?.fk_mcu) await syncActuatorsToMCU(prev.fk_mcu);
     }),

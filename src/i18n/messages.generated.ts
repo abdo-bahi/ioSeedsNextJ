@@ -64,6 +64,7 @@ const fr = {
     "schedules": "Programmes",
     "parameters": "Paramètres",
     "users": "Utilisateurs",
+    "audit": "Journal d'audit",
     "logout": "Se déconnecter",
     "themeToggle": "Basculer le thème",
     "subtitle": {
@@ -73,6 +74,7 @@ const fr = {
       "schedules": "Règles et configurations d'irrigation",
       "parameters": "Paramètres de la ferme et du système",
       "users": "Gestion des utilisateurs du système",
+      "audit": "Actions des utilisateurs (30 jours)",
     },
   },
   "auth": {
@@ -725,6 +727,37 @@ const fr = {
       "hours": "{{n}} h",
       "minutes": "{{n}} min",
       "zero": "0 min",
+    },
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "subtitle": "Actions des 30 derniers jours",
+    "allTables": "— Toutes les tables —",
+    "allActions": "— Toutes les actions —",
+    "column": {
+      "date": "DATE",
+      "user": "UTILISATEUR",
+      "action": "ACTION",
+      "table": "TABLE",
+      "id": "ID",
+      "changes": "MODIFICATIONS",
+    },
+    "action": {
+      "insert": "Création",
+      "update": "Modification",
+      "delete": "Suppression",
+    },
+    "empty": "Aucune entrée dans le journal.",
+    "noChange": "Aucun changement",
+    "userUnknown": "—",
+    "tables": {
+      "User": "Utilisateur",
+      "MCU": "Microcontrôleur",
+      "Sensor": "Capteur",
+      "Actuator": "Actionneur",
+      "Schedule": "Programme",
+      "Threshold": "Seuil",
+      "RoleMember": "Rôle",
     },
   },
   "errors": {

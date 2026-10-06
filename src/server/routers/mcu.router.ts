@@ -5,6 +5,7 @@ import { MCUStatus, Prisma } from "../../../generated/prisma/client";
 import crypto from "crypto";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { TRPCError } from "@trpc/server";
+import { audit } from "../../lib/audit";
 
 const MCUStatusZ = z.enum(["ONLINE", "OFFLINE", "SLEEPING", "ERROR"]);
 
@@ -62,7 +63,7 @@ export const mcuRouter = router({
         isActive: z.boolean().default(true),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       // Auto-generate a secure apiKey — never ask user to provide it
       const apiKey = crypto.randomBytes(32).toString("hex");
       const apiKeyHash = crypto
@@ -76,6 +77,20 @@ export const mcuRouter = router({
           status: MCUStatus.OFFLINE, // ← always starts OFFLINE updated on connection
           apiKeyHash,
         },
+      });
+
+      await audit({
+        tableName: "MCU",
+        rowId: mcu.id,
+        action: "INSERT",
+        newValue: {
+          name: mcu.name,
+          sleepTime: mcu.sleepingTime,
+          macAddress: input.macAddress ?? null,
+          autoControlledIrrigation: input.autoControlledIrrigation,
+          isActive: input.isActive,
+        },
+        fk_user: ctx.session?.user.id ?? null,
       });
 
       // Return apiKey in plaintext ONCE — never stored, never retrievable again
@@ -96,9 +111,9 @@ export const mcuRouter = router({
         fk_irrigationField: z.string(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input; 
-       const mcu = await prisma.mCU.findUnique({
+       const prev = await prisma.mCU.findUnique({
           where: { id: id },
               include: {
                 irrigationField: {
@@ -107,11 +122,11 @@ export const mcuRouter = router({
               },
         })
   
-        if (!mcu) throw new TRPCError({ code: "NOT_FOUND" });
+        if (!prev) throw new TRPCError({ code: "NOT_FOUND" });
   
-        const farmId = mcu.irrigationField.FarmingUnit!.id;
-        const fieldId = mcu.fk_irrigationField;
-        const mcuId = mcu.id;
+        const farmId = prev.irrigationField.FarmingUnit!.id;
+        const fieldId = prev.fk_irrigationField;
+        const mcuId = prev.id;
 
 
         // ✅ Publish via worker HTTP (retained → MCU gets the latest config on boot)
@@ -125,19 +140,63 @@ export const mcuRouter = router({
           { retain: true }
         )  
       
-      return         prisma.mCU.update({
+      const updated = await prisma.mCU.update({
           where: { id },
           data,
         })
+
+      await audit({
+        tableName: "MCU",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: {
+          name: prev.name,
+          sleepTime: prev.sleepingTime,
+          macAddress: prev.macAddress ?? null,
+          autoControlledIrrigation: prev.autoControlledIrrigation,
+          isActive: prev.isActive,
+        },
+        newValue: {
+          name: updated.name,
+          sleepTime: updated.sleepingTime,
+          macAddress: updated.macAddress ?? null,
+          autoControlledIrrigation: updated.autoControlledIrrigation,
+          isActive: updated.isActive,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      })
+
+      return updated
     }),
 
   // ── Delete ──────────────────────────────────────────────────────
   delete: publicProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      return prisma.mCU.delete({
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.mCU.findUnique({
+        where: { id: input.id },
+        select: {
+          name: true,
+          sleepingTime: true,
+          macAddress: true,
+          autoControlledIrrigation: true,
+          isActive: true,
+        },
+      });
+
+      const deleted = await prisma.mCU.delete({
         where: { id: input.id },
       });
+
+      await audit({
+        tableName: "MCU",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: old ?? null,
+        fk_user: ctx.session?.user.id ?? null,
+      });
+
+      return deleted;
     }),
 
   // ── Update status only (called by MQTT worker on connect/disconnect) ──
@@ -198,7 +257,7 @@ return prisma.mCU.update({
 
   regenerateApiKey: protectedProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const rawApiKey = crypto.randomBytes(32).toString("hex");
       const apiKeyHash = crypto
         .createHash("sha256")
@@ -208,6 +267,15 @@ return prisma.mCU.update({
       await prisma.mCU.update({
         where: { id: input.id },
         data: { apiKeyHash },
+      });
+
+      await audit({
+        tableName: "MCU",
+        rowId: input.id,
+        action: "UPDATE",
+        oldValue: { apiKey: "••••••••" },
+        newValue: { apiKeyRegenerated: true },
+        fk_user: ctx.user.id,
       });
 
       return { apiKey: rawApiKey };

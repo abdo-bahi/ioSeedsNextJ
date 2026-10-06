@@ -21,6 +21,7 @@ import {
   Database,
   CalendarClock,
   SlidersHorizontal,
+  ScrollText,
 } from "lucide-react";
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
@@ -65,6 +66,13 @@ const navItems = [
     subtitleKey: "nav.subtitle.users",
     icon: Users,
     href: "/users",
+    adminOnly: true,
+  },
+  {
+    labelKey: "nav.audit",
+    subtitleKey: "nav.subtitle.audit",
+    icon: ScrollText,
+    href: "/audit",
     adminOnly: true,
   },
 ];

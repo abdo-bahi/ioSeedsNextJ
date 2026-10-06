@@ -3,6 +3,7 @@ import { z } from "zod";
 import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
+import { audit } from "../../lib/audit";
 
 const DaysZ = z.enum([
   "MONDAY",
@@ -162,7 +163,7 @@ export const scheduleRouter = router({
         isActive: z.boolean().default(true),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       // Parse time string "06:00" → today's date with that time
       const startAt = input.startAt
         ? new Date(`1970-01-01T${input.startAt}:00.000Z`)
@@ -186,6 +187,21 @@ export const scheduleRouter = router({
             select: { fk_mcu: true },
           },
         },
+      });
+
+      await audit({
+        tableName: "Schedule",
+        rowId: schedule.id,
+        action: "INSERT",
+        newValue: {
+          name: schedule.name,
+          fk_actuator: schedule.fk_actuator,
+          duration: schedule.duration,
+          startAt: input.startAt ?? null,
+          repeatEveryDays: schedule.repeatEveryDays,
+          isActive: schedule.isActive,
+        },
+        fk_user: ctx.user.id,
       });
 
       // Sync all schedules to MCU after create
@@ -213,8 +229,24 @@ export const scheduleRouter = router({
         isActive: z.boolean().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, startAt, startDate, endDate, ...rest } = input;
+
+      const old = await prisma.schedule.findUnique({
+        where: { id },
+        select: {
+          name: true,
+          duration: true,
+          startAt: true,
+          startDate: true,
+          endDate: true,
+          weekDays: true,
+          repeatEveryDays: true,
+          toggleAtThresholds: true,
+          isActive: true,
+          fk_actuator: true,
+        },
+      });
 
       const updated = await prisma.schedule.update({
         where: { id },
@@ -233,6 +265,26 @@ export const scheduleRouter = router({
         include: { actuator: { select: { fk_mcu: true } } },
       });
 
+      await audit({
+        tableName: "Schedule",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: old ?? null,
+        newValue: {
+          name: updated.name,
+          duration: updated.duration,
+          startAt: updated.startAt?.toISOString() ?? null,
+          startDate: updated.startDate?.toISOString() ?? null,
+          endDate: updated.endDate?.toISOString() ?? null,
+          weekDays: updated.weekDays,
+          repeatEveryDays: updated.repeatEveryDays,
+          toggleAtThresholds: updated.toggleAtThresholds,
+          isActive: updated.isActive,
+          fk_actuator: updated.fk_actuator,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      });
+
       // Sync after update
       if (updated.actuator.fk_mcu) {
         await syncSchedulesToMCU(updated.actuator.fk_mcu);
@@ -243,11 +295,25 @@ export const scheduleRouter = router({
 
   toggleActive: protectedProc
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.schedule.findUnique({
+        where: { id: input.id },
+        select: { isActive: true },
+      });
+
       const updated = await prisma.schedule.update({
         where: { id: input.id },
         data: { isActive: input.isActive },
         include: { actuator: { select: { fk_mcu: true } } },
+      });
+
+      await audit({
+        tableName: "Schedule",
+        rowId: input.id,
+        action: "UPDATE",
+        oldValue: { isActive: old?.isActive ?? null },
+        newValue: { isActive: input.isActive },
+        fk_user: ctx.user.id,
       });
 
       // Sync after toggle
@@ -260,7 +326,7 @@ export const scheduleRouter = router({
 
   delete: protectedProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       // Get MCU before deleting
       const schedule = await prisma.schedule.findUnique({
         where: { id: input.id },
@@ -268,6 +334,16 @@ export const scheduleRouter = router({
       });
 
       await prisma.schedule.delete({ where: { id: input.id } });
+
+      await audit({
+        tableName: "Schedule",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: schedule
+          ? { name: schedule.name, isActive: schedule.isActive, fk_actuator: schedule.fk_actuator }
+          : null,
+        fk_user: ctx.user.id,
+      });
 
       // Sync after delete — MCU gets updated list without deleted schedule
       if (schedule?.actuator.fk_mcu) {

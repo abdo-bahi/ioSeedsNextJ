@@ -22,3 +22,15 @@ export const protectedProc = t.procedure.use(({ ctx, next }) => {
       ctx: { ...ctx, user: ctx.session.user }
     })
   })
+
+export const adminProc = t.procedure.use(({ ctx, next }) => {
+    if (!ctx.session?.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" })
+    }
+    if (ctx.session.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN" })
+    }
+    return next({
+      ctx: { ...ctx, user: ctx.session.user }
+    })
+  })

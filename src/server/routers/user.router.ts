@@ -3,6 +3,7 @@ import { prisma } from "../../../prisma/lib/prisma";
 import type { Prisma } from "../../../generated/prisma/client";
 import { protectedProc, publicProc, router } from "../trpc";
 import { auth } from "../../lib/auth";
+import { audit } from "../../lib/audit";
 import { headers } from "next/headers";
 
 
@@ -85,7 +86,7 @@ export const userRouter = router({
         fk_farm: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { email, password, name, ...rest } = input;
 
       // Step 1 — create via Better Auth (handles password hashing)
@@ -110,6 +111,19 @@ export const userRouter = router({
         },
       });
 
+      await audit({
+        tableName: "User",
+        rowId: user.id,
+        action: "INSERT",
+        newValue: {
+          name: user.name,
+          email: user.email,
+          isActive: user.isActive,
+          address: user.address ?? null,
+        },
+        fk_user: ctx.user.id,
+      });
+
       return user;
     }),
 
@@ -127,10 +141,14 @@ export const userRouter = router({
         password: z.string().min(6).optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, password, email, isActive, ...rest } = input;
       const reqHeaders = await headers()
 
+      const old = await prisma.user.findUnique({
+        where: { id },
+        select: { name: true, email: true, isActive: true, address: true },
+      });
 
       const data: any = { ...rest };
 
@@ -165,29 +183,85 @@ export const userRouter = router({
       }
 
       // Update other fields directly in Prisma
-      return prisma.user.update({
+      const updated = await prisma.user.update({
         where: { id },
         data: { isActive, ...rest },
       });
+
+      await audit({
+        tableName: "User",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: {
+          name: old?.name ?? null,
+          email: old?.email ?? null,
+          isActive: old?.isActive ?? null,
+          address: old?.address ?? null,
+        },
+        newValue: {
+          name: updated.name,
+          email: updated.email,
+          isActive: updated.isActive,
+          address: updated.address ?? null,
+        },
+        fk_user: ctx.user.id,
+      });
+
+      return updated;
     }),
 
   // ── Toggle isActive ───────────────────────────────────────────
   toggleActive: protectedProc
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
-    .mutation(async ({ input }) => {
-      return prisma.user.update({
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.user.findUnique({
+        where: { id: input.id },
+        select: { isActive: true },
+      });
+
+      const updated = await prisma.user.update({
         where: { id: input.id },
         data: { isActive: input.isActive },
       });
+
+      await audit({
+        tableName: "User",
+        rowId: input.id,
+        action: "UPDATE",
+        oldValue: { isActive: old?.isActive ?? null },
+        newValue: { isActive: input.isActive },
+        fk_user: ctx.user.id,
+      });
+
+      return updated;
     }),
 
   // ── Delete user ───────────────────────────────────────────────
   delete: protectedProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      return prisma.user.delete({
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.user.findUnique({
+        where: { id: input.id },
+        select: { name: true, email: true, isActive: true },
+      });
+
+      const deleted = await prisma.user.delete({
         where: { id: input.id },
       });
+
+      await audit({
+        tableName: "User",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: {
+          name: old?.name ?? null,
+          email: old?.email ?? null,
+          isActive: old?.isActive ?? null,
+        },
+        fk_user: ctx.user.id,
+      });
+
+      return deleted;
     }),
 
   // ── Assign role ───────────────────────────────────────────────
@@ -199,8 +273,19 @@ export const userRouter = router({
         fk_irrigationField: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      return prisma.roleMember.upsert({
+    .mutation(async ({ input, ctx }) => {
+      const existing = await prisma.roleMember.findUnique({
+        where: {
+          fk_user_fk_role_fk_irrigationField: {
+            fk_user: input.fk_user,
+            fk_role: input.fk_role,
+            fk_irrigationField: input.fk_irrigationField ?? "",
+          },
+        },
+        select: { fk_role: true, fk_irrigationField: true },
+      });
+
+      const member = await prisma.roleMember.upsert({
         where: {
           fk_user_fk_role_fk_irrigationField: {
             fk_user: input.fk_user,
@@ -211,14 +296,49 @@ export const userRouter = router({
         update: {},
         create: input,
       });
+
+      await audit({
+        tableName: "RoleMember",
+        rowId: member.id,
+        action: existing ? "UPDATE" : "INSERT",
+        oldValue: existing
+          ? {
+              fk_role: existing.fk_role,
+              fk_irrigationField: existing.fk_irrigationField ?? null,
+            }
+          : null,
+        newValue: {
+          fk_user: input.fk_user,
+          fk_role: input.fk_role,
+          fk_irrigationField: input.fk_irrigationField ?? null,
+        },
+        fk_user: ctx.user.id,
+      });
+
+      return member;
     }),
 
   // ── Remove role ───────────────────────────────────────────────
   removeRole: protectedProc
     .input(z.object({ roleMemberId: z.string() }))
-    .mutation(async ({ input }) => {
-      return prisma.roleMember.delete({
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.roleMember.findUnique({
+        where: { id: input.roleMemberId },
+        select: { fk_user: true, fk_role: true, fk_irrigationField: true },
+      });
+
+      const deleted = await prisma.roleMember.delete({
         where: { id: input.roleMemberId },
       });
+
+      await audit({
+        tableName: "RoleMember",
+        rowId: input.roleMemberId,
+        action: "DELETE",
+        oldValue: old ?? null,
+        fk_user: ctx.user.id,
+      });
+
+      return deleted;
     }),
 });

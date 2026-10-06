@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { protectedProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
+import { audit } from "../../lib/audit"
 
 export const thresholdRouter = router({
 
@@ -58,8 +59,24 @@ export const thresholdRouter = router({
       minValueAction: z.boolean().optional(),
       maxValueAction: z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const threshold = await prisma.threshold.create({ data: input })
+
+      await audit({
+        tableName: "Threshold",
+        rowId: threshold.id,
+        action: "INSERT",
+        newValue: {
+          name: threshold.name ?? null,
+          priority: threshold.priority,
+          fk_sensor: threshold.fk_sensor,
+          fk_actuator: threshold.fk_actuator,
+          minValue: threshold.minValue ?? null,
+          maxValue: threshold.maxValue ?? null,
+          isActive: threshold.isActive,
+        },
+        fk_user: ctx.user.id,
+      })
 
       // Sync thresholds to MCU
       const actuator = await prisma.actuator.findUnique({
@@ -87,12 +104,47 @@ export const thresholdRouter = router({
       minValueAction: z.boolean().nullable().optional(),
       maxValueAction: z.boolean().nullable().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
+
+      const old = await prisma.threshold.findUnique({
+        where: { id },
+        select: {
+          name:            true,
+          priority:        true,
+          fk_sensor:       true,
+          fk_actuator:     true,
+          minValue:        true,
+          maxValue:        true,
+          minValueAction:  true,
+          maxValueAction:  true,
+          isActive:        true,
+        }
+      })
+
       const threshold = await prisma.threshold.update({
         where:   { id },
         data,
         include: { actuator: { select: { fk_mcu: true } } }
+      })
+
+      await audit({
+        tableName: "Threshold",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: old ?? null,
+        newValue: {
+          name:           threshold.name ?? null,
+          priority:       threshold.priority,
+          fk_sensor:      threshold.fk_sensor,
+          fk_actuator:    threshold.fk_actuator,
+          minValue:       threshold.minValue ?? null,
+          maxValue:       threshold.maxValue ?? null,
+          minValueAction: threshold.minValueAction ?? null,
+          maxValueAction: threshold.maxValueAction ?? null,
+          isActive:       threshold.isActive,
+        },
+        fk_user: ctx.user.id,
       })
 
       if (threshold.actuator.fk_mcu) {
@@ -105,13 +157,28 @@ export const thresholdRouter = router({
   // ── Delete ────────────────────────────────────────────────────
   delete: protectedProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const threshold = await prisma.threshold.findUnique({
         where:   { id: input.id },
         include: { actuator: { select: { fk_mcu: true } } }
       })
 
       await prisma.threshold.delete({ where: { id: input.id } })
+
+      await audit({
+        tableName: "Threshold",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: threshold
+          ? {
+              name:       threshold.name ?? null,
+              priority:   threshold.priority,
+              fk_sensor:  threshold.fk_sensor,
+              fk_actuator: threshold.fk_actuator,
+            }
+          : null,
+        fk_user: ctx.user.id,
+      })
 
       if (threshold?.actuator.fk_mcu) {
         await syncThresholdsToMCU(threshold.actuator.fk_mcu)
@@ -123,11 +190,25 @@ export const thresholdRouter = router({
   // ── Toggle active ─────────────────────────────────────────────
   toggleActive: protectedProc
     .input(z.object({ id: z.string(), isActive: z.boolean() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.threshold.findUnique({
+        where:   { id: input.id },
+        select:  { isActive: true }
+      })
+
       const threshold = await prisma.threshold.update({
         where:   { id: input.id },
         data:    { isActive: input.isActive },
         include: { actuator: { select: { fk_mcu: true } } }
+      })
+
+      await audit({
+        tableName: "Threshold",
+        rowId: input.id,
+        action: "UPDATE",
+        oldValue: { isActive: old?.isActive ?? null },
+        newValue: { isActive: input.isActive },
+        fk_user: ctx.user.id,
       })
 
       if (threshold.actuator.fk_mcu) {

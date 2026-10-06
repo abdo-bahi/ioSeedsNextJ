@@ -3,6 +3,7 @@ import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { syncSensorsToMCU } from "./device-sync";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
+import { audit } from "../../lib/audit";
 
 // Optional MAC address: validates format, normalizes to uppercase "AA:BB:CC:DD:EE:FF"
 export const macAddressZ = z
@@ -204,8 +205,22 @@ export const sensorRouter = router({
         fk_sensorType: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const created = await prisma.sensor.create({ data: input });
+
+      await audit({
+        tableName: "Sensor",
+        rowId: created.id,
+        action: "INSERT",
+        newValue: {
+          name: created.name,
+          isActive: created.isActive,
+          fk_mcu: created.fk_mcu ?? null,
+          sensorType: created.fk_sensorType ?? null,
+          unit: created.unit,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       // Publish the refreshed sensor list to the MCU (retained)
       if (created.fk_mcu) await syncSensorsToMCU(created.fk_mcu);
@@ -342,15 +357,42 @@ export const sensorRouter = router({
         fk_sensorType: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input;
 
       const prev = await prisma.sensor.findUnique({
         where: { id },
-        select: { fk_mcu: true },
+        select: {
+          fk_mcu: true,
+          name: true,
+          macAddress: true,
+          latitude: true,
+          longitude: true,
+          isActive: true,
+          unit: true,
+          fk_sensorType: true,
+        },
       });
 
       const updated = await prisma.sensor.update({ where: { id }, data });
+
+      await audit({
+        tableName: "Sensor",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: prev ?? null,
+        newValue: {
+          name: updated.name,
+          macAddress: updated.macAddress ?? null,
+          latitude: updated.latitude ?? null,
+          longitude: updated.longitude ?? null,
+          isActive: updated.isActive,
+          unit: updated.unit,
+          fk_mcu: updated.fk_mcu ?? null,
+          sensorType: updated.fk_sensorType ?? null,
+        },
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       // Refresh both the old MCU (device moved away) and the new one
       const mcus = new Set<string>();
@@ -364,13 +406,28 @@ export const sensorRouter = router({
   // ── Delete ────────────────────────────────────────────────────
   delete: publicProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const prev = await prisma.sensor.findUnique({
         where: { id: input.id },
-        select: { fk_mcu: true },
+        select: {
+          fk_mcu: true,
+          name: true,
+          macAddress: true,
+          isActive: true,
+          unit: true,
+          fk_sensorType: true,
+        },
       });
 
       await prisma.sensor.delete({ where: { id: input.id } });
+
+      await audit({
+        tableName: "Sensor",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: prev ?? null,
+        fk_user: ctx.session?.user.id ?? null,
+      });
 
       if (prev?.fk_mcu) await syncSensorsToMCU(prev.fk_mcu);
     }),
