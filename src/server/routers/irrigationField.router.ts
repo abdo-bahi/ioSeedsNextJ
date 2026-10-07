@@ -2,6 +2,7 @@
 import { z } from "zod"
 import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
+import { audit } from "../../lib/audit"
 
 export const irrigationFieldRouter = router({
   getAllByFarm: publicProc
@@ -74,8 +75,8 @@ export const irrigationFieldRouter = router({
       latitude:  z.number(),
       longitude: z.number(),
     }))
-    .mutation(async ({ input }) => {
-      return await prisma.irrigationField.create({
+    .mutation(async ({ input, ctx }) => {
+      const field = await prisma.irrigationField.create({
         data: {
           name:           input.name,
           crop:           input.crop,
@@ -86,6 +87,23 @@ export const irrigationFieldRouter = router({
           fk_FarmingUnit: input.farmId,
         }
       })
+
+      await audit({
+        tableName: "IrrigationField",
+        rowId: field.id,
+        action: "INSERT",
+        newValue: {
+          name:       field.name,
+          crop:       field.crop ?? null,
+          surface:    field.surface ?? null,
+          latitude:   field.latitude,
+          longitude:  field.longitude,
+          isActive:   field.isActive,
+        },
+        fk_user: ctx.user.id,
+      })
+
+      return field
     }),
 
   update: protectedProc
@@ -98,19 +116,63 @@ export const irrigationFieldRouter = router({
       longitude: z.number().optional(),
       isActive:  z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
-      return await prisma.irrigationField.update({
+
+      const old = await prisma.irrigationField.findUnique({
+        where: { id },
+        select: {
+          name: true, crop: true, surface: true,
+          latitude: true, longitude: true, isActive: true,
+        },
+      })
+
+      const field = await prisma.irrigationField.update({
         where: { id },
         data,
       })
+
+      await audit({
+        tableName: "IrrigationField",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: old ?? null,
+        newValue: {
+          name:       field.name,
+          crop:       field.crop ?? null,
+          surface:    field.surface ?? null,
+          latitude:   field.latitude,
+          longitude:  field.longitude,
+          isActive:   field.isActive,
+        },
+        fk_user: ctx.user.id,
+      })
+
+      return field
     }),
 
   delete: publicProc
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      return await prisma.irrigationField.delete({
+    .mutation(async ({ input, ctx }) => {
+      const old = await prisma.irrigationField.findUnique({
+        where: { id: input.id },
+        select: {
+          name: true, crop: true, surface: true, isActive: true,
+        },
+      })
+
+      const deleted = await prisma.irrigationField.delete({
         where: { id: input.id }
       })
+
+      await audit({
+        tableName: "IrrigationField",
+        rowId: input.id,
+        action: "DELETE",
+        oldValue: old ?? null,
+        fk_user: ctx.session?.user.id ?? null,
+      })
+
+      return deleted
     }),
 })

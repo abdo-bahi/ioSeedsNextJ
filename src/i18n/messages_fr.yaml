@@ -681,13 +681,15 @@ audit:
   noChange:     "Aucun changement"
   userUnknown:  "—"
   tables:
-    User:         "Utilisateur"
-    MCU:          "Microcontrôleur"
-    Sensor:       "Capteur"
-    Actuator:     "Actionneur"
-    Schedule:     "Programme"
-    Threshold:    "Seuil"
-    RoleMember:   "Rôle"
+    User:           "Utilisateur"
+    MCU:            "Microcontrôleur"
+    Sensor:         "Capteur"
+    Actuator:       "Actionneur"
+    Schedule:       "Programme"
+    Threshold:      "Seuil"
+    RoleMember:     "Rôle"
+    IrrigationField: "Parcelle"
+    FarmingUnit:    "Ferme"
 
 # ── Errors ────────────────────────────────────────────────────────
 errors:

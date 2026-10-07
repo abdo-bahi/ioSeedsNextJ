@@ -758,6 +758,8 @@ const fr = {
       "Schedule": "Programme",
       "Threshold": "Seuil",
       "RoleMember": "Rôle",
+      "IrrigationField": "Parcelle",
+      "FarmingUnit": "Ferme",
     },
   },
   "errors": {

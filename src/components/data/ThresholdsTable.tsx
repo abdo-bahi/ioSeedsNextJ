@@ -419,45 +419,45 @@ export function ThresholdsTable({
               </tr>
             ))}
 
-            {!isLoading && filtered?.map((t:any) => (
-              <tr key={t.id} className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors">
+            {!isLoading && filtered?.map((row: any) => (
+              <tr key={row.id} className="border-b border-[#F0F7F3] hover:bg-canvas transition-colors">
 
                 {/* Priority */}
                 <td className="px-4 py-3.5">
                   <span className="h-6 w-6 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
-                    {t.priority}
+                    {row.priority}
                   </span>
                 </td>
 
                 {/* Name */}
                 <td className="px-4 py-3.5 font-medium text-foreground">
-                  {t.name ?? "—"}
+                  {row.name ?? "—"}
                 </td>
 
                 {/* Sensor */}
                 <td className="px-4 py-3.5 text-muted-foreground">
-                  <div>{t.sensor.name}</div>
+                  <div>{row.sensor.name}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {t.sensor.fk_sensorType}
+                    {row.sensor.fk_sensorType}
                   </div>
                 </td>
 
                 {/* Actuator */}
                 <td className="px-4 py-3.5 text-muted-foreground">
-                  <div>{t.actuator.name}</div>
+                  <div>{row.actuator.name}</div>
                   <div className="text-[10px] text-muted-foreground">
-                    {t.actuator.actuatorType?.name}
+                    {row.actuator.actuatorType?.name}
                   </div>
                 </td>
 
                 {/* Min condition */}
                 <td className="px-4 py-3.5">
-                  {t.minValue !== null && t.minValue !== undefined ? (
+                  {row.minValue !== null && row.minValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-foreground">
-                        {t("data.thresholds.minValue", { n: t.minValue })}
+                        {t("data.thresholds.minValue", { n: row.minValue })}
                       </span>
-                      <ActionBadge action={t.minValueAction} />
+                      <ActionBadge action={row.minValueAction} />
                     </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
@@ -466,12 +466,12 @@ export function ThresholdsTable({
 
                 {/* Max condition */}
                 <td className="px-4 py-3.5">
-                  {t.maxValue !== null && t.maxValue !== undefined ? (
+                  {row.maxValue !== null && row.maxValue !== undefined ? (
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-mono text-foreground">
-                        {t("data.thresholds.maxValue", { n: t.maxValue })}
+                        {t("data.thresholds.maxValue", { n: row.maxValue })}
                       </span>
-                      <ActionBadge action={t.maxValueAction} />
+                      <ActionBadge action={row.maxValueAction} />
                     </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
@@ -482,16 +482,16 @@ export function ThresholdsTable({
                 <td className="px-4 py-3.5">
                   <button
                     onClick={() => toggleActive.mutate({
-                      id:       t.id,
-                      isActive: !t.isActive
+                      id:       row.id,
+                      isActive: !row.isActive
                     })}
                     className={`text-[11px] px-2 py-0.5 rounded-full font-medium transition-colors ${
-                      t.isActive
+                      row.isActive
                         ? "bg-[#E6F7ED] text-[#2D8653] hover:bg-[#FDEAEA] hover:text-[#B84040]"
                         : "bg-muted text-muted-foreground hover:bg-[#E6F7ED] hover:text-[#2D8653]"
                     }`}
                   >
-                    {t.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
+                    {row.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
                   </button>
                 </td>
 
@@ -499,13 +499,13 @@ export function ThresholdsTable({
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setEditTarget(t.id)}
+                      onClick={() => setEditTarget(row.id)}
                       className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                     <button
-                      onClick={() => setDeleteTarget(t.id)}
+                      onClick={() => setDeleteTarget(row.id)}
                       className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

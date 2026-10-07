@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
+import { audit } from "../../lib/audit"
 
 export const farmingUnitRouter = router({
 
@@ -64,11 +65,37 @@ export const farmingUnitRouter = router({
       fk_wilaya:   z.string().optional(),
       isActive:    z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
-      return prisma.farmingUnit.update({
+
+      const old = await prisma.farmingUnit.findUnique({
+        where: { id },
+        select: {
+          name: true, address: true, description: true,
+          fk_wilaya: true, isActive: true,
+        },
+      })
+
+      const farm = await prisma.farmingUnit.update({
         where: { id },
         data,
       })
+
+      await audit({
+        tableName: "FarmingUnit",
+        rowId: id,
+        action: "UPDATE",
+        oldValue: old ?? null,
+        newValue: {
+          name:        farm.name ?? null,
+          address:     farm.address ?? null,
+          description: farm.description ?? null,
+          fk_wilaya:   farm.fk_wilaya ?? null,
+          isActive:    farm.isActive,
+        },
+        fk_user: ctx.user.id,
+      })
+
+      return farm
     }),
 })

@@ -17,6 +17,8 @@ const ACTION_STYLES: Record<string, string> = {
 };
 
 const TABLE_NAMES = [
+  "FarmingUnit",
+  "IrrigationField",
   "User",
   "MCU",
   "Sensor",
