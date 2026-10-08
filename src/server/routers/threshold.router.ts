@@ -2,6 +2,17 @@ import { z } from "zod"
 import { protectedProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 import { audit } from "../../lib/audit"
+import { assertCan } from "@/lib/permissions"
+
+// Resolve the irrigation field a threshold lives on (via its actuator + MCU)
+async function resolveFieldByActuator(fk_actuator: string | null | undefined): Promise<string> {
+  if (!fk_actuator) return ""
+  const actuator = await prisma.actuator.findUnique({
+    where:   { id: fk_actuator },
+    select:  { mcu: { select: { fk_irrigationField: true } } },
+  })
+  return actuator?.mcu?.fk_irrigationField ?? ""
+}
 
 export const thresholdRouter = router({
 
@@ -60,6 +71,8 @@ export const thresholdRouter = router({
       maxValueAction: z.boolean().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
+      await assertCan(ctx.user.id, "thresholds", await resolveFieldByActuator(input.fk_actuator), "canCreate")
+
       const threshold = await prisma.threshold.create({ data: input })
 
       await audit({
@@ -122,6 +135,8 @@ export const thresholdRouter = router({
         }
       })
 
+      await assertCan(ctx.user.id, "thresholds", await resolveFieldByActuator(old?.fk_actuator), "canUpdate")
+
       const threshold = await prisma.threshold.update({
         where:   { id },
         data,
@@ -163,6 +178,8 @@ export const thresholdRouter = router({
         include: { actuator: { select: { fk_mcu: true } } }
       })
 
+      await assertCan(ctx.user.id, "thresholds", await resolveFieldByActuator(threshold?.fk_actuator), "canDelete")
+
       await prisma.threshold.delete({ where: { id: input.id } })
 
       await audit({
@@ -193,8 +210,10 @@ export const thresholdRouter = router({
     .mutation(async ({ input, ctx }) => {
       const old = await prisma.threshold.findUnique({
         where:   { id: input.id },
-        select:  { isActive: true }
+        select:  { isActive: true, fk_actuator: true }
       })
+
+      await assertCan(ctx.user.id, "thresholds", await resolveFieldByActuator(old?.fk_actuator), "canToggle")
 
       const threshold = await prisma.threshold.update({
         where:   { id: input.id },

@@ -3,6 +3,7 @@ import { z } from "zod"
 import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 import { audit } from "../../lib/audit"
+import { assertCan, assertCanOnFarm } from "@/lib/permissions"
 
 export const irrigationFieldRouter = router({
   getAllByFarm: publicProc
@@ -76,6 +77,10 @@ export const irrigationFieldRouter = router({
       longitude: z.number(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // A new field doesn't exist yet — permission is checked against the
+      // farm: the user must hold canCreate somewhere on that farm (or be admin).
+      await assertCanOnFarm(ctx.user.id, "irrigationField", input.farmId, "canCreate")
+
       const field = await prisma.irrigationField.create({
         data: {
           name:           input.name,
@@ -119,6 +124,8 @@ export const irrigationFieldRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
 
+      await assertCan(ctx.user.id, "irrigationField", id, "canUpdate")
+
       const old = await prisma.irrigationField.findUnique({
         where: { id },
         select: {
@@ -151,9 +158,11 @@ export const irrigationFieldRouter = router({
       return field
     }),
 
-  delete: publicProc
+  delete: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      await assertCan(ctx.user.id, "irrigationField", input.id, "canDelete")
+
       const old = await prisma.irrigationField.findUnique({
         where: { id: input.id },
         select: {
@@ -170,7 +179,7 @@ export const irrigationFieldRouter = router({
         rowId: input.id,
         action: "DELETE",
         oldValue: old ?? null,
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       })
 
       return deleted

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicProc, router } from "../trpc";
+import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { notify } from "@/lib/notifications";
@@ -7,6 +7,17 @@ import { TRPCError } from "@trpc/server";
 import { syncActuatorsToMCU } from "./device-sync";
 import { macAddressZ } from "./sensor.router";
 import { audit } from "../../lib/audit";
+import { assertCan } from "@/lib/permissions";
+
+// Resolve the irrigation field an actuator lives on (via its MCU)
+async function resolveActuatorField(fk_mcu: string | null | undefined): Promise<string> {
+  if (!fk_mcu) return "";
+  const mcu = await prisma.mCU.findUnique({
+    where: { id: fk_mcu },
+    select: { fk_irrigationField: true },
+  });
+  return mcu?.fk_irrigationField ?? "";
+}
 
 export const actuatorRouter = router({
   // ── Get all for a field (dashboard quick actions) ─────────────
@@ -114,7 +125,7 @@ export const actuatorRouter = router({
   }),
 
   // ── Toggle (dashboard quick action) ──────────────────────────
-  toggle: publicProc
+  toggle: protectedProc
     .input(
       z.object({
         actuatorId: z.string(),
@@ -138,6 +149,8 @@ export const actuatorRouter = router({
 
       if (!actuator?.mcu) throw new TRPCError({ code: "NOT_FOUND" });
 
+      await assertCan(ctx.user.id, "actuator", actuator.mcu.fk_irrigationField, "canToggle");
+
       const farmId = actuator.mcu.irrigationField.FarmingUnit!.id;
       const fieldId = actuator.mcu.fk_irrigationField;
       const mcuId = actuator.fk_mcu!;
@@ -149,7 +162,7 @@ export const actuatorRouter = router({
           actionVal: input.newState,
           sentAt: new Date(),
           fk_actuator: input.actuatorId,
-          fk_user:     ctx.session?.user.id,   // ← set = manual
+          fk_user:     ctx.user.id,   // ← set = manual
           cmdStatus:   "WAITING",
         },
       });
@@ -186,7 +199,7 @@ export const actuatorRouter = router({
     }),
 
   // ── Create ────────────────────────────────────────────────────
-  create: publicProc
+  create: protectedProc
     .input(
       z.object({
         name: z.string().min(1),
@@ -201,6 +214,9 @@ export const actuatorRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const fieldId = await resolveActuatorField(input.fk_mcu);
+      await assertCan(ctx.user.id, "actuator", fieldId, "canCreate");
+
       const created = await prisma.actuator.create({ data: input });
 
       await audit({
@@ -214,7 +230,7 @@ export const actuatorRouter = router({
           actuatorType: created.fk_actuatorType ?? null,
           targetState: created.targetState,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Publish the refreshed actuator list to the MCU (retained)
@@ -224,7 +240,7 @@ export const actuatorRouter = router({
     }),
 
   // ── Update ────────────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(
       z.object({
         id: z.string(),
@@ -257,6 +273,10 @@ export const actuatorRouter = router({
         },
       });
 
+      // Permission is checked against the actuator's CURRENT MCU field
+      const fieldId = await resolveActuatorField(prev?.fk_mcu);
+      await assertCan(ctx.user.id, "actuator", fieldId, "canUpdate");
+
       const updated = await prisma.actuator.update({ where: { id }, data });
 
       await audit({
@@ -275,7 +295,7 @@ export const actuatorRouter = router({
           fk_mcu: updated.fk_mcu ?? null,
           actuatorType: updated.fk_actuatorType ?? null,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Refresh both the old MCU (device moved away) and the new one
@@ -288,7 +308,7 @@ export const actuatorRouter = router({
     }),
 
   // ── Delete ────────────────────────────────────────────────────
-  delete: publicProc
+  delete: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const prev = await prisma.actuator.findUnique({
@@ -303,6 +323,9 @@ export const actuatorRouter = router({
         },
       });
 
+      const fieldId = await resolveActuatorField(prev?.fk_mcu);
+      await assertCan(ctx.user.id, "actuator", fieldId, "canDelete");
+
       await prisma.actuator.delete({ where: { id: input.id } });
 
       await audit({
@@ -310,7 +333,7 @@ export const actuatorRouter = router({
         rowId: input.id,
         action: "DELETE",
         oldValue: prev ?? null,
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       if (prev?.fk_mcu) await syncActuatorsToMCU(prev.fk_mcu);

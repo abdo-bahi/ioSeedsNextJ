@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, User, CalendarClock } from "lucide-react";
 import { t } from "@/i18n";
+import { usePermissions } from "@/hooks/use-permissions";
 
 let FARM_ID:string;
 
@@ -389,6 +390,7 @@ function ScheduleCard({
   onDelete: (id: string) => void;
 }) {
   const isWeekdays = schedule.weekDays?.length > 0;
+  const { canUpdate, canDelete, canToggle } = usePermissions("schedules");
 
   const triggerLabel = schedule.toggleAtThresholds
     ? t("schedules.threshold")
@@ -496,32 +498,38 @@ function ScheduleCard({
         {/* Actions */}
         <div className="flex items-center gap-2">
           {/* Toggle */}
-          <button
-            onClick={() => onToggle(schedule.id, !schedule.isActive)}
-            className={`w-10 h-6 rounded-full transition-colors relative ${
-              schedule.isActive ? "bg-primary" : "bg-border"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
-                schedule.isActive ? "translate-x-4" : "translate-x-0.5"
+          {canToggle && (
+            <button
+              onClick={() => onToggle(schedule.id, !schedule.isActive)}
+              className={`w-10 h-6 rounded-full transition-colors relative ${
+                schedule.isActive ? "bg-primary" : "bg-border"
               }`}
-            />
-          </button>
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 h-5 w-5 bg-card rounded-full shadow transition-transform ${
+                  schedule.isActive ? "translate-x-4" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          )}
 
-          <button
-            onClick={() => onEdit(schedule.id)}
-            className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => onEdit(schedule.id)}
+              className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
 
-          <button
-            onClick={() => onDelete(schedule.id)}
-            className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => onDelete(schedule.id)}
+              className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -531,6 +539,7 @@ function ScheduleCard({
 // ── Main page ─────────────────────────────────────────────────────
 export default function SchedulesPage() {
   const { selectedField } = useFieldStore();
+  const { canCreate } = usePermissions("schedules");
 
   FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
   const utils = trpc.useUtils();
@@ -645,13 +654,15 @@ export default function SchedulesPage() {
             {t("schedules.allFields")}
           </button>
         </div>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white gap-1.5"
-        >
-          <Plus className="h-4 w-4" />
-          {t("schedules.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            {t("schedules.add")}
+          </Button>
+        )}
       </div>
 
       {/* ── KPI summary ── */}

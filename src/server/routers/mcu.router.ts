@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { TRPCError } from "@trpc/server";
 import { audit } from "../../lib/audit";
+import { assertCan } from "@/lib/permissions";
 
 const MCUStatusZ = z.enum(["ONLINE", "OFFLINE", "SLEEPING", "ERROR"]);
 
@@ -52,7 +53,7 @@ export const mcuRouter = router({
     }),
 
   // ── Create ──────────────────────────────────────────────────────
-  create: publicProc
+  create: protectedProc
     .input(
       z.object({
         fk_irrigationField: z.string(),
@@ -64,6 +65,8 @@ export const mcuRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      await assertCan(ctx.user.id, "mcu", input.fk_irrigationField, "canCreate")
+
       // Auto-generate a secure apiKey — never ask user to provide it
       const apiKey = crypto.randomBytes(32).toString("hex");
       const apiKeyHash = crypto
@@ -90,7 +93,7 @@ export const mcuRouter = router({
           autoControlledIrrigation: input.autoControlledIrrigation,
           isActive: input.isActive,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Return apiKey in plaintext ONCE — never stored, never retrievable again
@@ -98,7 +101,7 @@ export const mcuRouter = router({
     }),
 
   // ── Update ──────────────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(
       z.object({
         id: z.string(),
@@ -123,6 +126,10 @@ export const mcuRouter = router({
         })
   
         if (!prev) throw new TRPCError({ code: "NOT_FOUND" });
+
+        // Permission is checked against the MCU's CURRENT field — moving a device
+        // to another field can't grant yourself rights there.
+        await assertCan(ctx.user.id, "mcu", prev.fk_irrigationField, "canUpdate");
   
         const farmId = prev.irrigationField.FarmingUnit!.id;
         const fieldId = prev.fk_irrigationField;
@@ -163,14 +170,14 @@ export const mcuRouter = router({
           autoControlledIrrigation: updated.autoControlledIrrigation,
           isActive: updated.isActive,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       })
 
       return updated
     }),
 
   // ── Delete ──────────────────────────────────────────────────────
-  delete: publicProc
+  delete: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const old = await prisma.mCU.findUnique({
@@ -181,8 +188,13 @@ export const mcuRouter = router({
           macAddress: true,
           autoControlledIrrigation: true,
           isActive: true,
+          fk_irrigationField: true,
         },
       });
+
+      if (!old) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertCan(ctx.user.id, "mcu", old.fk_irrigationField, "canDelete");
 
       const deleted = await prisma.mCU.delete({
         where: { id: input.id },
@@ -193,7 +205,7 @@ export const mcuRouter = router({
         rowId: input.id,
         action: "DELETE",
         oldValue: old ?? null,
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       return deleted;
@@ -258,6 +270,15 @@ return prisma.mCU.update({
   regenerateApiKey: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const mcu = await prisma.mCU.findUnique({
+        where: { id: input.id },
+        select: { fk_irrigationField: true },
+      });
+
+      if (!mcu) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertCan(ctx.user.id, "mcu", mcu.fk_irrigationField, "canUpdate");
+
       const rawApiKey = crypto.randomBytes(32).toString("hex");
       const apiKeyHash = crypto
         .createHash("sha256")

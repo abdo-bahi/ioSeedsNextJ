@@ -4,6 +4,7 @@
 import { Power } from "lucide-react"
 import { trpc } from "@/lib/trpc/client"
 import { useFieldStore } from "@/store/field-store"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useSSE } from "@/lib/use-sse"
@@ -25,6 +26,7 @@ function ActuatorSkeleton() {
 export function ActuatorPanel() {
   const { selectedField } = useFieldStore()
   const queryClient = trpc.useUtils();
+  const { canToggle } = usePermissions("actuator")
 
   const { data: actuators, isLoading } = trpc.actuator.getAllByField.useQuery(
     { irrigationFieldId: selectedField?.id ?? "" },
@@ -123,22 +125,24 @@ export function ActuatorPanel() {
               </Badge>
 
               {/* Toggle button */}
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isToggling || !actuator.isActive}
-                onClick={() => toggle.mutate({
-                  actuatorId: actuator.id,
-                  newState:   !isOpen,
-                })}
-                className={`text-[12px] h-8 px-3 border transition-colors ${
-                  isOpen
-                    ? "border-[#D95F5F] text-[#D95F5F] hover:bg-[#FDEAEA]"
-                    : "border-primary text-primary hover:bg-[#E6F7ED]"
-                }`}
-              >
-                {isOpen ? t("dashboard.actuators.close") : t("dashboard.actuators.open")}
-              </Button>
+              {canToggle && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isToggling || !actuator.isActive}
+                  onClick={() => toggle.mutate({
+                    actuatorId: actuator.id,
+                    newState:   !isOpen,
+                  })}
+                  className={`text-[12px] h-8 px-3 border transition-colors ${
+                    isOpen
+                      ? "border-[#D95F5F] text-[#D95F5F] hover:bg-[#FDEAEA]"
+                      : "border-primary text-primary hover:bg-[#E6F7ED]"
+                  }`}
+                >
+                  {isOpen ? t("dashboard.actuators.close") : t("dashboard.actuators.open")}
+                </Button>
+              )}
             </div>
           )
         })}

@@ -23,6 +23,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { t, formatRelative, type I18nKey } from "@/i18n";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // ── Types ─────────────────────────────────────────────────────────
 type MCUStatus = "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR";
@@ -331,6 +332,7 @@ export function MCUsTable({
   farmId: string;
 }) {
   const utils = trpc.useUtils();
+  const { canCreate, canUpdate, canDelete } = usePermissions("mcu");
 
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<string | null>(null);
@@ -433,12 +435,14 @@ export function MCUsTable({
         <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
           {t("data.mcus.title")}
         </p>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />{t("data.mcus.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />{t("data.mcus.add")}
+          </Button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -518,20 +522,24 @@ export function MCUsTable({
                   {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setEditTarget(mcu.id)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                        title={t("common.configure")}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(mcu.id)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
-                        title={t("common.delete")}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          onClick={() => setEditTarget(mcu.id)}
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                          title={t("common.configure")}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => setDeleteTarget(mcu.id)}
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                          title={t("common.delete")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

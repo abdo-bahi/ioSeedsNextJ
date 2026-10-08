@@ -4,6 +4,17 @@ import { prisma } from "../../../prisma/lib/prisma";
 import { syncSensorsToMCU } from "./device-sync";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
 import { audit } from "../../lib/audit";
+import { assertCan } from "@/lib/permissions";
+
+// Resolve the irrigation field a sensor lives on (via its MCU)
+async function resolveSensorField(fk_mcu: string | null | undefined): Promise<string> {
+  if (!fk_mcu) return "";
+  const mcu = await prisma.mCU.findUnique({
+    where: { id: fk_mcu },
+    select: { fk_irrigationField: true },
+  });
+  return mcu?.fk_irrigationField ?? "";
+}
 
 // Optional MAC address: validates format, normalizes to uppercase "AA:BB:CC:DD:EE:FF"
 export const macAddressZ = z
@@ -187,7 +198,7 @@ export const sensorRouter = router({
   }),
 
   // ── Create ────────────────────────────────────────────────────
-  create: publicProc
+  create: protectedProc
     .input(
       z.object({
         name: z.string().min(1),
@@ -206,6 +217,9 @@ export const sensorRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const fieldId = await resolveSensorField(input.fk_mcu);
+      await assertCan(ctx.user.id, "sensor", fieldId, "canCreate");
+
       const created = await prisma.sensor.create({ data: input });
 
       await audit({
@@ -219,7 +233,7 @@ export const sensorRouter = router({
           sensorType: created.fk_sensorType ?? null,
           unit: created.unit,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Publish the refreshed sensor list to the MCU (retained)
@@ -338,7 +352,7 @@ export const sensorRouter = router({
       });
     }),
   // ── Update ────────────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(
       z.object({
         id: z.string(),
@@ -374,6 +388,10 @@ export const sensorRouter = router({
         },
       });
 
+      // Permission is checked against the sensor's CURRENT MCU field
+      const fieldId = await resolveSensorField(prev?.fk_mcu);
+      await assertCan(ctx.user.id, "sensor", fieldId, "canUpdate");
+
       const updated = await prisma.sensor.update({ where: { id }, data });
 
       await audit({
@@ -391,7 +409,7 @@ export const sensorRouter = router({
           fk_mcu: updated.fk_mcu ?? null,
           sensorType: updated.fk_sensorType ?? null,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Refresh both the old MCU (device moved away) and the new one
@@ -404,7 +422,7 @@ export const sensorRouter = router({
     }),
 
   // ── Delete ────────────────────────────────────────────────────
-  delete: publicProc
+  delete: protectedProc
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const prev = await prisma.sensor.findUnique({
@@ -419,6 +437,9 @@ export const sensorRouter = router({
         },
       });
 
+      const fieldId = await resolveSensorField(prev?.fk_mcu);
+      await assertCan(ctx.user.id, "sensor", fieldId, "canDelete");
+
       await prisma.sensor.delete({ where: { id: input.id } });
 
       await audit({
@@ -426,7 +447,7 @@ export const sensorRouter = router({
         rowId: input.id,
         action: "DELETE",
         oldValue: prev ?? null,
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       if (prev?.fk_mcu) await syncSensorsToMCU(prev.fk_mcu);

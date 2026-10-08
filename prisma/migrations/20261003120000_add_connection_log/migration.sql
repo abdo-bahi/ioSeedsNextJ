@@ -1,14 +1,7 @@
--- CreateTable
-CREATE TABLE "ConnectionLog" (
-    "id" TEXT NOT NULL,
-    "dateTime" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "ipAddress" TEXT NOT NULL,
-    "location" TEXT,
-    "fk_user" TEXT,
-    "success" BOOLEAN NOT NULL DEFAULT true,
-
-    CONSTRAINT "ConnectionLog_pkey" PRIMARY KEY ("id")
-);
-
--- AddForeignKey
-ALTER TABLE "ConnectionLog" ADD CONSTRAINT "ConnectionLog_fk_user_fkey" FOREIGN KEY ("fk_user") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- `ConnectionLog` is already created by the `20260708203017_init` migration.
+-- `20260807165511_better_auth_migration` re-points its FK to the lowercase
+-- `user` table, `20260807172809` drops NOT NULL on `fk_user`, and
+-- `20261003130000_add_connection_log_location` adds the `location` column.
+-- This migration mistakenly re-created the table (it only applied in dev
+-- databases where the table had been dropped out-of-band) — it is intentionally
+-- a no-op so the full history replays cleanly on fresh/shadow databases.

@@ -4,6 +4,17 @@ import { protectedProc, publicProc, router } from "../trpc";
 import { prisma } from "../../../prisma/lib/prisma";
 import { publishToMCU } from "@/lib/mqtt-publish";
 import { audit } from "../../lib/audit";
+import { assertCan } from "@/lib/permissions";
+
+// Resolve the irrigation field a schedule lives on (via its actuator + MCU)
+async function resolveFieldByActuator(fk_actuator: string | null | undefined): Promise<string> {
+  if (!fk_actuator) return "";
+  const actuator = await prisma.actuator.findUnique({
+    where: { id: fk_actuator },
+    select: { mcu: { select: { fk_irrigationField: true } } },
+  });
+  return actuator?.mcu?.fk_irrigationField ?? "";
+}
 
 const DaysZ = z.enum([
   "MONDAY",
@@ -169,6 +180,9 @@ export const scheduleRouter = router({
         ? new Date(`1970-01-01T${input.startAt}:00.000Z`)
         : null;
 
+      const fieldId = await resolveFieldByActuator(input.fk_actuator);
+      await assertCan(ctx.user.id, "schedules", fieldId, "canCreate");
+
       const schedule = await prisma.schedule.create({
         data: {
           name: input.name,
@@ -213,7 +227,7 @@ export const scheduleRouter = router({
     }),
 
   // ── Update ────────────────────────────────────────────────────
-  update: publicProc
+  update: protectedProc
     .input(
       z.object({
         id: z.string(),
@@ -247,6 +261,9 @@ export const scheduleRouter = router({
           fk_actuator: true,
         },
       });
+
+      const fieldId = await resolveFieldByActuator(old?.fk_actuator);
+      await assertCan(ctx.user.id, "schedules", fieldId, "canUpdate");
 
       const updated = await prisma.schedule.update({
         where: { id },
@@ -282,7 +299,7 @@ export const scheduleRouter = router({
           isActive: updated.isActive,
           fk_actuator: updated.fk_actuator,
         },
-        fk_user: ctx.session?.user.id ?? null,
+        fk_user: ctx.user.id,
       });
 
       // Sync after update
@@ -298,8 +315,11 @@ export const scheduleRouter = router({
     .mutation(async ({ input, ctx }) => {
       const old = await prisma.schedule.findUnique({
         where: { id: input.id },
-        select: { isActive: true },
+        select: { isActive: true, fk_actuator: true },
       });
+
+      const fieldId = await resolveFieldByActuator(old?.fk_actuator);
+      await assertCan(ctx.user.id, "schedules", fieldId, "canToggle");
 
       const updated = await prisma.schedule.update({
         where: { id: input.id },
@@ -332,6 +352,9 @@ export const scheduleRouter = router({
         where: { id: input.id },
         include: { actuator: { select: { fk_mcu: true } } },
       });
+
+      const fieldId = await resolveFieldByActuator(schedule?.fk_actuator);
+      await assertCan(ctx.user.id, "schedules", fieldId, "canDelete");
 
       await prisma.schedule.delete({ where: { id: input.id } });
 

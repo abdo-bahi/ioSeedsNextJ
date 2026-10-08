@@ -84,7 +84,7 @@ model RoleMember {
 }
 
 model Functionality {
-  name                String               @id // "devices", "zones", "schedules", "reports"
+  name                String               @id 
   // reverse relations
   roleFunctionalities Role_Functionality[]
 }
@@ -100,6 +100,7 @@ model Role_Functionality {
   canRead   Boolean @default(true)
   canUpdate Boolean @default(false)
   canDelete Boolean @default(false)
+  canToggle Boolean @default(false)
   // one row per role+functionality combo
 
   @@unique([fk_role, fk_functionality])

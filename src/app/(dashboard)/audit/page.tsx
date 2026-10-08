@@ -25,6 +25,8 @@ const TABLE_NAMES = [
   "Actuator",
   "Schedule",
   "Threshold",
+  "Role",
+  "Role_Functionality",
   "RoleMember",
 ];
 

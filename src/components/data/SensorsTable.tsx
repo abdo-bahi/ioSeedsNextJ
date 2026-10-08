@@ -17,6 +17,7 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { SensorCalibrationSection } from "./SensorCalibrationSection";
 import { resolveSensorValue } from "@/lib/sensor-conversion";
 import { t, formatRelative, type I18nKey } from "@/i18n";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // ── Helpers ───────────────────────────────────────────────────────
 function StatusBadge({ isActive }: { isActive: boolean }) {
@@ -359,6 +360,7 @@ export function SensorsTable({
   farmId: string;
 }) {
   const utils = trpc.useUtils();
+  const { canCreate, canUpdate, canDelete } = usePermissions("sensor");
 
   const [mcuFilter, setMcuFilter] = useState<string>("");
   const [addOpen, setAddOpen] = useState(false);
@@ -473,13 +475,15 @@ export function SensorsTable({
             ))}
           </select>
         </div>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {t("data.sensors.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("data.sensors.add")}
+          </Button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -611,18 +615,22 @@ export function SensorsTable({
                   {/* Actions */}
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setEditTarget(sensor.id)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(sensor.id)}
-                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          onClick={() => setEditTarget(sensor.id)}
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => setDeleteTarget(sensor.id)}
+                          className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

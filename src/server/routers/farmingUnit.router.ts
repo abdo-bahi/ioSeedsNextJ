@@ -2,6 +2,7 @@ import { z } from "zod"
 import { protectedProc, publicProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 import { audit } from "../../lib/audit"
+import { assertCanOnFarm } from "@/lib/permissions"
 
 export const farmingUnitRouter = router({
 
@@ -67,6 +68,9 @@ export const farmingUnitRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       const { id, ...data } = input
+
+      // Farm-level resource — permission is checked across the farm's fields.
+      await assertCanOnFarm(ctx.user.id, "farmingUnit", id, "canUpdate")
 
       const old = await prisma.farmingUnit.findUnique({
         where: { id },

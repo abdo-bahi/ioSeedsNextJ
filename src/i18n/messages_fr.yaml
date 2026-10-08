@@ -63,6 +63,7 @@ nav:
   parameters:   "Paramètres"
   users:        "Utilisateurs"
   audit:        "Journal d'audit"
+  rbac:         "Rôles & Accès"
   logout:       "Se déconnecter"
   themeToggle:  "Basculer le thème"
   subtitle:
@@ -73,6 +74,7 @@ nav:
     parameters: "Paramètres de la ferme et du système"
     users:      "Gestion des utilisateurs du système"
     audit:      "Actions des utilisateurs (30 jours)"
+    rbac:       "Rôles, matrices d'accès et membres"
 
 # ── Auth ──────────────────────────────────────────────────────────
 auth:
@@ -687,9 +689,60 @@ audit:
     Actuator:       "Actionneur"
     Schedule:       "Programme"
     Threshold:      "Seuil"
-    RoleMember:     "Rôle"
+    RoleMember:     "Affectation de rôle"
+    Role:           "Rôle"
+    Role_Functionality: "Matrice de rôle"
     IrrigationField: "Parcelle"
     FarmingUnit:    "Ferme"
+    ConnectionLog:  "Connexion"
+
+# ── RBAC ───────────────────────────────────────────────────────────
+rbac:
+  title:            "Gestion des rôles et accès"
+  subtitle:         "Rôles, matrices d'accès et affectations par parcelle"
+  noRoleSelected:   "Sélectionnez un rôle pour afficher sa matrice de permissions."
+  tab:
+    roles:          "Rôles & Fonctionnalités"
+    members:        "Membres par parcelle"
+  roles:
+    select:         "Rôle :"
+    create:         "Nouveau rôle"
+    createPlaceholder: "Nom du nouveau rôle..."
+    empty:          "Aucun rôle défini."
+    activate:       "Activer le rôle"
+    deactivate:     "Désactiver le rôle"
+  matrix:
+    title:          "Matrice de permissions"
+    functionality:  "FONCTIONNALITÉ"
+    read:           "VOIR"
+    create:         "CRÉER"
+    update:         "MODIFIER"
+    delete:         "SUPPRIMER"
+    toggle:         "BASCLER"
+  functionalities:
+    title:          "Fonctionnalités"
+    item:           "FONCTIONNALITÉ"
+  members:
+    noField:        "Sélectionnez une parcelle pour gérer ses membres."
+    assignTitle:    "Affecter un rôle sur « {{name}} »"
+    selectUser:     "— Sélectionner un utilisateur —"
+    selectRole:     "— Sélectionner un rôle —"
+    assign:         "Affecter"
+    user:           "UTILISATEUR"
+    email:          "E-MAIL"
+    role:           "RÔLE"
+    actions:        "ACTIONS"
+    empty:          "Aucun membre pour cette parcelle."
+  func:
+    irrigationField: "Parcelles"
+    farmingUnit:   "Ferme"
+    mcu:           "Unités MCU"
+    sensor:        "Capteurs"
+    actuator:      "Actionneurs"
+    thresholds:    "Seuils"
+    schedules:     "Programmations"
+    users:         "Utilisateurs"
+    auditLog:      "Journal d'audit"
 
 # ── Errors ────────────────────────────────────────────────────────
 errors:

@@ -33,9 +33,14 @@ const main = async () => {
 
   // ─── Functionalities ──────────────────────────────────────────
   const allFunctionalities = [
-    "users", "farms", "fields", "mcus",
-    "sensors", "actuators", "schedules", "Parameters",
+    "irrigationField", "farmingUnit", "mcu", "sensor",
+    "actuator", "thresholds", "schedules", "users", "auditLog",
   ]
+
+  // Clean up stale functionality names from older seed runs
+  await prisma.functionality.deleteMany({
+    where: { NOT: { name: { in: allFunctionalities } } },
+  })
 
   await prisma.functionality.createMany({
     data: allFunctionalities.map(name => ({ name })),
@@ -44,34 +49,45 @@ const main = async () => {
   console.log("✅ Functionalities seeded")
 
   // ─── Role functionalities ──────────────────────────────────────
-  await prisma.role_Functionality.createMany({
-    data: allFunctionalities.map(f => ({
-      fk_role: "ADMIN", fk_functionality: f,
-      canCreate: true, canRead: true, canUpdate: true, canDelete: true,
-    })),
-    skipDuplicates: true,
-  })
-  await prisma.role_Functionality.createMany({
-    data: ["farms","fields","mcus","sensors","actuators","schedules"].map(f => ({
-      fk_role: "FARMER", fk_functionality: f,
-      canCreate: true, canRead: true, canUpdate: true, canDelete: true,
-    })),
-    skipDuplicates: true,
-  })
-  await prisma.role_Functionality.createMany({
-    data: ["fields","mcus","sensors","actuators","schedules"].map(f => ({
-      fk_role: "OPERATOR", fk_functionality: f,
-      canCreate: true, canRead: true, canUpdate: true, canDelete: false,
-    })),
-    skipDuplicates: true,
-  })
-  await prisma.role_Functionality.createMany({
-    data: allFunctionalities.map(f => ({
-      fk_role: "VIEWER", fk_functionality: f,
-      canCreate: false, canRead: true, canUpdate: false, canDelete: false,
-    })),
-    skipDuplicates: true,
-  })
+  // Rebuild the matrix each run so it always matches the presets below.
+  await prisma.role_Functionality.deleteMany({})
+
+  const allCrud = { canCreate: true, canRead: true, canUpdate: true, canDelete: true, canToggle: true }
+  const readOnly = { canCreate: false, canRead: true, canUpdate: false, canDelete: false, canToggle: false }
+  const operate = { canCreate: true, canRead: true, canUpdate: true, canDelete: false, canToggle: true }
+
+  const rolePresets: Record<string, Record<string, typeof readOnly>> = {
+    ADMIN: Object.fromEntries(allFunctionalities.map(f => [f, allCrud])),
+    FARMER: Object.fromEntries(
+      allFunctionalities
+        .filter(f => !["users", "auditLog"].includes(f))
+        .map(f => [f, allCrud])
+    ),
+    OPERATOR: {
+      ...Object.fromEntries(
+        ["irrigationField", "mcu", "sensor", "actuator", "thresholds", "schedules"].map(f => [f, operate])
+      ),
+      farmingUnit: readOnly,
+      users:       readOnly,
+      auditLog:    readOnly,
+    },
+    VIEWER: Object.fromEntries(allFunctionalities.map(f => [f, readOnly])),
+  }
+
+  for (const [role, funcs] of Object.entries(rolePresets)) {
+    await prisma.role_Functionality.createMany({
+      data: Object.entries(funcs).map(([functionality, perms]) => ({
+        fk_role: role,
+        fk_functionality: functionality,
+        canCreate: perms.canCreate,
+        canRead: perms.canRead,
+        canUpdate: perms.canUpdate,
+        canDelete: perms.canDelete,
+        canToggle: perms.canToggle,
+      })),
+      skipDuplicates: true,
+    })
+  }
   console.log("✅ Role functionalities seeded")
 
   // ─── SensorTypes + ActuatorTypes ──────────────────────────────
@@ -114,7 +130,7 @@ const main = async () => {
         where: {
           email:     "admin@ioseeds.dz",
         },
-        data: {fk_wilaya: blida.id},
+        data: { fk_wilaya: blida.id, role: "admin" },
       }
     )
     console.log("✅ Admin created:", admin.email);

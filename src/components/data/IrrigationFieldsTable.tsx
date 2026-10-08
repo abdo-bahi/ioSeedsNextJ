@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2, MapPin, Plus } from "lucide-react"
 import { t, type I18nKey } from "@/i18n"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const COLUMN_HEADERS: I18nKey[] = [
   "data.fields.columns.name",
@@ -183,6 +184,7 @@ function FieldModal({
 // ── Main table ────────────────────────────────────────────────────
 export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
   const utils = trpc.useUtils()
+  const { canCreate, canUpdate, canDelete } = usePermissions("irrigationField")
 
   const [addOpen,    setAddOpen]    = useState(false)
   const [editTarget, setEditTarget] = useState<string | null>(null)
@@ -244,13 +246,15 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
         <p className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
           {t("data.fields.title")}
         </p>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {t("data.fields.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("data.fields.add")}
+          </Button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -335,18 +339,22 @@ export function IrrigationFieldsTable({ farmId }: { farmId: string }) {
                 {/* Actions */}
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setEditTarget(field.id)}
-                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(field.id)}
-                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => setEditTarget(field.id)}
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => setDeleteTarget(field.id)}
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

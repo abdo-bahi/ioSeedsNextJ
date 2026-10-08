@@ -7,6 +7,7 @@ import { fieldRouter } from "./field.router"
 import { irrigationFieldRouter } from "./irrigationField.router"
 import { mcuRouter } from "./mcu.router"
 import { notificationRouter } from "./notification.router"
+import { rbacRouter } from "./rbac.router"
 import { scheduleRouter } from "./schedule.router"
 import { sensorRouter } from "./sensor.router"
 import { statisticsRouter } from "./statistics.router"
@@ -27,6 +28,7 @@ export const appRouter = router({
   notification: notificationRouter,
   stats: statisticsRouter,
   audit: auditRouter,
+  rbac: rbacRouter,
 })
 
 export type AppRouter = typeof appRouter

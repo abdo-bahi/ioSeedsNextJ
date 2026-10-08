@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { useFieldStore } from "@/store/field-store";
+import { usePermissions } from "@/hooks/use-permissions";
 import { t, type I18nKey } from "@/i18n";
 
 let FARM_ID: string;
@@ -499,6 +500,7 @@ function ConnectionLogsDialog({
 export default function UsersPage() {
   const utils = trpc.useUtils();
   const { selectedField } = useFieldStore();
+  const { canCreate, canUpdate } = usePermissions("users");
 
   FARM_ID = selectedField?.fk_FarmingUnit ?? "Unnamed farm";
 
@@ -572,6 +574,7 @@ export default function UsersPage() {
       isActive: form.isActive,
       fk_wilaya: form.fk_wilaya || undefined,
       fk_farm: FARM_ID,
+      irrigationFieldId: selectedField?.id ?? "",
     });
   }
 
@@ -585,6 +588,7 @@ export default function UsersPage() {
       isActive: form.isActive,
       fk_wilaya: form.fk_wilaya || undefined,
       password: form.password || undefined,
+      irrigationFieldId: selectedField?.id ?? "",
     });
   }
 
@@ -602,13 +606,15 @@ export default function UsersPage() {
             {t("users.count", { n: users?.length ?? 0 })}
           </p>
         </div>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white gap-1.5"
-        >
-          <Plus className="h-4 w-4" />
-          {t("users.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            {t("users.add")}
+          </Button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -693,11 +699,13 @@ export default function UsersPage() {
 
                     {/* Status */}
                     <td className="px-4 py-3.5">
+                      {canUpdate && (
                       <button
                         onClick={() =>
                           toggleActive.mutate({
                             id: user.id,
                             isActive: !user.isActive,
+                            irrigationFieldId: selectedField?.id ?? "",
                           })
                         }
                         className={`text-[11px] px-2 py-0.5 rounded-full border-0 font-medium transition-colors ${
@@ -713,6 +721,7 @@ export default function UsersPage() {
                       >
                         {user.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
                       </button>
+                    )}
                     </td>
 
                     {/* Created at */}
@@ -733,6 +742,7 @@ export default function UsersPage() {
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
                         </button> */}
+                        {canUpdate && (
                         <button
                           onClick={() => setEditTarget(user.id)}
                           className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
@@ -740,6 +750,7 @@ export default function UsersPage() {
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
+                      )}
                         <button
                           onClick={() => setLogsTarget(user.id)}
                           className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
@@ -855,8 +866,8 @@ export default function UsersPage() {
             </Button>
             <Button
               onClick={() =>
-                deleteTarget && remove.mutate({ id: deleteTarget })
-              }
+                    deleteTarget && remove.mutate({ id: deleteTarget, irrigationFieldId: selectedField?.id ?? "" })
+                  }
               disabled={remove.isPending}
               className="bg-[#D95F5F] hover:bg-[#C04040] text-white"
             >

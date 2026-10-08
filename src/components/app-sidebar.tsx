@@ -22,6 +22,7 @@ import {
   CalendarClock,
   SlidersHorizontal,
   ScrollText,
+  ShieldCheck,
 } from "lucide-react";
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
@@ -75,6 +76,13 @@ const navItems = [
     href: "/audit",
     adminOnly: true,
   },
+  {
+    labelKey: "nav.rbac",
+    subtitleKey: "nav.subtitle.rbac",
+    icon: ShieldCheck,
+    href: "/rbac",
+    adminOnly: true,
+  },
 ];
 
 export function AppSidebar({ farms, user }: { farms: any; user: any }) {
@@ -89,6 +97,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
     id: FARM_ID,
   });
   const router = useRouter();
+  const { data: amAdmin } = trpc.rbac.amIAdmin.useQuery();
 
   async function handleLogout() {
     reset(); // clear field store
@@ -123,7 +132,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
             <SidebarMenu>
               {navItems.map(
                 (item) =>
-                  (!item.adminOnly || session?.user?.role === "admin") && (
+                  (!item.adminOnly || session?.user?.role === "admin" || amAdmin) && (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         isActive={pathname === item.href}

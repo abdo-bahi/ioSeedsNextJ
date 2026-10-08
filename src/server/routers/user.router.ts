@@ -4,6 +4,7 @@ import type { Prisma } from "../../../generated/prisma/client";
 import { protectedProc, publicProc, router } from "../trpc";
 import { auth } from "../../lib/auth";
 import { audit } from "../../lib/audit";
+import { assertCan, isAdminUser } from "@/lib/permissions";
 import { headers } from "next/headers";
 
 
@@ -84,10 +85,13 @@ export const userRouter = router({
         isActive: z.boolean().default(true),
         fk_wilaya: z.string().optional(),
         fk_farm: z.string().optional(),
+        irrigationFieldId: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { email, password, name, ...rest } = input;
+      const { email, password, name, irrigationFieldId, ...rest } = input;
+
+      await assertCan(ctx.user.id, "users", irrigationFieldId ?? "", "canCreate");
 
       // Step 1 — create via Better Auth (handles password hashing)
       const result = await auth.api
@@ -139,11 +143,14 @@ export const userRouter = router({
         fk_wilaya: z.string().optional(),
         fk_farm: z.string().optional(),
         password: z.string().min(6).optional(),
+        irrigationFieldId: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { id, password, email, isActive, ...rest } = input;
+      const { id, password, email, isActive, irrigationFieldId, ...rest } = input;
       const reqHeaders = await headers()
+
+      await assertCan(ctx.user.id, "users", irrigationFieldId ?? "", "canUpdate");
 
       const old = await prisma.user.findUnique({
         where: { id },
@@ -212,8 +219,10 @@ export const userRouter = router({
 
   // ── Toggle isActive ───────────────────────────────────────────
   toggleActive: protectedProc
-    .input(z.object({ id: z.string(), isActive: z.boolean() }))
+    .input(z.object({ id: z.string(), isActive: z.boolean(), irrigationFieldId: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
+      await assertCan(ctx.user.id, "users", input.irrigationFieldId ?? "", "canUpdate");
+
       const old = await prisma.user.findUnique({
         where: { id: input.id },
         select: { isActive: true },
@@ -238,8 +247,10 @@ export const userRouter = router({
 
   // ── Delete user ───────────────────────────────────────────────
   delete: protectedProc
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), irrigationFieldId: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
+      await assertCan(ctx.user.id, "users", input.irrigationFieldId ?? "", "canDelete");
+
       const old = await prisma.user.findUnique({
         where: { id: input.id },
         select: { name: true, email: true, isActive: true },
@@ -274,6 +285,14 @@ export const userRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      // Assigning on a field requires canCreate on "users" for that field;
+      // farm-wide (null) memberships are a super-admin action.
+      if (input.fk_irrigationField) {
+        await assertCan(ctx.user.id, "users", input.fk_irrigationField, "canCreate");
+      } else if (!(await isAdminUser(ctx.user.id))) {
+        throw new Error("FORBIDDEN: rôle global réservé aux administrateurs.");
+      }
+
       const existing = await prisma.roleMember.findUnique({
         where: {
           fk_user_fk_role_fk_irrigationField: {
@@ -326,6 +345,12 @@ export const userRouter = router({
         where: { id: input.roleMemberId },
         select: { fk_user: true, fk_role: true, fk_irrigationField: true },
       });
+
+      if (old?.fk_irrigationField) {
+        await assertCan(ctx.user.id, "users", old.fk_irrigationField, "canDelete");
+      } else if (!(await isAdminUser(ctx.user.id))) {
+        throw new Error("FORBIDDEN: rôle global réservé aux administrateurs.");
+      }
 
       const deleted = await prisma.roleMember.delete({
         where: { id: input.roleMemberId },

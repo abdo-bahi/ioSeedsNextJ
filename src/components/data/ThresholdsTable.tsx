@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { t, type I18nKey } from "@/i18n"
+import { usePermissions } from "@/hooks/use-permissions"
 
 function ActionBadge({ action }: { action: boolean | null }) {
   if (action === null || action === undefined) return <span className="text-muted-foreground">—</span>
@@ -247,6 +248,7 @@ export function ThresholdsTable({
   farmId:            string
 }) {
   const utils = trpc.useUtils()
+  const { canCreate, canUpdate, canDelete, canToggle } = usePermissions("thresholds")
 
   const [addOpen,      setAddOpen]      = useState(false)
   const [editTarget,   setEditTarget]   = useState<string | null>(null)
@@ -370,13 +372,15 @@ export function ThresholdsTable({
             ))}
           </select>
         </div>
-        <Button
-          onClick={() => setAddOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {t("data.thresholds.add")}
-        </Button>
+        {canCreate && (
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white text-[12px] h-8 px-3 gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {t("data.thresholds.add")}
+          </Button>
+        )}
       </div>
 
       {/* No field selected */}
@@ -480,6 +484,7 @@ export function ThresholdsTable({
 
                 {/* Status */}
                 <td className="px-4 py-3.5">
+                  {canToggle && (
                   <button
                     onClick={() => toggleActive.mutate({
                       id:       row.id,
@@ -493,23 +498,28 @@ export function ThresholdsTable({
                   >
                     {row.isActive ? `• ${t("common.active")}` : `• ${t("common.inactive")}`}
                   </button>
+                )}
                 </td>
 
                 {/* Actions */}
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setEditTarget(row.id)}
-                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(row.id)}
-                      className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => setEditTarget(row.id)}
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => setDeleteTarget(row.id)}
+                        className="h-7 w-7 rounded border border-border flex items-center justify-center text-muted-foreground hover:text-[#D95F5F] hover:border-[#D95F5F] transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
