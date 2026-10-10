@@ -1,24 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc/client";
 import { useFieldStore } from "@/store/field-store";
 import { t, type I18nKey } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Power } from "lucide-react";
-
-// Must stay in sync with the seeded functionality names (prisma/seed.ts).
-const FUNCTIONALITY_NAMES = [
-  "irrigationField",
-  "farmingUnit",
-  "mcu",
-  "sensor",
-  "actuator",
-  "thresholds",
-  "schedules",
-  "users",
-  "auditLog",
-];
 
 const PERM_COLUMNS = [
   { key: "canRead",   labelKey: "rbac.matrix.read" },
@@ -183,7 +170,7 @@ function RolesTab() {
       </div>
 
       {innerTab === "roles" ? (
-        <PermissionsMatrix roleName={selectedRole} />
+        <PermissionsMatrix roleName={selectedRole} functionalities={functionalities} />
       ) : (
         <FunctionalitiesList functionalities={functionalities} />
       )}
@@ -192,7 +179,13 @@ function RolesTab() {
 }
 
 // ── Permissions matrix ────────────────────────────────────────────
-function PermissionsMatrix({ roleName }: { roleName: string }) {
+function PermissionsMatrix({
+  roleName,
+  functionalities,
+}: {
+  roleName: string;
+  functionalities: { name: string }[] | undefined;
+}) {
   const utils = trpc.useUtils();
 
   const { data: roleFuncs } = trpc.rbac.getRoleFunctionalities.useQuery(
@@ -257,7 +250,7 @@ function PermissionsMatrix({ roleName }: { roleName: string }) {
             </tr>
           </thead>
           <tbody>
-            {FUNCTIONALITY_NAMES.map((func) => {
+            {(functionalities ?? []).map(({ name: func }) => {
               const rf = funcMap[func] ?? {};
               return (
                 <tr key={func} className="border-b border-border hover:bg-canvas">
@@ -318,38 +311,63 @@ function FunctionalitiesList({
   );
 }
 
-// ── Tab 2: Members per field ──────────────────────────────────────
+// ── Tab 2: Members per field or per farm ──────────────────────────
 function MembersTab() {
   const { selectedField } = useFieldStore();
   const utils = trpc.useUtils();
 
+  const [scope, setScope] = useState<"field" | "farm">("field");
+  const [selectedFarm, setSelectedFarm] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
 
-  const members = trpc.rbac.getMembersByField.useQuery(
-    { irrigationFieldId: selectedField?.id ?? "" },
-    { enabled: !!selectedField?.id }
-  );
+  const { data: myFields } = trpc.rbac.getMyFields.useQuery();
   const roles = trpc.rbac.getRoles.useQuery();
   const users = trpc.user.getAll.useQuery();
 
+  // Unique farms visible to the current user (from accessible fields).
+  const farmOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const f of myFields ?? []) {
+      if (f.fk_FarmingUnit && !map.has(f.fk_FarmingUnit)) map.set(f.fk_FarmingUnit, f.name ?? "Ferme");
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [myFields]);
+
+  const fieldId = scope === "field" ? (selectedField?.id ?? "") : "";
+  const farmId = scope === "farm" ? (selectedFarm || farmOptions[0]?.id || "") : "";
+
+  const membersField = trpc.rbac.getMembersByField.useQuery(
+    { irrigationFieldId: fieldId },
+    { enabled: scope === "field" && !!fieldId }
+  );
+  const membersFarm = trpc.rbac.getMembersByFarm.useQuery(
+    { farmId },
+    { enabled: scope === "farm" && !!farmId }
+  );
+  const scopeMembers = scope === "field" ? membersField.data : membersFarm.data;
+
+  const invalidateMembers = () => {
+    utils.rbac.getMembersByField.invalidate();
+    utils.rbac.getMembersByFarm.invalidate();
+    utils.user.getAll.invalidate();
+  };
+
   const assign = trpc.rbac.assignRole.useMutation({
     onSuccess: () => {
-      utils.rbac.getMembersByField.invalidate();
-      utils.user.getAll.invalidate();
+      invalidateMembers();
       setSelectedUser("");
       setSelectedRole("");
     },
   });
 
   const remove = trpc.rbac.removeRole.useMutation({
-    onSuccess: () => {
-      utils.rbac.getMembersByField.invalidate();
-      utils.user.getAll.invalidate();
-    },
+    onSuccess: invalidateMembers,
   });
 
-  if (!selectedField) {
+  const heading = scope === "field" ? selectedField?.name ?? "" : farmOptions.find((f) => f.id === farmId)?.name ?? "";
+
+  if (scope === "field" && !selectedField) {
     return (
       <div className="bg-card border border-border rounded-xl p-8 text-center text-[13px] text-muted-foreground">
         {t("rbac.members.noField")}
@@ -357,14 +375,65 @@ function MembersTab() {
     );
   }
 
+  if (scope === "farm" && farmOptions.length === 0) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-8 text-center text-[13px] text-muted-foreground">
+        {t("rbac.members.noFarm")}
+      </div>
+    );
+  }
+
   const activeRoles = (roles.data ?? []).filter((r) => r.isActive);
+  // ADMIN is farm-scoped; the other roles are field-scoped.
+  const scopeRoles = scope === "farm"
+    ? activeRoles
+    : activeRoles.filter((r) => r.name !== "ADMIN");
 
   return (
     <div className="space-y-4">
+      {/* Scope selector */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <p className="text-[13px] font-medium text-foreground">{t("rbac.members.scope")}</p>
+        <div className="flex gap-1.5">
+          {[
+            { key: "field" as const, labelKey: "rbac.members.scopeField" },
+            { key: "farm" as const,  labelKey: "rbac.members.scopeFarm" },
+          ].map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setScope(s.key)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border transition-colors ${
+                scope === s.key
+                  ? "bg-primary text-white border-primary"
+                  : "bg-card text-foreground border-border hover:border-primary"
+              }`}
+            >
+              {t(s.labelKey as I18nKey)}
+            </button>
+          ))}
+        </div>
+
+        {scope === "farm" && (
+          <select
+            value={farmId}
+            onChange={(e) => setSelectedFarm(e.target.value)}
+            className="h-9 rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            {farmOptions.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
       {/* Assign form */}
       <div className="bg-card border border-border rounded-xl p-5">
         <p className="text-[13px] font-semibold text-foreground mb-3">
-          {t("rbac.members.assignTitle", { name: selectedField.name ?? "" })}
+          {t(scope === "field" ? "rbac.members.assignTitle" : "rbac.members.assignFarmTitle", {
+            name: heading,
+          })}
         </p>
         <div className="flex items-center gap-3 flex-wrap">
           <select
@@ -386,7 +455,7 @@ function MembersTab() {
             className="h-9 rounded-md border border-border bg-card px-3 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">{t("rbac.members.selectRole")}</option>
-            {activeRoles.map((r) => (
+            {scopeRoles.map((r) => (
               <option key={r.name} value={r.name}>
                 {r.name}
               </option>
@@ -396,9 +465,10 @@ function MembersTab() {
           <Button
             onClick={() =>
               assign.mutate({
-                fk_user:            selectedUser,
-                fk_role:            selectedRole,
-                fk_irrigationField: selectedField.id,
+                fk_user: selectedUser,
+                fk_role: selectedRole,
+                fk_irrigationField: scope === "field" ? fieldId : undefined,
+                fk_farmingUnit:     scope === "farm" ? farmId : undefined,
               })
             }
             disabled={!selectedUser || !selectedRole || assign.isPending}
@@ -428,7 +498,7 @@ function MembersTab() {
               </tr>
             </thead>
             <tbody>
-              {members.data?.map((m) => (
+              {scopeMembers?.map((m) => (
                 <tr key={m.id} className="border-b border-border hover:bg-canvas">
                   <td className="px-4 py-3 font-medium text-foreground">
                     {m.user?.name ?? "—"}
@@ -443,6 +513,11 @@ function MembersTab() {
                       }`}
                     >
                       {m.fk_role}
+                      {scope === "farm" && (
+                        <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">
+                          {m.fk_farmingUnit ? "fm" : m.fk_irrigationField ? "ch" : "gl"}
+                        </span>
+                      )}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -456,7 +531,7 @@ function MembersTab() {
                 </tr>
               ))}
 
-              {members.data?.length === 0 && (
+              {scopeMembers?.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
                     {t("rbac.members.empty")}

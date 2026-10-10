@@ -10,28 +10,10 @@ export function AppInitializer() {
   const { selectedField, setField, setFields } = useFieldStore()
 
   const {
-    data: farmId,
-    isLoading: farmLoading,
-  } = trpc.farmingUnit.getFarmingUnitByUser.useQuery(
-    {
-      id: session?.user.id ?? "",
-    },
-    {
-      enabled: !!session?.user.id,
-    }
-  );
-
-  const {
     data: fields,
-    isLoading: fieldsLoading,
-  } = trpc.irrigationField.getAllByFarm.useQuery(
-    {
-      farmId: farmId!,
-    },
-    {
-      enabled: !!farmId,
-    }
-  );
+  } = trpc.rbac.getMyFields.useQuery(undefined, {
+    enabled: !!session?.user.id,
+  });
 
   useEffect(() => {
     if (!fields || fields.length === 0) return

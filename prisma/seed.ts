@@ -385,25 +385,46 @@ const main = async () => {
   })
   console.log("✅ Schedules seeded")
 
-  // ─── RoleMember for admin on all fields ────────────────────────
-  for (const field of [parcelleA, parcelleB, parcelleC]) {
-    await prisma.roleMember.upsert({
-      where: {
-        fk_user_fk_role_fk_irrigationField: {
-          fk_user:            admin.id,
-          fk_role:            "ADMIN",
-          fk_irrigationField: field.id,
-        }
-      },
-      update: {},
-      create: {
+  // ─── RoleMembers: farm-level admin + demo users ───────────────
+  // Better-Auth super-admin: keep a farm-scoped ADMIN membership on the farm.
+  const existingAdminMember = await prisma.roleMember.findFirst({
+    where: {
+      fk_user:            admin.id,
+      fk_role:            "ADMIN",
+      fk_irrigationField: null,
+      fk_farmingUnit:     farm.id,
+    },
+    select: { id: true },
+  })
+  if (!existingAdminMember) {
+    await prisma.roleMember.create({
+      data: {
         fk_user:            admin.id,
         fk_role:            "ADMIN",
-        fk_irrigationField: field.id,
-      }
+        fk_irrigationField: null,
+        fk_farmingUnit:     farm.id,
+      },
     })
   }
-  console.log("✅ RoleMembers seeded for admin")
+
+  // ─── Demo users (accounts only — fields assigned via the RBAC UI) ──────
+  const demoAccounts: Array<{ email: string; password: string; name: string }> = [
+    { email: "farmer@ioseeds.dz",  password: "ioseed2026", name: "Farmer Demo" },
+    { email: "viewer@ioseeds.dz",  password: "ioseed2026", name: "Viewer Demo" },
+  ]
+  for (const acc of demoAccounts) {
+    const existing = await prisma.user.findUnique({ where: { email: acc.email }, select: { id: true } })
+    if (!existing) {
+      await auth.api
+        .signUpEmail({ body: { email: acc.email, password: acc.password, name: acc.name } })
+        .catch((e) => console.log("**** signup error:", acc.email, e))
+    }
+    await prisma.user.updateMany({
+      where: { email: acc.email },
+      data:  { fk_farm: farm.id },
+    })
+  }
+  console.log("✅ RoleMembers seeded (farm ADMIN for super-admin) + demo users created")
   console.log("🌱 Full seed complete!")
 }
 

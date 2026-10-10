@@ -79,8 +79,11 @@ model RoleMember {
   fk_irrigationField String?
   irrigationField    IrrigationField? @relation(fields: [fk_irrigationField], references: [id], onDelete: Cascade)
 
-  // one row per role+functionality combo
-  @@unique([fk_user, fk_role, fk_irrigationField])
+  fk_farmingUnit String?
+  farmingUnit    FarmingUnit? @relation(fields: [fk_farmingUnit], references: [id], onDelete: Cascade)
+
+  // one row per user+role+scope (nulls = farm-wide/global)
+  @@unique([fk_user, fk_role, fk_irrigationField, fk_farmingUnit])
 }
 
 model Functionality {
@@ -160,6 +163,7 @@ model FarmingUnit {
   // reverse relations
   irrigationFields IrrigationField[]
   users            User[]            @relation("FarmMembers")
+  roleMembers      RoleMember[]
 
   @@unique([fk_owner, name])
 }

@@ -773,7 +773,7 @@ const fr = {
     "noRoleSelected": "Sélectionnez un rôle pour afficher sa matrice de permissions.",
     "tab": {
       "roles": "Rôles & Fonctionnalités",
-      "members": "Membres par parcelle",
+      "members": "Membres",
     },
     "roles": {
       "select": "Rôle :",
@@ -798,7 +798,12 @@ const fr = {
     },
     "members": {
       "noField": "Sélectionnez une parcelle pour gérer ses membres.",
+      "noFarm": "Aucune ferme accessible — devenez administrateur d'une ferme.",
+      "scope": "Gérer par :",
+      "scopeField": "Parcelle",
+      "scopeFarm": "Ferme",
       "assignTitle": "Affecter un rôle sur « {{name}} »",
+      "assignFarmTitle": "Affecter un rôle (ferme) — « {{name}} »",
       "selectUser": "— Sélectionner un utilisateur —",
       "selectRole": "— Sélectionner un rôle —",
       "assign": "Affecter",

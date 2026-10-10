@@ -2,14 +2,31 @@ import { z } from "zod"
 import { protectedProc, router } from "../trpc"
 import { prisma } from "../../../prisma/lib/prisma"
 import { audit } from "../../lib/audit"
-import { assertCan, getPermissions, isAdminUser } from "@/lib/permissions"
+import {
+  assertAdminOfFarm,
+  assertCan,
+  getAccessibleFields,
+  getPermissions,
+  isAdminUser,
+  isSuperAdmin,
+} from "@/lib/permissions"
 
-// ── Role & permission management — super-admin only ────────────────
-async function assertSuperAdmin(userId: string) {
-  const ok = await isAdminUser(userId)
-  if (!ok) {
-    throw new Error("FORBIDDEN: manager roles et accès réservé aux administrateurs.")
+// ── Role & matrix management — super-admin or any farm admin ──────────
+async function assertMatrixAdmin(userId: string) {
+  if (await isAdminUser(userId)) return
+  throw new Error("FORBIDDEN: gestion des rôles réservée aux administrateurs.")
+}
+
+async function resolveMemberFarm(member: { fk_irrigationField: string | null; fk_farmingUnit: string | null }) {
+  if (member.fk_farmingUnit) return member.fk_farmingUnit
+  if (member.fk_irrigationField) {
+    const field = await prisma.irrigationField.findUnique({
+      where: { id: member.fk_irrigationField },
+      select: { fk_FarmingUnit: true },
+    })
+    return field?.fk_FarmingUnit ?? null
   }
+  return null
 }
 
 export const rbacRouter = router({
@@ -29,7 +46,7 @@ export const rbacRouter = router({
   createRole: protectedProc
     .input(z.object({ name: z.string().trim().min(1).max(60) }))
     .mutation(async ({ input, ctx }) => {
-      await assertSuperAdmin(ctx.user.id)
+      await assertMatrixAdmin(ctx.user.id)
 
       const role = await prisma.role.create({
         data: { name: input.name.toUpperCase() },
@@ -49,7 +66,7 @@ export const rbacRouter = router({
   toggleRole: protectedProc
     .input(z.object({ name: z.string(), isActive: z.boolean() }))
     .mutation(async ({ input, ctx }) => {
-      await assertSuperAdmin(ctx.user.id)
+      await assertMatrixAdmin(ctx.user.id)
 
       const old = await prisma.role.findUnique({
         where: { name: input.name },
@@ -97,7 +114,7 @@ export const rbacRouter = router({
       canToggle:        z.boolean().default(false),
     }))
     .mutation(async ({ input, ctx }) => {
-      await assertSuperAdmin(ctx.user.id)
+      await assertMatrixAdmin(ctx.user.id)
 
       const existing = await prisma.role_Functionality.findUnique({
         where: {
@@ -158,7 +175,27 @@ export const rbacRouter = router({
       return rf
     }),
 
-  // ── RoleMembers — assign users to roles per field ─────────────
+  // ── My accessible fields (topbar selector) ─────────────────────
+  getMyFields: protectedProc.query(async ({ ctx }) => {
+    return getAccessibleFields(ctx.user.id)
+  }),
+
+  // ── My permissions for a field ─────────────────────────────────
+  getMyPermissions: protectedProc
+    .input(z.object({
+      irrigationFieldId: z.string(),
+      functionality:     z.string(),
+    }))
+    .query(async ({ input, ctx }) => {
+      return getPermissions(ctx.user.id, input.functionality, input.irrigationFieldId)
+    }),
+
+  // ── Am I an admin (nav visibility for the RBAC page) ───────────
+  amIAdmin: protectedProc.query(async ({ ctx }) => {
+    return isAdminUser(ctx.user.id)
+  }),
+
+  // ── RoleMembers — assign users to roles per scope ──────────────
   getMembersByField: protectedProc
     .input(z.object({ irrigationFieldId: z.string() }))
     .query(async ({ input, ctx }) => {
@@ -174,37 +211,77 @@ export const rbacRouter = router({
       })
     }),
 
+  getMembersByFarm: protectedProc
+    .input(z.object({ farmId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      await assertAdminOfFarm(ctx.user.id, input.farmId)
+
+      const fieldIds = await prisma.irrigationField.findMany({
+        where: { fk_FarmingUnit: input.farmId },
+        select: { id: true },
+      })
+
+      return prisma.roleMember.findMany({
+        where: {
+          OR: [
+            { fk_farmingUnit: input.farmId },
+            { fk_irrigationField: { in: fieldIds.map((f) => f.id) } },
+          ],
+        },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          role: { select: { name: true, isActive: true } },
+        },
+        orderBy: { role: { name: "asc" } },
+      })
+    }),
+
   assignRole: protectedProc
     .input(z.object({
       fk_user:            z.string(),
       fk_role:            z.string(),
-      fk_irrigationField: z.string().min(1),
+      fk_irrigationField: z.string().optional(),
+      fk_farmingUnit:     z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      await assertCan(ctx.user.id, "users", input.fk_irrigationField, "canCreate")
+      // Global (scope-less) assignments are super-admin only.
+      // Field/farm assignments require an admin of the target farm.
+      if (!input.fk_irrigationField && !input.fk_farmingUnit) {
+        if (!(await isSuperAdmin(ctx.user.id))) {
+          throw new Error("FORBIDDEN: rôle global réservé aux super-admins.")
+        }
+      } else {
+        const farmId = input.fk_farmingUnit
+          ?? (input.fk_irrigationField
+            ? (await prisma.irrigationField.findUnique({
+                where: { id: input.fk_irrigationField },
+                select: { fk_FarmingUnit: true },
+              }))?.fk_FarmingUnit
+            : null)
+        if (!farmId) throw new Error("FORBIDDEN: ferme introuvable.")
+        await assertAdminOfFarm(ctx.user.id, farmId)
+      }
 
-      const existing = await prisma.roleMember.findUnique({
+      const existing = await prisma.roleMember.findFirst({
         where: {
-          fk_user_fk_role_fk_irrigationField: {
-            fk_user:            input.fk_user,
-            fk_role:            input.fk_role,
-            fk_irrigationField: input.fk_irrigationField,
-          }
+          fk_user:            input.fk_user,
+          fk_role:            input.fk_role,
+          fk_irrigationField: input.fk_irrigationField ?? null,
+          fk_farmingUnit:     input.fk_farmingUnit ?? null,
         },
-        select: { fk_role: true },
+        select: { id: true, fk_role: true },
       })
 
-      const member = await prisma.roleMember.upsert({
-        where: {
-          fk_user_fk_role_fk_irrigationField: {
-            fk_user:            input.fk_user,
-            fk_role:            input.fk_role,
-            fk_irrigationField: input.fk_irrigationField,
-          }
-        },
-        update: {},
-        create: input,
-      })
+      const member = existing
+        ? existing
+        : await prisma.roleMember.create({
+            data: {
+              fk_user:            input.fk_user,
+              fk_role:            input.fk_role,
+              fk_irrigationField: input.fk_irrigationField ?? null,
+              fk_farmingUnit:     input.fk_farmingUnit ?? null,
+            },
+          })
 
       await audit({
         tableName: "RoleMember",
@@ -214,7 +291,8 @@ export const rbacRouter = router({
         newValue: {
           fk_user:            input.fk_user,
           fk_role:            input.fk_role,
-          fk_irrigationField: input.fk_irrigationField,
+          fk_irrigationField: input.fk_irrigationField ?? null,
+          fk_farmingUnit:     input.fk_farmingUnit ?? null,
         },
         fk_user: ctx.user.id,
       })
@@ -227,14 +305,16 @@ export const rbacRouter = router({
     .mutation(async ({ input, ctx }) => {
       const old = await prisma.roleMember.findUnique({
         where: { id: input.roleMemberId },
-        select: { fk_user: true, fk_role: true, fk_irrigationField: true },
+        select: { fk_user: true, fk_role: true, fk_irrigationField: true, fk_farmingUnit: true },
       })
+      if (!old) throw new Error("NOT_FOUND: membre introuvable.")
 
-      if (!old?.fk_irrigationField) {
-        throw new Error("FORBIDDEN: rôle global — géré manuellement.")
+      const farmId = await resolveMemberFarm(old)
+      if (farmId) {
+        await assertAdminOfFarm(ctx.user.id, farmId)
+      } else if (!(await isSuperAdmin(ctx.user.id))) {
+        throw new Error("FORBIDDEN: rôle global réservé aux super-admins.")
       }
-
-      await assertCan(ctx.user.id, "users", old.fk_irrigationField, "canDelete")
 
       await prisma.roleMember.delete({ where: { id: input.roleMemberId } })
 
@@ -248,19 +328,4 @@ export const rbacRouter = router({
 
       return { success: true }
     }),
-
-  // ── My permissions for a field ─────────────────────────────────
-  getMyPermissions: protectedProc
-    .input(z.object({
-      irrigationFieldId: z.string(),
-      functionality:     z.string(),
-    }))
-    .query(async ({ input, ctx }) => {
-      return getPermissions(ctx.user.id, input.functionality, input.irrigationFieldId)
-    }),
-
-  // ── Am I a super-admin (used to show/hide the RBAC nav) ────────
-  amIAdmin: protectedProc.query(async ({ ctx }) => {
-    return isAdminUser(ctx.user.id)
-  }),
 })

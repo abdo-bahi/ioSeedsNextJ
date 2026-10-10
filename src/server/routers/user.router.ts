@@ -1,17 +1,26 @@
 import { z } from "zod";
 import { prisma } from "../../../prisma/lib/prisma";
 import type { Prisma } from "../../../generated/prisma/client";
-import { protectedProc, publicProc, router } from "../trpc";
+import { protectedProc, router } from "../trpc";
 import { auth } from "../../lib/auth";
 import { audit } from "../../lib/audit";
-import { assertCan, isAdminUser } from "@/lib/permissions";
+import {
+  assertAdminOfFarm,
+  assertCan,
+  assertCanManageUser,
+  getAdminFarmIds,
+  isSuperAdmin,
+} from "@/lib/permissions";
 import { headers } from "next/headers";
 
 
 export const userRouter = router({
-  // ── Get all users ─────────────────────────────────────────────
-  getAll: publicProc.query(async () => {
-    return prisma.user.findMany({
+  // ── Get all users (visibility-aware) ───────────────────────────
+  getAll: protectedProc.query(async ({ ctx }) => {
+    const viewerSuper = await isSuperAdmin(ctx.user.id);
+    const viewerAdminFarms = await getAdminFarmIds(ctx.user.id);
+
+    const users = await prisma.user.findMany({
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -29,10 +38,42 @@ export const userRouter = router({
             id: true,
             fk_role: true,
             fk_irrigationField: true,
-            irrigationField: { select: { name: true } },
+            fk_farmingUnit: true,
+            irrigationField: { select: { name: true, fk_FarmingUnit: true } },
+            farmingUnit: { select: { name: true } },
           },
         },
       },
+    });
+
+    // Visibility rules:
+    //  - Better Auth super-admins (role === "admin") are only visible to
+    //    other super-admins.
+    //  - Farm admins (ADMIN membership) are only visible to their own farm
+    //    admins or to a super-admin.
+    //  - Everyone else is visible normally.
+    return users.filter((u) => {
+      if (u.role === "admin") return viewerSuper;
+
+      let globalAdmin = false;
+      const adminFarms = new Set<string>();
+      for (const m of u.roleMembers) {
+        if (m.fk_role !== "ADMIN") continue;
+        if (m.fk_irrigationField === null && m.fk_farmingUnit === null) globalAdmin = true;
+        else if (m.fk_farmingUnit) adminFarms.add(m.fk_farmingUnit);
+        else if (m.fk_irrigationField && m.irrigationField?.fk_FarmingUnit) {
+          adminFarms.add(m.irrigationField.fk_FarmingUnit);
+        }
+      }
+
+      if (globalAdmin) return viewerAdminFarms === "ALL";
+      if (adminFarms.size === 0) return true;
+
+      if (viewerAdminFarms === "ALL") return true;
+      for (const f of adminFarms) {
+        if (viewerAdminFarms.has(f)) return true;
+      }
+      return viewerSuper;
     });
   }),
 
@@ -151,13 +192,12 @@ export const userRouter = router({
       const reqHeaders = await headers()
 
       await assertCan(ctx.user.id, "users", irrigationFieldId ?? "", "canUpdate");
+      await assertCanManageUser(ctx.user.id, id);
 
       const old = await prisma.user.findUnique({
         where: { id },
         select: { name: true, email: true, isActive: true, address: true },
       });
-
-      const data: any = { ...rest };
 
       if (email) {
         await auth.api.adminUpdateUser({
@@ -222,6 +262,7 @@ export const userRouter = router({
     .input(z.object({ id: z.string(), isActive: z.boolean(), irrigationFieldId: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
       await assertCan(ctx.user.id, "users", input.irrigationFieldId ?? "", "canUpdate");
+      await assertCanManageUser(ctx.user.id, input.id);
 
       const old = await prisma.user.findUnique({
         where: { id: input.id },
@@ -250,6 +291,7 @@ export const userRouter = router({
     .input(z.object({ id: z.string(), irrigationFieldId: z.string().optional() }))
     .mutation(async ({ input, ctx }) => {
       await assertCan(ctx.user.id, "users", input.irrigationFieldId ?? "", "canDelete");
+      await assertCanManageUser(ctx.user.id, input.id);
 
       const old = await prisma.user.findUnique({
         where: { id: input.id },
@@ -275,61 +317,69 @@ export const userRouter = router({
       return deleted;
     }),
 
-  // ── Assign role ───────────────────────────────────────────────
+  // ── Assign role (field or farm scope) ─────────────────────────
   assignRole: protectedProc
     .input(
       z.object({
         fk_user: z.string(),
         fk_role: z.string(),
         fk_irrigationField: z.string().optional(),
+        fk_farmingUnit: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Assigning on a field requires canCreate on "users" for that field;
-      // farm-wide (null) memberships are a super-admin action.
-      if (input.fk_irrigationField) {
-        await assertCan(ctx.user.id, "users", input.fk_irrigationField, "canCreate");
-      } else if (!(await isAdminUser(ctx.user.id))) {
-        throw new Error("FORBIDDEN: rôle global réservé aux administrateurs.");
+      // Field/farm assignments need an admin of the target farm;
+      // global (scope-less) assignments are super-admin only.
+      if (!input.fk_irrigationField && !input.fk_farmingUnit) {
+        if (!(await isSuperAdmin(ctx.user.id))) {
+          throw new Error("FORBIDDEN: rôle global réservé aux super-admins.");
+        }
+      } else {
+        const farmId = input.fk_farmingUnit
+          ?? (input.fk_irrigationField
+            ? (await prisma.irrigationField.findUnique({
+                where: { id: input.fk_irrigationField },
+                select: { fk_FarmingUnit: true },
+              }))?.fk_FarmingUnit
+            : null);
+        if (!farmId) throw new Error("FORBIDDEN: ferme introuvable.");
+        await assertAdminOfFarm(ctx.user.id, farmId);
       }
 
-      const existing = await prisma.roleMember.findUnique({
+      // The target user must be manageable by the actor.
+      await assertCanManageUser(ctx.user.id, input.fk_user);
+
+      const existing = await prisma.roleMember.findFirst({
         where: {
-          fk_user_fk_role_fk_irrigationField: {
-            fk_user: input.fk_user,
-            fk_role: input.fk_role,
-            fk_irrigationField: input.fk_irrigationField ?? "",
-          },
+          fk_user:            input.fk_user,
+          fk_role:            input.fk_role,
+          fk_irrigationField: input.fk_irrigationField ?? null,
+          fk_farmingUnit:     input.fk_farmingUnit ?? null,
         },
-        select: { fk_role: true, fk_irrigationField: true },
+        select: { id: true, fk_role: true },
       });
 
-      const member = await prisma.roleMember.upsert({
-        where: {
-          fk_user_fk_role_fk_irrigationField: {
-            fk_user: input.fk_user,
-            fk_role: input.fk_role,
-            fk_irrigationField: input.fk_irrigationField ?? "",
-          },
-        },
-        update: {},
-        create: input,
-      });
+      const member = existing
+        ? existing
+        : await prisma.roleMember.create({
+            data: {
+              fk_user:            input.fk_user,
+              fk_role:            input.fk_role,
+              fk_irrigationField: input.fk_irrigationField ?? null,
+              fk_farmingUnit:     input.fk_farmingUnit ?? null,
+            },
+          });
 
       await audit({
         tableName: "RoleMember",
         rowId: member.id,
         action: existing ? "UPDATE" : "INSERT",
-        oldValue: existing
-          ? {
-              fk_role: existing.fk_role,
-              fk_irrigationField: existing.fk_irrigationField ?? null,
-            }
-          : null,
+        oldValue: existing ? { fk_role: existing.fk_role } : null,
         newValue: {
-          fk_user: input.fk_user,
-          fk_role: input.fk_role,
+          fk_user:            input.fk_user,
+          fk_role:            input.fk_role,
           fk_irrigationField: input.fk_irrigationField ?? null,
+          fk_farmingUnit:     input.fk_farmingUnit ?? null,
         },
         fk_user: ctx.user.id,
       });
@@ -343,14 +393,27 @@ export const userRouter = router({
     .mutation(async ({ input, ctx }) => {
       const old = await prisma.roleMember.findUnique({
         where: { id: input.roleMemberId },
-        select: { fk_user: true, fk_role: true, fk_irrigationField: true },
+        select: { fk_user: true, fk_role: true, fk_irrigationField: true, fk_farmingUnit: true },
       });
+      if (!old) throw new Error("NOT_FOUND: membre introuvable.");
 
-      if (old?.fk_irrigationField) {
-        await assertCan(ctx.user.id, "users", old.fk_irrigationField, "canDelete");
-      } else if (!(await isAdminUser(ctx.user.id))) {
-        throw new Error("FORBIDDEN: rôle global réservé aux administrateurs.");
+      // Admin of the member's farm (or super-admin for global memberships).
+      const farmId =
+        old.fk_farmingUnit
+        ?? (old.fk_irrigationField
+          ? (await prisma.irrigationField.findUnique({
+              where: { id: old.fk_irrigationField },
+              select: { fk_FarmingUnit: true },
+            }))?.fk_FarmingUnit
+          : null);
+
+      if (farmId) {
+        await assertAdminOfFarm(ctx.user.id, farmId);
+      } else if (!(await isSuperAdmin(ctx.user.id))) {
+        throw new Error("FORBIDDEN: rôle global réservé aux super-admins.");
       }
+
+      if (old.fk_user) await assertCanManageUser(ctx.user.id, old.fk_user);
 
       const deleted = await prisma.roleMember.delete({
         where: { id: input.roleMemberId },
