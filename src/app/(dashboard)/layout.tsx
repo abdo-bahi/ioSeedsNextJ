@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardTopbar } from "@/components/dashboard-topbar"
 import { auth } from "@/lib/auth"
+import { prisma } from "../../../prisma/lib/prisma"
 import { getUserFarms } from "@/lib/get-user-farms"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
@@ -17,7 +18,21 @@ export default async function Layout({ children }: { children: React.ReactNode }
 
   if (!session) redirect("/login")
 
-    
+  // Non super-admins belonging to a deactivated farm are locked out.
+  if (session.user.role !== "admin") {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { fk_farm: true },
+    })
+    if (dbUser?.fk_farm) {
+      const farm = await prisma.farmingUnit.findUnique({
+        where: { id: dbUser.fk_farm },
+        select: { isActive: true },
+      })
+      if (farm && farm.isActive === false) redirect("/farm-inactive")
+    }
+  }
+
   // Fetch farms this user has access to
   const farms = await getUserFarms(session.user.id)
 

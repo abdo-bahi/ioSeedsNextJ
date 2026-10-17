@@ -52,12 +52,23 @@ export const auth = betterAuth({
       const ip = extractClientIp(ctx.headers);
       const user = await prisma.user.findUnique({
         where: { email },
-        select: { id: true, isActive: true },
+        select: { id: true, isActive: true, fk_farm: true },
       });
 
       if (user && user.isActive === false) {
         await logConnection({ fk_user: user.id, ip, success: false });
         throw new Error("This account has been deactivated.");
+      }
+
+      if (user?.fk_farm) {
+        const farm = await prisma.farmingUnit.findUnique({
+          where: { id: user.fk_farm },
+          select: { isActive: true },
+        });
+        if (farm && farm.isActive === false) {
+          await logConnection({ fk_user: user.id, ip, success: false });
+          throw new Error("Cette ferme est inactive.");
+        }
       }
     }),
     after: createAuthMiddleware(async (ctx) => {

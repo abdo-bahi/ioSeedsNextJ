@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc/client";
+import { useFieldStore } from "@/store/field-store";
 import { t, type I18nKey } from "@/i18n";
 
 type CrudAction = "INSERT" | "UPDATE" | "DELETE";
@@ -36,14 +37,30 @@ function tableLabel(name: string) {
 }
 
 export default function AuditPage() {
+  const { selectedField } = useFieldStore();
+  const farmId = selectedField?.fk_FarmingUnit ?? undefined;
+
   const [tableFilter, setTableFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("");
+  const [userFilter, setUserFilter] = useState("");
   const [skip, setSkip] = useState(0);
+
+  const { data: farmUsers } = trpc.user.getAll.useQuery(
+    { farmId },
+    { enabled: !!farmId }
+  );
+
+  // Ignore a stale user filter when the active farm changes.
+  const effectiveUserFilter = farmUsers?.some((u) => u.id === userFilter)
+    ? userFilter
+    : "";
 
   const { data, isLoading, isError } = trpc.audit.getAll.useQuery(
     {
       tableName: tableFilter || undefined,
       action: (actionFilter || undefined) as CrudAction | undefined,
+      farmId,
+      fk_user: effectiveUserFilter || undefined,
       skip,
       take: TAKE,
     },
@@ -68,6 +85,22 @@ export default function AuditPage() {
 
         {/* ── Filters ── */}
         <div className="flex items-center gap-2">
+          <select
+            value={effectiveUserFilter}
+            onChange={(e) => {
+              setUserFilter(e.target.value);
+              setSkip(0);
+            }}
+            className="h-8 rounded-md border border-[#D6E8DC] bg-white dark:bg-card dark:border-border px-2 text-[12px] text-[#5A7A65] dark:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#4CAF7D]"
+          >
+            <option value="">{t("audit.allUsers")}</option>
+            {farmUsers?.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name ?? u.email}
+              </option>
+            ))}
+          </select>
+
           <select
             value={tableFilter}
             onChange={(e) => {

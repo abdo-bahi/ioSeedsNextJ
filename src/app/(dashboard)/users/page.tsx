@@ -520,7 +520,9 @@ export default function UsersPage() {
   const [logsTarget, setLogsTarget] = useState<string | null>(null);
 
   // ── Queries ───────────────────────────────────────────────────
-  const { data: users, isLoading } = trpc.user.getAll.useQuery();
+  const { data: users, isLoading } = trpc.user.getAll.useQuery({
+    farmId: selectedField?.fk_FarmingUnit ?? undefined,
+  });
   const { data: wilayas } = trpc.farmingUnit.getWilayas.useQuery();
   const { data: fields } = trpc.irrigationField.getAllByFarm.useQuery({
     farmId: FARM_ID,
@@ -573,7 +575,7 @@ export default function UsersPage() {
       address: form.address || undefined,
       isActive: form.isActive,
       fk_wilaya: form.fk_wilaya || undefined,
-      fk_farm: FARM_ID,
+      fk_farm: selectedField?.fk_FarmingUnit ?? undefined,
       irrigationFieldId: selectedField?.id ?? "",
     });
   }

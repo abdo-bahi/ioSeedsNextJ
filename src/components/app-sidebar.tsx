@@ -23,6 +23,7 @@ import {
   SlidersHorizontal,
   ScrollText,
   ShieldCheck,
+  Building2,
 } from "lucide-react";
 import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
@@ -83,6 +84,13 @@ const navItems = [
     href: "/rbac",
     adminOnly: true,
   },
+  {
+    labelKey: "nav.farms",
+    subtitleKey: "nav.subtitle.farms",
+    icon: Building2,
+    href: "/farms",
+    superAdminOnly: true,
+  },
 ];
 
 export function AppSidebar({ farms, user }: { farms: any; user: any }) {
@@ -132,6 +140,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
             <SidebarMenu>
               {navItems.map(
                 (item) =>
+                  (!item.superAdminOnly || session?.user?.role === "admin") &&
                   (!item.adminOnly || session?.user?.role === "admin" || amAdmin) && (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton

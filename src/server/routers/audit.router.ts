@@ -23,6 +23,7 @@ export const auditRouter = router({
       z.object({
         tableName: z.string().optional(),
         fk_user: z.string().optional(),
+        farmId: z.string().optional(),
         action: z.enum(["INSERT", "UPDATE", "DELETE"]).optional(),
         skip: z.number().int().min(0).default(0),
         take: z.number().int().min(1).max(100).default(50),
@@ -37,8 +38,23 @@ export const auditRouter = router({
       };
 
       if (input.tableName) where.tableName = input.tableName;
-      if (input.fk_user) where.fk_user = input.fk_user;
       if (input.action) where.crudAction = input.action;
+
+      // Farm scope: only audit rows whose actor belongs to the farm.
+      if (input.farmId) {
+        const farmUsers = await prisma.user.findMany({
+          where: { fk_farm: input.farmId },
+          select: { id: true },
+        });
+        const ids = farmUsers.map((u) => u.id);
+        if (input.fk_user) {
+          where.fk_user = ids.includes(input.fk_user) ? input.fk_user : "__none__";
+        } else {
+          where.fk_user = { in: ids };
+        }
+      } else if (input.fk_user) {
+        where.fk_user = input.fk_user;
+      }
 
       const [logs, total] = await Promise.all([
         prisma.auditLog.findMany({

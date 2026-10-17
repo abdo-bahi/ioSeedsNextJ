@@ -15,12 +15,15 @@ import { headers } from "next/headers";
 
 
 export const userRouter = router({
-  // ── Get all users (visibility-aware) ───────────────────────────
-  getAll: protectedProc.query(async ({ ctx }) => {
+  // ── Get all users (visibility-aware, optionally farm-scoped) ───
+  getAll: protectedProc
+    .input(z.object({ farmId: z.string().optional() }).optional())
+    .query(async ({ input, ctx }) => {
     const viewerSuper = await isSuperAdmin(ctx.user.id);
     const viewerAdminFarms = await getAdminFarmIds(ctx.user.id);
 
     const users = await prisma.user.findMany({
+      where: input?.farmId ? { fk_farm: input.farmId } : undefined,
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -127,10 +130,11 @@ export const userRouter = router({
         fk_wilaya: z.string().optional(),
         fk_farm: z.string().optional(),
         irrigationFieldId: z.string().optional(),
+        role: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { email, password, name, irrigationFieldId, ...rest } = input;
+      const { email, password, name, irrigationFieldId, role, ...rest } = input;
 
       await assertCan(ctx.user.id, "users", irrigationFieldId ?? "", "canCreate");
 
@@ -155,6 +159,30 @@ export const userRouter = router({
           fk_farm: rest.fk_farm,
         },
       });
+
+      // Step 3 — give the new user default access so their parcelles show up.
+      // Farm scope when the user belongs to a farm (whole farm), otherwise
+      // scope to the field they were created under.
+      const roleName = role ?? "VIEWER";
+      const roleRow = await prisma.role.findUnique({ where: { name: roleName } });
+      if (roleRow) {
+        const scope = rest.fk_farm
+          ? { fk_irrigationField: null, fk_farmingUnit: rest.fk_farm }
+          : irrigationFieldId
+            ? { fk_irrigationField: irrigationFieldId, fk_farmingUnit: null }
+            : null;
+        if (scope) {
+          const existing = await prisma.roleMember.findFirst({
+            where: { fk_user: user.id, fk_role: roleName, ...scope },
+            select: { id: true },
+          });
+          if (!existing) {
+            await prisma.roleMember.create({
+              data: { fk_user: user.id, fk_role: roleName, ...scope },
+            });
+          }
+        }
+      }
 
       await audit({
         tableName: "User",

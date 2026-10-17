@@ -66,6 +66,7 @@ const fr = {
     "users": "Utilisateurs",
     "audit": "Journal d'audit",
     "rbac": "Rôles & Accès",
+    "farms": "Fermes",
     "logout": "Se déconnecter",
     "themeToggle": "Basculer le thème",
     "subtitle": {
@@ -77,6 +78,7 @@ const fr = {
       "users": "Gestion des utilisateurs du système",
       "audit": "Actions des utilisateurs (30 jours)",
       "rbac": "Rôles, matrices d'accès et membres",
+      "farms": "Gestion des fermes et de leurs administrateurs",
     },
   },
   "auth": {
@@ -91,6 +93,11 @@ const fr = {
       "error": {
         "invalid": "Email ou mot de passe incorrect.",
       },
+    },
+    "farmInactive": {
+      "title": "Ferme inactive",
+      "message": "La ferme à laquelle votre compte est rattaché est inactive. Contactez un administrateur.",
+      "logout": "Se déconnecter",
     },
   },
   "dashboard": {
@@ -736,6 +743,7 @@ const fr = {
     "subtitle": "Actions des 30 derniers jours",
     "allTables": "— Toutes les tables —",
     "allActions": "— Toutes les actions —",
+    "allUsers": "— Tous les utilisateurs —",
     "column": {
       "date": "DATE",
       "user": "UTILISATEUR",
@@ -823,6 +831,57 @@ const fr = {
       "schedules": "Programmations",
       "users": "Utilisateurs",
       "auditLog": "Journal d'audit",
+    },
+  },
+  "farms": {
+    "title": "Fermes",
+    "subtitle": "Créez et gérez les fermes ainsi que leurs administrateurs.",
+    "create": "Nouvelle ferme",
+    "empty": "Aucune ferme pour le moment.",
+    "table": {
+      "name": "FERME",
+      "owner": "PROPRIÉTAIRE",
+      "wilaya": "WILAYA",
+      "fields": "PARCELLES",
+      "status": "STATUT",
+      "actions": "ACTIONS",
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+    },
+    "actions": {
+      "enter": "Accéder à cette ferme",
+      "admins": "Gérer les administrateurs",
+      "edit": "Modifier",
+      "activate": "Activer",
+      "deactivate": "Désactiver",
+    },
+    "enter": {
+      "noFieldsTitle": "Aucun champ dans cette ferme",
+      "noFieldsDesc": "Créez au moins une parcelle pour cette ferme avant d'y accéder.",
+    },
+    "form": {
+      "createTitle": "Nouvelle ferme",
+      "editTitle": "Modifier la ferme",
+      "name": "Nom",
+      "address": "Adresse",
+      "description": "Description",
+      "wilaya": "Wilaya",
+      "owner": "Propriétaire",
+      "isActive": "Ferme active",
+      "none": "— Aucun —",
+      "cancel": "Annuler",
+      "create": "Créer",
+      "save": "Enregistrer",
+    },
+    "admins": {
+      "title": "Administrateurs de la ferme",
+      "selectUser": "— Sélectionner un utilisateur —",
+      "assign": "Ajouter",
+      "user": "UTILISATEUR",
+      "email": "E-MAIL",
+      "empty": "Aucun administrateur pour cette ferme.",
     },
   },
   "errors": {
