@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { protectedProc, router } from "../trpc"
+import { TRPCError } from "@trpc/server"
 import { prisma } from "../../../prisma/lib/prisma"
 import { audit } from "../../lib/audit"
 import {
@@ -260,6 +261,24 @@ export const rbacRouter = router({
             : null)
         if (!farmId) throw new Error("FORBIDDEN: ferme introuvable.")
         await assertAdminOfFarm(ctx.user.id, farmId)
+
+        // Only a super-admin may grant access to a user who does not belong to
+        // the target farm — a farm admin must stay within their own farm.
+        if (!(await isSuperAdmin(ctx.user.id))) {
+          const target = await prisma.user.findUnique({
+            where: { id: input.fk_user },
+            select: { fk_farm: true },
+          })
+          if (!target) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Utilisateur introuvable." })
+          }
+          if (target.fk_farm !== farmId) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Cet utilisateur n'appartient pas à cette ferme.",
+            })
+          }
+        }
       }
 
       const existing = await prisma.roleMember.findFirst({

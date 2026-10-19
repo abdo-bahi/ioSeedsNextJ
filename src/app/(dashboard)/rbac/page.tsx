@@ -323,7 +323,6 @@ function MembersTab() {
 
   const { data: myFields } = trpc.rbac.getMyFields.useQuery();
   const roles = trpc.rbac.getRoles.useQuery();
-  const users = trpc.user.getAll.useQuery();
 
   // Unique farms visible to the current user (from accessible fields).
   const farmOptions = useMemo(() => {
@@ -347,6 +346,14 @@ function MembersTab() {
   );
   const scopeMembers = scope === "field" ? membersField.data : membersFarm.data;
 
+  // Only ever offer users belonging to the farm in scope — never other farms'.
+  const contextFarmId =
+    scope === "field" ? (selectedField?.fk_FarmingUnit ?? "") : farmId;
+  const users = trpc.user.getAll.useQuery(
+    { farmId: contextFarmId },
+    { enabled: !!contextFarmId }
+  );
+
   const invalidateMembers = () => {
     utils.rbac.getMembersByField.invalidate();
     utils.rbac.getMembersByFarm.invalidate();
@@ -359,6 +366,7 @@ function MembersTab() {
       setSelectedUser("");
       setSelectedRole("");
     },
+    onError: (err) => alert(err.message),
   });
 
   const remove = trpc.rbac.removeRole.useMutation({

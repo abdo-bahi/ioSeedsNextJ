@@ -46,7 +46,7 @@ const EMPTY_FORM: FarmForm = {
 export default function FarmsPage() {
   const router = useRouter();
   const utils = trpc.useUtils();
-  const { setField, setFields } = useFieldStore();
+  const { setField, setFields, setActiveFarmId } = useFieldStore();
   const { data: session } = authClient.useSession();
   const isSuperAdmin = session?.user?.role === "admin";
 
@@ -78,29 +78,26 @@ export default function FarmsPage() {
     onSuccess: invalidate,
   });
 
-  // ── Enter a farm: switch the topbar context to its first field ──
+  // ── Enter a farm: scope the topbar selector to this farm's parcelles ──
   async function handleEnter(farmId: string) {
     try {
       const fields = await utils.farmingUnit.getFieldsOfFarm.fetch({ farmId });
-      const first = fields?.[0];
-      if (!first) {
+      if (!fields || fields.length === 0) {
         alert(t("farms.enter.noFieldsDesc") ?? "This farm has no irrigation fields yet.");
         return;
       }
-      setField({
-        id: first.id,
-        name: first.name ?? null,
-        fk_FarmingUnit: first.fk_FarmingUnit ?? null,
-      });
-      setFields([{
-        id: first.id,
-        name: first.name ?? null,
-        fk_FarmingUnit: first.fk_FarmingUnit ?? null,
-      }]);
+      const mapped = fields.map((f) => ({
+        id: f.id,
+        name: f.name ?? null,
+        fk_FarmingUnit: f.fk_FarmingUnit ?? null,
+      }));
+      setActiveFarmId(farmId);
+      setFields(mapped);
+      setField(mapped[0]);
       router.push("/");
-    } catch (err: any) {
+    } catch (err) {
       console.error("handleEnter failed:", err);
-      alert(err?.message ?? "Failed to enter farm");
+      alert(err instanceof Error ? err.message : "Failed to enter farm");
     }
   }
 

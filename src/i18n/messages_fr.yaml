@@ -67,6 +67,7 @@ nav:
   farms:        "Fermes"
   logout:       "Se déconnecter"
   themeToggle:  "Basculer le thème"
+  languageToggle: "Changer la langue"
   subtitle:
     dashboard:  "Lectures en direct et actions"
     statistics: "Graphiques et historique"

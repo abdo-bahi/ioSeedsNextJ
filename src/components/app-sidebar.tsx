@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Icon, LogOut, Users } from "lucide-react";
 import {
   Sidebar,
@@ -29,6 +30,7 @@ import { authClient, signOut } from "@/lib/auth-client";
 import { useFieldStore } from "@/store/field-store";
 import { trpc } from "@/lib/trpc/client";
 import { t } from "@/i18n";
+import { useLocale } from "@/components/locale-provider";
 
 let FARM_ID: string;
 
@@ -96,6 +98,8 @@ const navItems = [
 export function AppSidebar({ farms, user }: { farms: any; user: any }) {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
+  const { locale } = useLocale();
+  const isRtl = locale === "ar";
 
   const reset = useFieldStore((s) => s.reset);
   const { selectedField } = useFieldStore();
@@ -114,7 +118,10 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
   }
 
   return (
-    <Sidebar className="border-r border-border bg-card">
+    <Sidebar
+      side={isRtl ? "right" : "left"}
+      className={`${isRtl ? "border-l" : "border-r"} border-border bg-card`}
+    >
       {/* ── Header ── */}
       <SidebarHeader className="px-4 py-5">
         <div className="flex items-center gap-3">
@@ -151,7 +158,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
                       data-[active=true]:bg-green-soft data-[active=true]:text-foreground
                     `}
                       >
-                        <a href={item.href} className="flex items-center gap-3">
+                        <Link href={item.href} className="flex items-center gap-3">
                           <item.icon
                             className={`h-[18px] w-[18px] shrink-0 ${
                               pathname === item.href
@@ -173,7 +180,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
                               {t(item.subtitleKey)}
                             </span>
                           </div>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )
@@ -204,7 +211,7 @@ export function AppSidebar({ farms, user }: { farms: any; user: any }) {
         </div>
         <button
           onClick={handleLogout}
-          className="absolute right-2 text-muted-foreground  hover:text-[#D95F5F] transition-colors p-1 rounded"
+          className="absolute end-2 text-muted-foreground  hover:text-[#D95F5F] transition-colors p-1 rounded"
           title={t("nav.logout")}
         >
           <LogOut className="h-4 w-4" />

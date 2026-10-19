@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Sprout, RotateCcw, Moon, Sun } from "lucide-react";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useFieldStore } from "@/store/field-store"
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/theme-provider";
@@ -89,6 +90,8 @@ export function DashboardTopbar() {
             <Moon className="h-[16px] w-[16px]" />
           )}
         </Button>
+
+        <LanguageSwitcher />
 
         <NotificationBell />
       </div>

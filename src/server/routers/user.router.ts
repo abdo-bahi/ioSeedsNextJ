@@ -80,6 +80,15 @@ export const userRouter = router({
     });
   }),
 
+  // ── Farm the current user belongs to (login landing context) ───
+  myFarm: protectedProc.query(async ({ ctx }) => {
+    const user = await prisma.user.findUnique({
+      where: { id: ctx.user.id },
+      select: { fk_farm: true },
+    });
+    return user?.fk_farm ?? null;
+  }),
+
   // ── Connection logs for a user (paginated, date-filterable, newest first) ──
   getConnectionLogs: protectedProc
     .input(

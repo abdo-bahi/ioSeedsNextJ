@@ -20,15 +20,26 @@ type DeepKeys<T> = T extends object
   : never;
 
 export type { Locale };
+export { defaultLocale };
 export type I18nKey = DeepKeys<Messages>;
 
 export type I18nParams = Record<string, Primitive>;
 
-// ── Current locale (single-locale default; setLocale for switching) ──
+// ── Current locale (external store so React can subscribe) ──────────
 let currentLocale: Locale = defaultLocale;
+const listeners = new Set<() => void>();
+
+export function subscribeLocale(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 export function setLocale(locale: Locale): void {
+  if (currentLocale === locale) return;
   currentLocale = locale;
+  listeners.forEach((listener) => listener());
 }
 
 export function getLocale(): Locale {

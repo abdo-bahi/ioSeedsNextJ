@@ -8,6 +8,9 @@ const root = join(__dirname, "..");
 const i18nDir = join(root, "src", "i18n");
 const outFile = join(i18nDir, "messages.generated.ts");
 
+// The fallback locale used at runtime if no preference is stored.
+const PREFERRED_DEFAULT = "fr";
+
 const files = readdirSync(i18nDir)
   .filter((f) => /^messages_[a-z]{2}\.yaml$/.test(f))
   .sort();
@@ -15,6 +18,14 @@ const files = readdirSync(i18nDir)
 if (files.length === 0) {
   console.error("No messages_*.yaml found in", i18nDir);
   process.exit(1);
+}
+
+// Keep the preferred default (and the key-completeness reference) first,
+// regardless of alphabetical order, so adding e.g. `ar` never changes it.
+const preferredFile = `messages_${PREFERRED_DEFAULT}.yaml`;
+const preferredIndex = files.indexOf(preferredFile);
+if (preferredIndex > 0) {
+  files.unshift(files.splice(preferredIndex, 1)[0]);
 }
 
 const locales = {};
