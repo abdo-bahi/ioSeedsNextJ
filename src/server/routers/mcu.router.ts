@@ -48,6 +48,8 @@ export const mcuRouter = router({
               actuators: true,
             },
           },
+          // include battery percent
+          batteryPercent: true,
         },
       });
     }),
@@ -224,6 +226,48 @@ return prisma.mCU.update({
         where: { id: input.id },
         data: { status: input.status },
       });
+    }),
+
+  // ── Update battery percent (called by MCU POST) ───────────────────
+  updateBattery: protectedProc
+    .input(z.object({ id: z.string(), batteryPercent: z.number().min(0).max(100) }))
+    .mutation(async ({ input }) => {
+      const { id, batteryPercent } = input;
+      const mcu = await prisma.mCU.findUnique({ where: { id } });
+      if (!mcu) throw new TRPCError({ code: "NOT_FOUND" });
+      return prisma.mCU.update({
+        where: { id },
+        data: { batteryPercent },
+      });
+    }),
+
+  // ── Receive sensor/battery data from MCU (public) ────────────────
+  receiveReadings: publicProc
+    .input(z.object({
+      mcuid: z.string(),
+      temperature: z.number().optional(),
+      humidity: z.number().optional(),
+      soilRaw: z.number().optional(),
+      soilPct: z.number().optional(),
+      battVoltage: z.number().optional(),
+      battPct: z.number().optional().default(0),
+      dhtError: z.boolean().optional(),
+      battLow: z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { mcuid, battPct } = input;
+      if (battPct !== undefined && battPct !== null) {
+        await prisma.mCU.update({
+          where: { id: mcuid },
+          data: { batteryPercent: battPct },
+        });
+      }
+      // optionally update status online
+      await prisma.mCU.update({
+        where: { id: mcuid },
+        data: { status: MCUStatus.ONLINE, lastSeenAt: new Date() },
+      });
+      return { ok: true };
     }),
 
   // ── Device connectivity log (paginated, date-filtered) ─────────

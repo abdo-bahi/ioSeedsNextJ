@@ -1,253 +1,141 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
+#include <DHT.h>
 
-// ── Config ────────────────────────────────────────────────────────
-const char* WIFI_SSID = "IdoomFibre_Bh";
-const char* WIFI_PASSWORD = "tMtkKH96";
-const char* MQTT_BROKER = "192.168.100.35";
-const int MQTT_PORT = 28883;
-const char* MQTT_USER = "admin";
-const char* MQTT_PASS = "ioseeds2026";
+// ── Pin definitions (from diymore_012592 template) ────────────────
+#define DHT_PIN     22   // DHT11 data pin
+#define SOIL_PIN    32   // Capacitive soil sensor (ADC)
+#define BATTERY_PIN 34   // Battery voltage divider
+#define LED_STATUS  16   // LedLink — blue status LED
+#define LED_1       33   // Led1 — red LED
 
-// ── IOSeeds IDs ───────────────────────────────────────────────────
-const char* FARM_ID = "cmsj9pj3i000vkcbisbbrib12";
-const char* FIELD_ID = "cmsj9pj3s000wkcbixjdd70n3";
-const char* MCU_ID = "cmsj9pj4s000zkcbiwo80bdas";
-const char* SENSOR_ID = "cmsj9pj5l0012kcbi3k07j4f6";
-const char* ACTUATOR_ID = "cmsj9pj700016kcbiw7yjbtak";
-const char* API_KEY = "e4eba5a852588f9a2ccb6f064d415945715fb7352d90d1e55c529480c142e958";
+#define DHT_TYPE DHT11
 
-// ── Clients ───────────────────────────────────────────────────────
-WiFiClient wifiClient;
-PubSubClient mqtt(wifiClient);
+DHT dht(DHT_PIN, DHT_TYPE);
 
-unsigned long lastSend = 0;
+// ── LED blink state ───────────────────────────────────────────────
+unsigned long lastBlink    = 0;
+unsigned long lastRead     = 0;
+bool          ledState     = false;
+const long    BLINK_NORMAL = 1000;  // 1s blink = all OK
+const long    BLINK_ERROR  = 200;   // fast blink = sensor error
+const long    READ_INTERVAL = 2000; // read every 2s
 
-// ── Device presence ─────────────────────────────────────────────
-// PubSubClient only stores POINTERS to the will topic/payload,
-// so they must be globals that outlive connect().
-char willTopic[256];
-char willBuf[200];
-char statusBuf[200];
-
-String statusTopic() {
-  return String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID + "/status";
-}
-
-// Publish ONLINE/OFFLINE status (retained) to the dashboard worker.
-void publishStatus(const char* status, const char* source) {
-  StaticJsonDocument<256> doc;
-  doc["apiKey"] = API_KEY;
-  doc["status"] = status;
-  doc["source"] = source;
-  serializeJson(doc, statusBuf);
-
-  String topic = statusTopic();
-  bool ok = mqtt.publish(topic.c_str(), statusBuf, true);
-  Serial.printf("📡 Status %s (%s) → %s %s\n", status, source, topic.c_str(), ok ? "✅" : "❌ FAILED");
-}
-
-// ── Command tracking: report the lifecycle of a dashboard command ──
-String ackTopic() {
-  return String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID + "/ack";
-}
-
-// status: "delivered" (received) | "executed" (actuator operated) | "failed"
-void publishAck(const char* commandId, const char* status, const char* message) {
-  StaticJsonDocument<256> doc;
-  doc["apiKey"] = API_KEY;show per sensor data popup on dashboard kpigrid ( show details smal btn )
-  doc["commandId"] = commandId;
-  doc["status"] = status;
-  if (strlen(message) > 0) doc["message"] = message;
-
-  char buf[256];
-  serializeJson(doc, buf);
-
-  String topic = ackTopic();
-  bool ok = mqtt.publish(topic.c_str(), buf);
-  Serial.printf("📨 Ack %s → %s (%s) %s\n", commandId, status, message, ok ? "✅" : "❌ FAILED");
-}
-
-// Physically operate the actuator. Returns false when the actuator is
-// unreachable or the action could not be completed (→ a "failed" ack).
-// TODO(real hardware): drive the relay/pin and verify the actuator.
-bool executeActuator(bool targetState) {
-  if (targetState) {
-    Serial.println("🔓 OPEN (relay ON)");
-  } else {
-    Serial.println("🔒 CLOSED (relay OFF)");
+// ── Battery ───────────────────────────────────────────────────────
+float readBatteryVoltage() {
+  int sum = 0;
+  for (int i = 0; i < 10; i++) {
+    sum += analogRead(BATTERY_PIN);
+    delay(5);
   }
-  return true; // simulated: wire a real relay + feedback here
+  float raw     = sum / 10.0;
+  float voltage = (raw / 4095.0) * 3.3 * 2.0;  // x2 for voltage divider
+  return voltage;
 }
 
-// -- callback for mqtt subscriber ----------------------
-void onMessage(char* topic, byte* payload, unsigned int length) {
-  Serial.println("\n📥 Message received!");
-  Serial.println("   Topic: " + String(topic));
-
-  // Config topics (actuators / sensors / schedules / ...) — retained
-  // full-list snapshots; just log them (the MCU replaces its whole list).
-  if (!String(topic).endsWith("/cmd")) {
-    Serial.print("   ⚙️ Config payload: ");
-    Serial.write(payload, length);
-    Serial.println();
-    return;
-  }
-
-  // Parse JSON
-  StaticJsonDocument<512> doc;
-  DeserializationError err = deserializeJson(doc, payload, length);
-
-  if (err) {
-    Serial.println("❌ JSON parse error: " + String(err.c_str()));
-    return;
-  }
-  // ── Actuator command ──────────────────────────────────────────
-  bool targetState = doc["targetState"] | false;
-  const char* commandId = doc["commandId"] | "unknown";
-
-  // 1) Confirm receipt → the dashboard command becomes "delivered".
-  publishAck(commandId, "delivered", "cmd_received");
-
-  Serial.printf("   commandId: %s\n", commandId);
-
-  // 2) Execute on the actuator (live command OR retained message pushed
-  //    right after subscribe) — report executed / failed back to the
-  //    dashboard.
-  if (executeActuator(targetState)) {
-    publishAck(commandId, "executed", targetState ? "opened" : "closed");
-    reportActuatorState(targetState);
-  } else {
-    publishAck(commandId, "failed", "actuator_unreachable");
-  }
-  }
-// ─────────────────────────────────────────────────────────────────
-void connectWifi() {
-  Serial.print("📶 Connecting to WiFi");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-  }
-
-  Serial.println();
-  Serial.println("✅ WiFi connected — IP: " + WiFi.localIP().toString());
-}
-
-void connectMQTT() {
-  while (!mqtt.connected()) {
-    Serial.print("🔌 Connecting to MQTT...");
-
-    // ── LWT will: the broker auto-publishes OFFLINE if we drop without
-    //    a clean DISCONNECT (Wi-Fi loss, power cut) — this is what makes
-    //    offline detection reliable instead of relying on us.
-    StaticJsonDocument<256> willDoc;
-    willDoc["apiKey"] = API_KEY;
-    willDoc["status"] = "OFFLINE";
-    willDoc["source"] = "will";
-    serializeJson(willDoc, willBuf);
-    statusTopic().toCharArray(willTopic, sizeof(willTopic));
-
-    if (mqtt.connect("esp32-ioseeds", MQTT_USER, MQTT_PASS,
-                     willTopic, 1, true, willBuf)) {
-      Serial.println(" ✅ Connected!");
-      // Tell the dashboard we are back online (overrides the retained will)
-      publishStatus("ONLINE", "connect");
-
-       // Subscribe to actuator command topic.
-       // Because the server publishes with { retain: true }, Mosquitto
-       // instantly pushes the latest retained command to us here.
-      String cmdTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
-                      + "/" + MCU_ID + "/actuator/" + ACTUATOR_ID + "/cmd";
-
-      mqtt.subscribe(cmdTopic.c_str(), 1);
-      Serial.println("📡 Subscribed to: " + cmdTopic);
-
-       // Device config topics — server publishes the full actuator/sensor
-       // lists on create/update/delete (retained → delivered on boot).
-      String actuatorsTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
-                              + "/" + MCU_ID + "/actuators";
-      String sensorsTopic = String("irrigation/") + FARM_ID + "/" + FIELD_ID
-                              + "/" + MCU_ID + "/sensors";
-      mqtt.subscribe(actuatorsTopic.c_str(), 1);
-      mqtt.subscribe(sensorsTopic.c_str(), 1);
-      Serial.println("📡 Subscribed to: " + actuatorsTopic);
-      Serial.println("📡 Subscribed to: " + sensorsTopic);
-
-    } else {
-      Serial.printf(" ❌ Failed rc=%d — retry in 5s\n", mqtt.state());
-      delay(5000);
-    }
-  }
-}
-
-void sendSensorData() {
-  float value = random(0, 1000) / 10.0;  // 0.0 – 100.0
-  int rawValue = (int)(value * 10.23);
-
-  StaticJsonDocument<256> doc;
-  doc["apiKey"] = API_KEY;
-  doc["sensorId"] = SENSOR_ID;
-  doc["value"] = value;
-  doc["rawValue"] = rawValue;
-  doc["unit"] = "%";
-  doc["timestamp"] = millis();
-
-  char buf[512];
-  serializeJson(doc, buf);
-
-  String topic = String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID
-                 + "/sensor/" + SENSOR_ID + "/data";
-
-  Serial.println("📤 Topic length: " + String(topic.length()));  
-  Serial.println("📤 Topic: " + topic);      
-
-  bool ok = mqtt.publish(topic.c_str(), buf);
-  Serial.printf("💧 Sent: %.1f%% — %s\n", value, ok ? "✅" : "❌ FAILED");
-}
-
-void reportActuatorState(bool state) {
-  StaticJsonDocument<256> doc;
-  doc["apiKey"] = API_KEY;
-  doc["state"] = state;
-
-  char buf[256];
-  serializeJson(doc, buf);
-
-  String topic = String("irrigation/") + FARM_ID + "/" + FIELD_ID + "/" + MCU_ID
-                 + "/actuator/" + ACTUATOR_ID + "/state";
-
-  bool ok = mqtt.publish(topic.c_str(), buf);
-  Serial.printf("🔁 Actuator state reported: %s — %s\n", state ? "OPEN" : "CLOSED", ok ? "✅" : "❌ FAILED");
+float batteryPercent(float voltage) {
+  // 18650: 4.2V = 100%, 3.0V = 0%
+  float pct = (voltage - 3.0) / (4.2 - 3.0) * 100.0;
+  return constrain(pct, 0.0, 100.0);
 }
 
 // ─────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
   delay(1000);
-  Serial.println("\n🌱 IOSeeds ESP32 starting...");
 
-  connectWifi();
+  pinMode(LED_STATUS, OUTPUT);
+  pinMode(LED_1,      OUTPUT);
 
-  mqtt.setBufferSize(2048);
-  mqtt.setServer(MQTT_BROKER, MQTT_PORT);
-  mqtt.setCallback(onMessage); 
+  digitalWrite(LED_STATUS, LOW);
+  digitalWrite(LED_1,      LOW);
+
+  dht.begin();
+
+  Serial.println("\nIOSeeds ESP32 - Sensor test");
+  Serial.println("================================");
+  Serial.println("DHT_PIN    : GPIO22");
+  Serial.println("SOIL_PIN   : GPIO32");
+  Serial.println("BATTERY_PIN: GPIO34");
+  Serial.println("LED_STATUS : GPIO16");
+  Serial.println("LED_1      : GPIO33");
+  Serial.println("================================\n");
 }
 
+// ─────────────────────────────────────────────────────────────────
 void loop() {
-  if (!mqtt.connected()) {
-    // Report the drop here too (broker will ALSO fire via LWT — the worker
-    // dedupes, so only the first OFFLINE produces a log/notification).
-    publishStatus("OFFLINE", "disconnect");
-    connectMQTT();
-  }
-  mqtt.loop();
+  unsigned long now = millis();
 
-  if (millis() - lastSend > 5000) {
-    lastSend = millis();
-    sendSensorData();
+  // ── Sensor readings every 2s ──────────────────────────────────
+  if (now - lastRead >= READ_INTERVAL) {
+    lastRead = now;
+
+    // ── DHT11 ──────────────────────────────────────────────────
+    float temperature = dht.readTemperature();
+    float humidity    = dht.readHumidity();
+    bool  dhtError    = isnan(temperature) || isnan(humidity);
+
+    // ── Soil moisture ───────────────────────────────────────────
+    int   rawSoil     = analogRead(SOIL_PIN);
+    float soilPct     = map(rawSoil, 4095, 1500, 0, 100);
+    soilPct           = constrain(soilPct, 0.0, 100.0);
+
+    // ── Battery ─────────────────────────────────────────────────
+    float battVoltage = readBatteryVoltage();
+    float battPct     = batteryPercent(battVoltage);
+    bool  battLow     = battPct < 20.0;
+
+    // ── Print ───────────────────────────────────────────────────
+    Serial.println("------------------------------");
+
+    if (dhtError) {
+      Serial.println("DHT11 ERROR - check GPIO22 wiring");
+    } else {
+      Serial.print("Temperature  : ");
+      Serial.print(temperature, 1);
+      Serial.println(" C");
+
+      Serial.print("Air Humidity : ");
+      Serial.print(humidity, 1);
+      Serial.println(" %");
+    }
+
+    Serial.print("Soil raw     : ");
+    Serial.print(rawSoil);
+    Serial.println(" (0-4095)");
+
+    Serial.print("Soil moisture: ");
+    Serial.print(soilPct, 1);
+    Serial.println(" %");
+
+    Serial.print("Battery      : ");
+    Serial.print(battVoltage, 2);
+    Serial.print(" V  (");
+    Serial.print(battPct, 0);
+    Serial.println(" %)");
+
+    if (battLow) {
+      Serial.println("WARNING: Battery LOW - charge soon");
+    }
+
+    Serial.println("------------------------------\n");
+
+    // ── LED 1 (red) — error or battery low ─────────────────────
+    digitalWrite(LED_1, (dhtError || battLow) ? HIGH : LOW);
+  }
+
+  // ── LED STATUS (blue) blink — non-blocking ────────────────────
+  // Determine blink speed based on DHT error
+  // We re-read dhtError flag via a static variable to avoid
+  // reading sensors again just for the blink
+  static bool lastDhtError = false;
+  float t = dht.readTemperature();
+  lastDhtError = isnan(t);
+
+  long blinkInterval = lastDhtError ? BLINK_ERROR : BLINK_NORMAL;
+
+  if (now - lastBlink >= blinkInterval) {
+    lastBlink = now;
+    ledState  = !ledState;
+    digitalWrite(LED_STATUS, ledState ? HIGH : LOW);
   }
 }

@@ -196,6 +196,7 @@ model MCU {
   apiKeyHash               String
   status                   MCUStatus
   lastSeenAt               DateTime?
+  batteryPercent           Float?     // 0-100, from MCU reports
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 

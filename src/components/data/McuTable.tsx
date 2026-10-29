@@ -456,6 +456,7 @@ export function MCUsTable({
                 "data.mcus.columns.mode",
                 "data.mcus.columns.sleep",
                 "data.mcus.columns.status",
+                "data.mcus.columns.battery",
                 "data.mcus.columns.lastSeen",
                 "data.mcus.columns.actions",
               ].map((h) => (
@@ -512,6 +513,17 @@ export function MCUsTable({
                       status={mcu.status as MCUStatus}
                       isActive={mcu.isActive}
                     />
+                  </td>
+                  <td className="px-4 py-3.5 text-[12px] text-foreground">
+                    {mcu.batteryPercent !== undefined ? (
+                      <Badge
+                        className={mcu.batteryPercent < 20 ? "bg-[#D95F5F] text-white" : "bg-[#E6F7ED] text-[#2D8653]"}
+                      >
+                        {mcu.batteryPercent}%
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-muted text-muted-foreground">—</Badge>
+                    )}
                   </td>
 
                   {/* Last seen */}

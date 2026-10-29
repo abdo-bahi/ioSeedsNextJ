@@ -1,0 +1,8 @@
+﻿timeout : Erreur : Syntaxe incorrecte. L'option par défaut n'est pas autorisée plus de 1 fois.
+Au caractère Ligne:1 : 1
++ timeout 10 npx prisma migrate deploy 2>&1 | Out-File -Encoding UTF8 - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Erreur : Syntax...plus de 1 fois.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Entrez "TIMEOUT /?" pour afficher la syntaxe.

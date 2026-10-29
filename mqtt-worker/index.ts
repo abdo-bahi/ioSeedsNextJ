@@ -87,7 +87,7 @@ async function validateMCU(mcuId: string, fieldId: string, rawApiKey: string) {
     .createHash("sha256")
     .update(rawApiKey)
     .digest("hex");
-
+    
   return await prisma.mCU.findFirst({
     where: {
       id: mcuId,
