@@ -442,6 +442,7 @@ export function ActuatorsTable({
                 "data.actuators.columns.gps",
                 "data.actuators.columns.mac",
                 "data.actuators.columns.state",
+                "data.actuators.columns.battery",
                 "data.actuators.columns.status",
                 "data.actuators.columns.lastAction",
                 "data.actuators.columns.timeLimit",
@@ -456,7 +457,7 @@ export function ActuatorsTable({
           <tbody>
             {isLoading && [...Array(4)].map((_, i) => (
               <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
-                {[...Array(11)].map((_, j) => (
+                {[...Array(12)].map((_, j) => (
                   <td key={j} className="px-4 py-3.5">
                     <div className="h-3 bg-green-soft rounded w-16" />
                   </td>
@@ -505,6 +506,23 @@ export function ActuatorsTable({
                   {/* State */}
                   <td className="px-4 py-3.5">
                     <StateBadge isOpen={isOpen} />
+                  </td>
+
+                  {/* Battery */}
+                  <td className="px-4 py-3.5">
+                    {actuator.batteryPercent != null ? (
+                      <Badge
+                        className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
+                          actuator.batteryPercent < 20
+                            ? "bg-[#FDE8E8] text-[#D95F5F]"
+                            : "bg-[#E6F7ED] text-[#2D8653]"
+                        }`}
+                      >
+                        {Math.round(actuator.batteryPercent)}%
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </td>
 
                   {/* Status */}
@@ -558,7 +576,7 @@ export function ActuatorsTable({
 
             {!isLoading && actuators?.length === 0 && (
               <tr>
-                <td colSpan={11} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
+                <td colSpan={12} className="px-4 py-8 text-center text-[13px] text-muted-foreground">
                   {t("data.actuators.empty")}
                 </td>
               </tr>

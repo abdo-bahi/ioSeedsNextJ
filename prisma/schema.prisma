@@ -241,6 +241,7 @@ model Sensor {
   unit        String?
   rowValueConversion Boolean @default(false)
   lastSeenAt  DateTime?
+  batteryPercent Float?
   createdAt   DateTime @default(now())
   isActive    Boolean
 
@@ -268,6 +269,7 @@ model Actuator {
   toggleTimeLimit Int?      // max minutes an open state may last, null = no limit
   toggleStartedAt DateTime? // when the current open state started, null when closed
   lastSeenAt  DateTime?
+  batteryPercent Float?
   createdAt   DateTime @default(now())
   isActive    Boolean
 

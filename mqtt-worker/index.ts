@@ -23,6 +23,18 @@ interface MQTTData {
   commandId?:  string
   success?:    boolean
   message?:    string
+  // Battery — devices may send either field name.
+  batteryPercent?: string | number
+  battery?:        string | number
+}
+
+// Normalise a battery value from a payload to a 0-100 number (or undefined).
+function parseBattery(data: MQTTData): number | undefined {
+  const raw = data.batteryPercent ?? data.battery;
+  if (raw === undefined || raw === null || raw === "") return undefined;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.min(100, Math.max(0, n));
 }
 
 // ── Simple HTTP server for receiving publish commands ──────────────
@@ -63,8 +75,8 @@ const httpServer = http.createServer(async (req, res) => {
   });
 });
 
-httpServer.listen(3001, () => {
-  console.log("📡 Worker HTTP server on port 3001");
+httpServer.listen(Number(process.env.WORKER_PORT ?? 3001), () => {
+  console.log(`📡 Worker HTTP server on port ${process.env.WORKER_PORT ?? 3001}`);
 });
 
 // ✅ Create directly here — not from prisma/lib/prisma.ts
@@ -137,7 +149,8 @@ async function logDeviceEvent(
 async function setMCUPresence(
   mcu: MCU,
   status: "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR",
-  source: "connect" | "disconnect" | "will" | "status" | "watchdog" | "message"
+  source: "connect" | "disconnect" | "will" | "status" | "watchdog" | "message",
+  batteryPercent?: number
 ) {
   const changed = mcu.status !== status;
   // Log connectivity events (connect/disconnect/will) even when the status
@@ -153,6 +166,7 @@ async function setMCUPresence(
     data: {
       status,
       ...(source !== "watchdog" ? { lastSeenAt: new Date() } : {}),
+      ...(batteryPercent !== undefined ? { batteryPercent } : {}),
     },
   });
 
@@ -166,6 +180,7 @@ async function setMCUPresence(
     name: mcu.name,
     fieldId: mcu.fk_irrigationField,
     status,
+    batteryPercent,
     lastSeenAt: new Date().toISOString(),
   });
 
@@ -296,10 +311,14 @@ async function handleSensorData(mcu: MCU, sensorId: string, data: MQTTData) {
     },
   });
 
-  // Track sensor liveness
+  // Track sensor liveness + battery level reported by the sensor
+  const batteryPercent = parseBattery(data);
   await prisma.sensor.update({
     where: { id: sensor.id },
-    data: { lastSeenAt: new Date() },
+    data: {
+      lastSeenAt: new Date(),
+      ...(batteryPercent !== undefined ? { batteryPercent } : {}),
+    },
   });
 
   // Broadcast to dashboard 
@@ -309,6 +328,8 @@ async function handleSensorData(mcu: MCU, sensorId: string, data: MQTTData) {
     sensorType: sensor.fk_sensorType,
     fieldId:    mcu.fk_irrigationField,
     value:      data.value,
+    unit:       data.unit,
+    batteryPercent: batteryPercent ?? sensor.batteryPercent ?? null,
     timestamp:  new Date().toISOString(),
   })
 
@@ -368,6 +389,7 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
   }
 
   const newState = data.state === true || data.state === "true";
+  const batteryPercent = parseBattery(data);
 
   // Update targetState optimistically — opening always restarts the countdown
   await prisma.actuator.update({
@@ -376,6 +398,7 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
       targetState:     newState,
       toggleStartedAt: newState ? new Date() : null,
       lastSeenAt:      new Date(),
+      ...(batteryPercent !== undefined ? { batteryPercent } : {}),
     },
   });
 
@@ -410,6 +433,7 @@ async function handleActuatorState(mcu: MCU, actuatorId: string, data: MQTTData)
     name: actuator.name,
     state: newState,
     fieldId: mcu.fk_irrigationField,
+    batteryPercent: batteryPercent ?? actuator.batteryPercent ?? null,
     timestamp: new Date().toISOString(),
   });
 
@@ -429,7 +453,12 @@ async function handleMCUStatus(mcu: MCU, data: MQTTData) {
       ? ("disconnect" as const)
       : ("status" as const);
 
-  await setMCUPresence(mcu, status as "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR", source);
+  await setMCUPresence(
+    mcu,
+    status as "ONLINE" | "OFFLINE" | "SLEEPING" | "ERROR",
+    source,
+    parseBattery(data)
+  );
 }
 
 // ── 4. Ack handler ─────────────────────────────────────────────────

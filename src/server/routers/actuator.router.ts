@@ -75,6 +75,7 @@ export const actuatorRouter = router({
           toggleTimeLimit: true,
           toggleStartedAt: true,
           lastSeenAt: true,
+          batteryPercent: true,
           isActive: true,
           fk_mcu: true,
           mcu: {
@@ -107,6 +108,7 @@ export const actuatorRouter = router({
         toggleStartedAt: a.toggleStartedAt,
         lastSeenAt: a.lastSeenAt,
         isActive: a.isActive,
+        batteryPercent: a.batteryPercent,
         fk_mcu: a.fk_mcu,
         mcuName: a.mcu?.name ?? "—",
         mcuStatus: a.mcu?.status ?? "OFFLINE",

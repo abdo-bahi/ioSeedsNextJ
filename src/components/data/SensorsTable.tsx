@@ -499,6 +499,7 @@ export function SensorsTable({
                 "data.sensors.columns.mcu",
                 "data.sensors.columns.field",
                 "data.sensors.columns.lastValue",
+                "data.sensors.columns.battery",
                 "data.sensors.columns.calibration",
                 "data.sensors.columns.status",
                 "data.sensors.columns.actions",
@@ -516,7 +517,7 @@ export function SensorsTable({
             {isLoading &&
               [...Array(4)].map((_, i) => (
                 <tr key={i} className="border-b border-[#F0F7F3] animate-pulse">
-                  {[...Array(10)].map((_, j) => (
+                  {[...Array(11)].map((_, j) => (
                     <td key={j} className="px-4 py-3.5">
                       <div className="h-3 bg-green-soft rounded w-16" />
                     </td>
@@ -599,6 +600,23 @@ export function SensorsTable({
                     )}
                   </td>
 
+                  {/* Battery */}
+                  <td className="px-4 py-3.5">
+                    {sensor.batteryPercent != null ? (
+                      <Badge
+                        className={`text-[11px] px-2 py-0.5 border-0 rounded-full ${
+                          sensor.batteryPercent < 20
+                            ? "bg-[#FDE8E8] text-[#D95F5F]"
+                            : "bg-[#E6F7ED] text-[#2D8653]"
+                        }`}
+                      >
+                        {Math.round(sensor.batteryPercent)}%
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+
                   {/* Calibration ranges */}
                   <td className="px-4 py-3.5 text-[12px] text-muted-foreground font-mono">
                     <div>{sensor.minAnalogue}→{sensor.maxAnalogue}</div>
@@ -639,7 +657,7 @@ export function SensorsTable({
             {!isLoading && sensors?.length === 0 && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={11}
                   className="px-4 py-8 text-center text-[13px] text-muted-foreground"
                 >
                   {t("data.sensors.empty")}

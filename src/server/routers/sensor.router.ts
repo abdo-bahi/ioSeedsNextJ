@@ -149,6 +149,7 @@ export const sensorRouter = router({
           rowValueConversion: true,
           isActive: true,
           lastSeenAt: true,
+          batteryPercent: true,
           fk_mcu: true,
           mcu: {
             select: {
@@ -180,6 +181,7 @@ export const sensorRouter = router({
         maxToConvertValue: s.maxToConvertValue,
         lastSeenAt: s.lastSeenAt,
         isActive: s.isActive,
+        batteryPercent: s.batteryPercent,
         fk_mcu: s.fk_mcu,
         mcuName: s.mcu?.name ?? "—",
         fieldName: s.mcu?.irrigationField?.name ?? "—",
